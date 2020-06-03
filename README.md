@@ -1,1 +1,1 @@
-# pythagoras.io
+# Pythagoras.IO
