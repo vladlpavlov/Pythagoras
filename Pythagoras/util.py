@@ -95,9 +95,9 @@ class NeatStr:
             , stacks_to_skip:int = 0) -> str:
         """ Find the name(s) of variable(s) that are aliases for an_object.
 
-          The function uses a naive but fast approach,
-          it does not always find all the names
-          """
+        The function uses a naive but fast approach,
+        it does not always find all the names
+        """
         all_names = []
 
         for f in reversed(inspect.stack()[stacks_to_skip+1:]):
