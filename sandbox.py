@@ -1,3 +1,4 @@
-import Pythagoras
+from Pythagoras import *
 
-print("test")
+print("test " + NeatStr.mem_size(5000000))
+
