@@ -1,2 +1,2 @@
-from Pythagoras.P_util import *
-from Pythagoras.P_logging import *
+from Pythagoras.util import *
+from Pythagoras.logging import *
