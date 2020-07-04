@@ -12,19 +12,19 @@ class LoggableObject:
     append logger's name with information
     about an object that generated a message.
     """
-    
+
     parent_logger_name: str
     reveal_identity: bool
     selflog_prefix: str = "__selflog__: "
     logging_level: Optional[int] = None
 
     def __init__(self
-                 , parent_logger_name: str = "Pythagoras"
-                 , reveal_loggers_identity: bool = True
-                 , new_logging_handler: logging.Handler = None
-                 , new_logging_level: Optional[int] = None
-                 , new_logging_formatter: logging.Formatter = None
-                 ):
+             , parent_logger_name: str = "Pythagoras"
+             , reveal_loggers_identity: bool = True
+             , new_logging_handler: logging.Handler = None
+             , new_logging_level: Optional[int] = None
+             , new_logging_formatter: logging.Formatter = None
+             ) -> None:
         assert len(parent_logger_name), "parent_logger_name can not be empty"
         self.parent_logger_name = parent_logger_name
         self.reveal_identity = reveal_loggers_identity
@@ -72,14 +72,12 @@ class LoggableObject:
         return description
 
     def update_parent_logger(self
-                             , new_logging_level: int = logging.DEBUG
-                             ,
-                             new_logging_handler: logging.Handler = logging.StreamHandler()
-                             ,
-                             new_logging_formatter: logging.Formatter = logging.Formatter(
-                                 '%(asctime)s %(name)s %(levelname)s: %(message)s',
-                                 datefmt="%I:%M:%S")
-                             ) -> LoggableObject:
+            , new_logging_level: int = logging.DEBUG
+            , new_logging_handler: logging.Handler = logging.StreamHandler()
+            , new_logging_formatter: logging.Formatter = logging.Formatter(
+                '%(asctime)s %(name)s %(levelname)s: %(message)s',
+                datefmt="%I:%M:%S")
+            ) -> LoggableObject:
         parent_logger = logging.getLogger(self.parent_logger_name)
         if new_logging_level is not None:
             parent_logger.setLevel(new_logging_level)
