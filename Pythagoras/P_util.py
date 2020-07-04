@@ -1,5 +1,6 @@
 from __future__ import annotations
 import math
+import inspect
 import numbers, time
 from typing import Any, ClassVar
 
@@ -23,6 +24,7 @@ class TempAttributeAssignmentIfNotNone:
     def __exit__(self, *args, **kwargs):
         if self.tmp_value is not None:
             setattr(self.an_object, self.attr_name, self.old_value)
+
 
 class NeatStr:
     """Nice short human-readable str depictions of popular numeric values.
@@ -85,6 +87,62 @@ class NeatStr:
 
         t_str = t_str.rstrip(div_ch)
         return t_str
+
+    @staticmethod
+    def object_names(
+            an_object: Any
+            , div_ch: str = '.'
+            , stacks_to_skip:int = 0) -> str:
+        """ Find the name(s) of variable(s) that are aliases for an_object.
+
+          The function uses a naive but fast approach,
+          it does not always find all the names
+          """
+        all_names = []
+
+        for f in reversed(inspect.stack()[stacks_to_skip+1:]):
+            local_vars = f.frame.f_locals
+            names = [name for name in local_vars if
+                     local_vars[name] is an_object]
+            if "self" in names:
+                names.remove("self")
+            all_names += names
+
+        all_names = list(dict.fromkeys(all_names))  # dedup but keep the order
+
+        return div_ch.join(all_names)
+
+    @staticmethod
+    def object_info(
+            an_object: Any
+            , div_ch: str = '.'
+            , stacks_to_skip: int = 0) -> str:
+        """ Create a string with debug information about an object"""
+
+        names_str = NeatStr.object_names(
+            an_object, div_ch=" / ",stacks_to_skip = stacks_to_skip+1)
+
+        if names_str.count("/"):
+            text_info = "An object with names < " + names_str + " >"
+        elif len(names_str):
+            text_info = "An object with name < " + names_str + " >"
+        else:
+            text_info = "An anonymous object"
+
+        text_info += " has type < "
+        if hasattr(type(an_object),"__qualname__"):
+            text_info += type(an_object).__qualname__
+        else:
+            text_info += type(an_object).__name__
+        text_info += " > and repr_value < "
+        text_info += repr(an_object)
+        text_info += " >"
+
+        text_info = text_info.replace("  ", " ")
+        text_info = text_info.replace("< <", "< ")
+        text_info = text_info.replace("> >", " >")
+
+        return text_info
 
 
 class BasicStopwatch:
