@@ -8,3 +8,5 @@
 * **DeterministicGarden**: State-of-the-art regression algorithm that outperforms traditional ones (coming soon)
 
 * **FeatureShower**: Automatic feature generator (coming soon)
+
+* Many more
