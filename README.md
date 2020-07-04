@@ -9,4 +9,4 @@
 
 * **FeatureShower**: Automatic feature generator (coming soon)
 
-* Many more
+* And more
