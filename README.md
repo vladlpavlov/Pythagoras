@@ -1,5 +1,5 @@
 # Pythagoras
-##Advanced Python tools for Data Scientists
+## Advanced Python tools for Data Scientists
 
 * **PickleCache**: Pandas-compatible persistent caching, easily extendable to work with new custom classes
 
