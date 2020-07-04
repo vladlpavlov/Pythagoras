@@ -5,8 +5,6 @@
 
 * **LoggableObject**: Simple logging base class that enables your objects with story-telling capabilities
 
-* **DeterministicGarden**: State-of-the-art regression algorithm that outperforms traditional ones (coming soon)
+* **DeterministicGarden**: State-of-the-art regression algorithm that outperforms traditional ones (*coming soon*)
 
-* **FeatureShower**: Automatic feature generator (coming soon)
-
-* And more
+* **FeatureShower**: Automatic feature generator (*coming soon*) 
