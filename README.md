@@ -20,8 +20,8 @@
 
 ### Tutorials
 
-1. [Basic Caching](Pythagoras_caching_introductory_tutorial.ipynb): How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
-2. [Advanced Caching](Pythagoras_caching_advanced_tutorial.ipynb): How to make Pythagoras PickleCache work with custom classes 
+1. [Basic Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_introductory_tutorial.ipynb): How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
+2. [Advanced Caching](https://github.com/vladlpavlov/Pythagoras/blob/b0e83af41aecb1ee40fd3f9245f5e7e8d2906ee4/Pythagoras_caching_advanced_tutorial.ipynb): How to make Pythagoras PickleCache work with custom classes 
  
 ### Core Design Principles 
 

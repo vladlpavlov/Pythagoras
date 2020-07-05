@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="Pythagoras"
-    ,version="0.1.0"
+    ,version="0.1.1"
     ,author="Vlad(imir) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description="Advanced Python tools for Data Scientists"
