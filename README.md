@@ -12,7 +12,7 @@
 3. Fully ***automate*** your ***feature engineering*** process and free your time (COMING SOON)
 4. ***Improve accuracy*** of your predictions by creating ***best-in-class regression models*** (COMING SOON)
 
-### How to get it 
+### How To Get It 
 
 The source code is hosted on GitHub at:
 [https://github.com/vladlpavlov/Pythagoras](https://github.com/vladlpavlov/Pythagoras) 
@@ -37,9 +37,13 @@ Binary installers for the latest released version are available at the Python pa
 
 * **FeatureShower**: Automatic feature generator (COMING SOON) 
 
-* **SelfDrivingRegressor**: Top-performing regression algorithm that works out-of-the-box and  
-requires no customisation, no parameter tuning, no feature engineering, no outlier removal, or even no EDA: 
-it does everything for you (COMING SOON)
+* **SelfDrivingRegressor**: Top-performing regression algorithm that does everything for you right out-of-the-box (COMING SOON).  It requires 
+    * no EDA,
+    * no data cleaning, 
+    * no feature engineering, 
+    * no customisation, 
+    * no hyperparameter tuning.
+  
 
 ### Tutorials
 
@@ -57,3 +61,14 @@ it does everything for you (COMING SOON)
 
 * [Vlad(imir) Pavlov](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
 * [Kai Zhao](https://www.linkedin.com/in/kaimzhao/): quality assurance
+
+### What Do The Name And Logo Mean
+
+Pythagoras was a famous ancient Greek thinker and scientist 
+who was the first man to call himself a philosopher ("lover of wisdom"). 
+He is most recognised for his many mathematical findings, 
+including the Pythagorean theorem. 
+
+But not everyone knows that in antiquity, Pythagoras was credited with discovering
+sphericity of the Earth and the identity of the morning and evening stars as the planet Venus. 
+Our logo depicts these, lesser known but not less important achievements of Pythagoras.
