@@ -30,7 +30,7 @@
 3. OOP and static typing 
 4. SKLearn-like interfaces when possible
 
-### Key People
+### Key Contacts
 
-* [**Vladimir (Vlad) Pavlov**](https://www.linkedin.com/in/vlpavlov/): design and core development 
+* [**Vladimir (Vlad) Pavlov**](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
 * [**Kai Zhao**](https://www.linkedin.com/in/kaimzhao/): quality assurance
