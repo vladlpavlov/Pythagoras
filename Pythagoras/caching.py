@@ -15,6 +15,12 @@ from Pythagoras import TempAttributeAssignmentIfNotNone
 class ReprBuilder(LoggableObject):
     """Base class for class representation factories."""
 
+    glue_ch: str = ""
+    div_ch: str = '__'
+    eq_ch: str = '='
+    left_bkt_ch: str = '('
+    right_bkt_ch: str = ')'
+
     def __init__(self
                  , custom_handler: Optional[
                 Callable[[Any, ReprBuilder], str]] = None
@@ -81,7 +87,7 @@ class ReprBuilder(LoggableObject):
 
     def for_bool(self, n: Any) -> Optional[str]:
         if isinstance(n, bool):
-            repr_str = ("bool_1" if n else "bool_0")
+            repr_str = "bool"+self.glue_ch+("1" if n else "0")
         else:
             repr_str = None
 
@@ -89,9 +95,9 @@ class ReprBuilder(LoggableObject):
 
     def for_numbers(self, n: Any) -> Optional[str]:
         if isinstance(n, numbers.Integral):
-            repr_str = f"int_{n}"
+            repr_str = "int" + self.glue_ch + str(n)
         elif isinstance(n, numbers.Real):
-            repr_str = f"real_{n:.8g}"
+            repr_str = "real" + self.glue_ch + f"{n:.8g}"
         else:
             repr_str = None
 
@@ -109,12 +115,6 @@ class ReprBuilder(LoggableObject):
 
 class SlimReprBuilder(ReprBuilder):
     """Build concise, human-readable summary representations of objects."""
-
-    div_ch: str = '--'
-    glue_ch: str = "_"
-    eq_ch: str = '='
-    left_bkt_ch: str = '('
-    right_bkt_ch: str = ')'
 
     def __init__(self
                  , *
@@ -153,7 +153,7 @@ class SlimReprBuilder(ReprBuilder):
 
     def for_dataframe(self
                       , df: Any
-                      , prefix: str = "DataFrame"
+                      , prefix: str = "dataframe"
                       , suffix: str = ""
                       ) -> Optional[str]:
         repr_str = None
@@ -162,7 +162,7 @@ class SlimReprBuilder(ReprBuilder):
             repr_str = f"{df.shape[0]}x{df.shape[1]}"
             n_nans = df.isna().sum().sum()
             if n_nans:
-                repr_str += self.glue_ch + str(n_nans) + 'nans'
+                repr_str += self.glue_ch + 'nans' + str(n_nans)
             repr_str = self.put_into_brackets(prefix, repr_str, suffix)
 
         return repr_str
@@ -423,69 +423,6 @@ class PickleFileWarden(CacheFileWarden):
             , "cost_in_seconds": cost_in_seconds
             , "source": source}
         pd.to_pickle(package_to_write, file_name)
-
-
-class NeatStr:
-    """Nice short human-readable str depictions of popular numeric values.
-
-    Insignificant details are dropped:
-    - exact # of seconds is not shown if we are talking about hours,
-    - exact # of bytes is dropped if we are talking about gigabytes, etc.
-    """
-
-    @staticmethod
-    def mem_size(size_in_B: int, div_ch: str = ' ') -> str:
-        """Convert an integer number of bytes into a string like '7 Mb' """
-        assert isinstance(size_in_B, numbers.Number)
-        assert size_in_B >= 0
-
-        size_in_K = size_in_B / 1024
-        if size_in_K < 1: return (str(math.ceil(size_in_B))) + div_ch + "B"
-
-        size_in_M = size_in_K / 1024
-        if size_in_M < 1: return (str(math.ceil(size_in_K))) + div_ch + "Kb"
-
-        size_in_G = size_in_M / 1024
-        if size_in_G < 1: return (str(math.ceil(size_in_M))) + div_ch + "Mb"
-
-        size_in_T = size_in_G / 1024
-        if size_in_T < 1: return (str(math.ceil(size_in_G))) + div_ch + "Gb"
-
-        size_in_P = size_in_T / 1024
-        if size_in_P < 1: return (str(math.ceil(size_in_G))) + div_ch + "Tb"
-
-        return (str(math.ceil(size_in_T))) + div_ch + "Pb"
-
-    @staticmethod
-    def time_diff(time_in_seconds: float, div_ch: str = ' ') -> str:
-        """Convert a float number of seconds into a string like '5 hours' """
-        t = time_in_seconds
-        t_str = ""
-
-        h = t / (60 * 60)
-        if h >= 1:
-            t_str += str(math.floor(h)) + div_ch + "hours" + div_ch
-            t = t - h * (60 * 60)
-
-        m = t / 60
-        if m >= 1:
-            t_str += str(math.floor(m)) + div_ch + "minutes" + div_ch
-            t = t - m * 60
-
-        if h < 1:
-            if m > 1:
-                t_str += str(math.ceil(t))
-            elif t >= 10:
-                t_str += f"{t:.1f}"
-            elif t >= 1:
-                t_str += f"{t:.2f}"
-            else:
-                t_str += f"{t:.3g}"
-
-            t_str += div_ch + "seconds" + div_ch
-
-        t_str = t_str.rstrip(div_ch)
-        return t_str
 
 
 class FileBasedCache(LoggableObject):

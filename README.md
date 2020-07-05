@@ -23,7 +23,7 @@
 1. Basic Cashing: How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
 2. Advanced Caching: How to make Pythagoras PickleCache work with custom classes 
  
-### Core design principles 
+### Core Design Principles 
 
 1. Transparency and explainability
 2. Pandas as the main data vessel
