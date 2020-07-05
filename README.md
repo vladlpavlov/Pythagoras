@@ -3,10 +3,10 @@
 
 ### Main Use Cases
 
-1. **Speed up** your Data Science code by employing persistent file-based cashing 
-2. Make your scripts and classes **easy to debug and reuse** by equipping them with story-telling capabilities
-3. Fully **automate** your **feature engineering** process and free your time (*COMING SOON*)
-4. **Improve accuracy** of your predictions by creating **best-in-class regression models** (*COMING SOON*)
+1. ***Speed up*** your Data Science code by employing persistent file-based cashing 
+2. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
+3. Fully ***automate*** your ***feature engineering*** process and free your time (COMING SOON)
+4. ***Improve accuracy*** of your predictions by creating ***best-in-class regression models*** (COMING SOON)
 
 ### Major Components
 
@@ -14,14 +14,14 @@
 
 * **LoggableObject**: Simple base class that provides your objects with easy-to-use story-telling tools
 
-* **DeterministicGarden**: State-of-the-art regression algorithm that outperforms popular ones (*COMING SOON*)
+* **DeterministicGarden**: State-of-the-art regression algorithm that outperforms popular ones (COMING SOON)
 
-* **FeatureShower**: Automatic feature generator (*COMING SOON*) 
+* **FeatureShower**: Automatic feature generator (COMING SOON) 
 
 ### Tutorials
 
-1. Basic Cashing: How to speed up your code using PickleCache if your Python code works with Pandas and build-in datatypes
-2. Advanced Caching: How to make PickleCache work with custom classes 
+1. Basic Cashing: How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
+2. Advanced Caching: How to make Pythagoras PickleCache work with custom classes 
  
 ### Core design principles 
 
