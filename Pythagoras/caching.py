@@ -75,19 +75,19 @@ class ReprBuilder(LoggableObject):
 
     def for_none(self, x: Any) -> Optional[str]:
         if x is None:
-            return "none"
+            return "None"
         else:
             return None
 
     def for_ellipsis(self, x: Any) -> Optional[str]:
         if x is Ellipsis:
-            return "dots"
+            return "Dots"
         else:
             return None
 
     def for_bool(self, n: Any) -> Optional[str]:
         if isinstance(n, bool):
-            repr_str = "bool"+self.glue_ch+("1" if n else "0")
+            repr_str = "Bool"+self.glue_ch+("1" if n else "0")
         else:
             repr_str = None
 
@@ -95,9 +95,9 @@ class ReprBuilder(LoggableObject):
 
     def for_numbers(self, n: Any) -> Optional[str]:
         if isinstance(n, numbers.Integral):
-            repr_str = "int" + self.glue_ch + str(n)
+            repr_str = "Int" + self.glue_ch + str(n)
         elif isinstance(n, numbers.Real):
-            repr_str = "real" + self.glue_ch + f"{n:.8g}"
+            repr_str = "Real" + self.glue_ch + f"{n:.8g}"
         else:
             repr_str = None
 
@@ -153,7 +153,7 @@ class SlimReprBuilder(ReprBuilder):
 
     def for_dataframe(self
                       , df: Any
-                      , prefix: str = "dataframe"
+                      , prefix: str = "DTFrame"
                       , suffix: str = ""
                       ) -> Optional[str]:
         repr_str = None
@@ -172,10 +172,10 @@ class SlimReprBuilder(ReprBuilder):
             return None
 
         if len(s) <= self.max_atomic_str_length:
-            repr_str = "str" + self.glue_ch + s
+            repr_str = "Str" + self.glue_ch + s
         else:
             repr_str = self.put_into_brackets(
-                prefix="str", body=str(len(s)))
+                prefix="Str", body=str(len(s)))
 
         return repr_str
 
