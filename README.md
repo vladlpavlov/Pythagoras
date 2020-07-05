@@ -10,7 +10,7 @@
 1. ***Speed up*** your Data Science code by employing persistent file-based caching 
 2. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
 3. Fully ***automate*** your ***feature engineering*** process and free your time (COMING SOON)
-4. ***Improve accuracy*** of your predictions by creating ***best-in-class regression models*** (COMING SOON)
+4. ***Improve accuracy*** of your predictions by easily creating ***best-in-class regression models*** (COMING SOON)
 
 ### How To Get It?
 
@@ -37,7 +37,7 @@ Binary installers for the latest released version are available at the Python pa
 
 * **FeatureShower**: Automatic feature generator (COMING SOON) 
 
-* **SelfDrivingRegressor**: Top-performing regression algorithm that does everything for you right out-of-the-box (COMING SOON).  It requires 
+* **SelfDrivingRegressor**: Top-performing regression algorithm that does everything for you right out-of-the-box (COMING SOON).  It requires from your side:
     * no EDA,
     * no data cleaning, 
     * no feature engineering, 
@@ -68,6 +68,6 @@ who was the first man to call himself a philosopher ("lover of wisdom").
 He is most recognised for his many mathematical findings, 
 including the Pythagorean theorem. 
 
-But not everyone knows that in antiquity, Pythagoras was credited with discovering
+But not everyone knows that in antiquity, Pythagoras was also credited with discovering
 sphericity of the Earth and the identity of the morning and evening stars as the planet Venus. 
 Our logo depicts these, lesser known but not less important achievements of Pythagoras.
