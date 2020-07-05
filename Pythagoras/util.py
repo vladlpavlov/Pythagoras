@@ -1,4 +1,4 @@
-from __future__ import annotations
+# from __future__ import annotations
 import math
 import inspect
 import numbers, time
@@ -144,6 +144,8 @@ class NeatStr:
 
         return text_info
 
+class BasicStopwatch:
+    pass
 
 class BasicStopwatch:
     """Simple class to measure time durations."""

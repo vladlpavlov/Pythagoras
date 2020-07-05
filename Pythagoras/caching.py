@@ -1,4 +1,4 @@
-from __future__ import annotations
+# from __future__ import annotations
 import os
 import string, math
 import shutil, numbers
@@ -11,6 +11,8 @@ from functools import wraps
 from Pythagoras import NeatStr, LoggableObject, BasicStopwatch
 from Pythagoras import TempAttributeAssignmentIfNotNone
 
+class ReprBuilder:
+    pass
 
 class ReprBuilder(LoggableObject):
     """Base class for class representation factories."""
@@ -112,6 +114,9 @@ class ReprBuilder(LoggableObject):
             rez_str += f" with no custom handler."
         return rez_str
 
+
+class SlimReprBuilder:
+    pass
 
 class SlimReprBuilder(ReprBuilder):
     """Build concise, human-readable summary representations of objects."""
@@ -223,6 +228,8 @@ class SlimReprBuilder(ReprBuilder):
 
         return rez_str
 
+class FingerprintReprBuilder:
+    pass
 
 class FingerprintReprBuilder(ReprBuilder):
     """Build hash-based fingerprint representations of objects."""

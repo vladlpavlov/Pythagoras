@@ -1,9 +1,11 @@
-from __future__ import annotations
+# from __future__ import annotations
 import logging
 import inspect
 from typing import Optional, Any
 from Pythagoras import NeatStr
 
+class LoggableObject:
+    pass
 
 class LoggableObject:
     """ Base class for types that are able to log events/messages.
