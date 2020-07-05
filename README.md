@@ -12,7 +12,7 @@
 3. Fully ***automate*** your ***feature engineering*** process and free your time (COMING SOON)
 4. ***Improve accuracy*** of your predictions by creating ***best-in-class regression models*** (COMING SOON)
 
-### How To Get It 
+### How To Get It?
 
 The source code is hosted on GitHub at:
 [https://github.com/vladlpavlov/Pythagoras](https://github.com/vladlpavlov/Pythagoras) 
@@ -62,7 +62,7 @@ Binary installers for the latest released version are available at the Python pa
 * [Vlad(imir) Pavlov](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
 * [Kai Zhao](https://www.linkedin.com/in/kaimzhao/): quality assurance
 
-### What Do The Name And Logo Mean
+### What Do The Name And Logo Mean?
 
 Pythagoras was a famous ancient Greek thinker and scientist 
 who was the first man to call himself a philosopher ("lover of wisdom"). 
