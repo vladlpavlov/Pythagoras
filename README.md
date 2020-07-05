@@ -37,6 +37,10 @@ Binary installers for the latest released version are available at the Python pa
 
 * **FeatureShower**: Automatic feature generator (COMING SOON) 
 
+* **SelfDrivingRegressor**: Top-performing regression algorithm that works out-of-the-box and  
+requires no customisation, no parameter tuning, no feature engineering, no outlier removal, or even no EDA: 
+it does everything for you (COMING SOON)
+
 ### Tutorials
 
 1. [Basic Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_introductory_tutorial.ipynb): How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
