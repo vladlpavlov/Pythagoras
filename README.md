@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="http://vlpavlov.org/Pythagoras-Logo.svg"><br>
+  <img src="http://vlpavlov.org/Pythagoras-Logo1.svg"><br>
 </div>
 
 # Pythagoras
