@@ -229,7 +229,7 @@ class FingerprintReprBuilder(ReprBuilder):
 
     def __init__(self
                  , *
-                 , hex_digest_length: int = 10
+                 , hex_digest_length: int = 14
                  , custom_handler: Optional[Callable[
                 [str, FingerprintReprBuilder], str]] = None
                  , **kwargs

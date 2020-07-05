@@ -8,7 +8,7 @@ my_cache.update_parent_logger()
 def f(x):
     return x**2
 
-f(5)
+f(7)
 
 
 
