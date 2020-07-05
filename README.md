@@ -12,7 +12,22 @@
 3. Fully ***automate*** your ***feature engineering*** process and free your time (COMING SOON)
 4. ***Improve accuracy*** of your predictions by creating ***best-in-class regression models*** (COMING SOON)
 
-### Major Components
+### How to get it 
+
+The source code is hosted on GitHub at:
+[https://github.com/vladlpavlov/Pythagoras](https://github.com/vladlpavlov/Pythagoras) 
+
+Binary installers for the latest released version are available at the Python package index at:
+[https://pypi.org/project/Pythagoras](https://pypi.org/project/Pythagoras)
+
+        pip install Pythagoras
+
+### Dependencies
+
+* [pandas](https://pypi.org/project/pandas/) 
+* [xxhash](https://pypi.org/project/xxhash/)
+
+### Major Pythagoras Components
 
 * **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes
 
@@ -30,7 +45,7 @@
 ### Core Design Principles 
 
 1. Transparency and explainability
-2. Pandas as the main data vessel
+2. Pandas-based data representation
 3. OOP and static typing 
 4. SKLearn-like interfaces when possible
 
