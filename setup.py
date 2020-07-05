@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="Pythagoras"
-    ,version="0.1.4"
+    ,version="0.1.7"
     ,author="Vlad(imir) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description="Advanced Python tools for Data Scientists"
@@ -27,6 +27,6 @@ setuptools.setup(
         , "Topic :: Software Development :: Libraries :: Python Modules"
     ]
     ,keywords='caching logging regression'
-    ,python_requires='>=3.7'
+    ,python_requires='>=3.6'
     ,install_requires=['pandas', 'xxhash']
 )

@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="http://vlpavlov.org/Pythagoras-Logo.svg"><br>
+</div>
+
 # Pythagoras
 ## Advanced Python tools for Data Scientists
 
