@@ -4,16 +4,16 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 setuptools.setup(
-    name="Pythagoras",
-    version="0.1.0",
-    author="Vlad(imir) Pavlov",
-    author_email="vlpavlov@ieee.org",
-    description="Advanced Python tools for Data Scientists",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/vladlpavlov/Pythagoras",
-    packages=["Pythagoras"],
-    classifiers=[
+    name="Pythagoras"
+    ,version="0.1.0"
+    ,author="Vlad(imir) Pavlov"
+    ,author_email="vlpavlov@ieee.org"
+    ,description="Advanced Python tools for Data Scientists"
+    ,long_description=long_description
+    ,long_description_content_type="text/markdown"
+    ,url="https://github.com/vladlpavlov/Pythagoras"
+    ,packages=["Pythagoras"]
+    ,classifiers=[
         "Development Status :: 3 - Alpha"
         , "Intended Audience :: Developers"
         , "Intended Audience :: Science/Research"
@@ -25,6 +25,8 @@ setuptools.setup(
         , "Topic :: Scientific/Engineering :: Information Analysis"
         , "Topic :: Software Development :: Libraries"
         , "Topic :: Software Development :: Libraries :: Python Modules"
-    ],
-    python_requires='>=3.6',
+    ]
+    ,keywords='caching logging regression'
+    ,python_requires='>=3.6'
+    ,install_requires=['pandas', 'xxhash']
 )
