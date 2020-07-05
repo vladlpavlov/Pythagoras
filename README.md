@@ -43,7 +43,6 @@ Binary installers for the latest released version are available at the Python pa
     * no feature engineering, 
     * no customisation, 
     * no hyperparameter tuning.
-  
 
 ### Tutorials
 
@@ -55,7 +54,7 @@ Binary installers for the latest released version are available at the Python pa
 1. Transparency and explainability
 2. Pandas-based data representation
 3. OOP and static typing 
-4. SKLearn-like interfaces when possible
+4. SKLearn-inspired interfaces
 
 ### Key Contacts
 
