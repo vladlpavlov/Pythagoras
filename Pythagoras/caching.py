@@ -153,7 +153,7 @@ class SlimReprBuilder(ReprBuilder):
 
     def for_dataframe(self
                       , df: Any
-                      , prefix: str = "DTFrame"
+                      , prefix: str = "DataFrame"
                       , suffix: str = ""
                       ) -> Optional[str]:
         repr_str = None
@@ -182,16 +182,16 @@ class SlimReprBuilder(ReprBuilder):
     def for_core_containers(self, c) -> Optional[str]:
         if isinstance(c, list):
             repr_str = self.put_into_brackets(
-                prefix="list", body=str(len(c)))
+                prefix="List", body=str(len(c)))
         elif isinstance(c, set):
             repr_str = self.put_into_brackets(
-                prefix="set", body=str(len(c)))
+                prefix="Set", body=str(len(c)))
         elif isinstance(c, dict):
             repr_str = self.put_into_brackets(
-                prefix="dict", body=str(len(c)))
+                prefix="Dict", body=str(len(c)))
         elif isinstance(c, tuple):
             repr_str = self.put_into_brackets(
-                prefix="tuple", body=str(len(c)))
+                prefix="Tuple", body=str(len(c)))
         else:
             repr_str = None
 
