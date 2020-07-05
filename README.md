@@ -32,5 +32,5 @@
 
 ### Key Contacts
 
-* [Vladimir (Vlad) Pavlov](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
+* [Vlad(imir) Pavlov](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
 * [Kai Zhao](https://www.linkedin.com/in/kaimzhao/): quality assurance
