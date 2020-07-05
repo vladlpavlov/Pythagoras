@@ -4,13 +4,13 @@
 ### Main Use Cases
 
 1. **Speed up** your Data Science code by employing persistent file-based cashing 
-2. Make your scripts and classes **easy to reuse** by equipping them with story-telling capabilities
-3. **Improve accuracy** of your predictions by creating **best-in-class** regression models (*COMING SOON*)
-4. Fully **automate** your **feature engineering** process (*COMING SOON*)
+2. Make your scripts and classes **easy to debug and reuse** by equipping them with story-telling capabilities
+3. Fully **automate** your **feature engineering** process and free your time (*COMING SOON*)
+4. **Improve accuracy** of your predictions by creating **best-in-class regression models** (*COMING SOON*)
 
 ### Major Classes
 
-* **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes
+* **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom datatypes
 
 * **LoggableObject**: Simple base class that provides your objects with easy-to-use story-telling tools
 
@@ -30,7 +30,7 @@
 3. OOP and static typing 
 4. SKLearn-like interfaces when possible
 
-### Contacts
+### Key People
 
 * [**Vladimir (Vlad) Pavlov**](https://www.linkedin.com/in/vlpavlov/): design and core development 
 * [**Kai Zhao**](https://www.linkedin.com/in/kaimzhao/): quality assurance
