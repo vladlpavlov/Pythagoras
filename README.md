@@ -7,7 +7,7 @@
 
 ### Main Use Cases
 
-1. ***Speed up*** your Data Science code by employing persistent file-based cashing 
+1. ***Speed up*** your Data Science code by employing persistent file-based caching 
 2. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
 3. Fully ***automate*** your ***feature engineering*** process and free your time (COMING SOON)
 4. ***Improve accuracy*** of your predictions by creating ***best-in-class regression models*** (COMING SOON)
@@ -47,7 +47,7 @@ Binary installers for the latest released version are available at the Python pa
 ### Tutorials
 
 1. [Basic Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_introductory_tutorial.ipynb): How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
-2. [Advanced Caching](https://github.com/vladlpavlov/Pythagoras/blob/b0e83af41aecb1ee40fd3f9245f5e7e8d2906ee4/Pythagoras_caching_advanced_tutorial.ipynb): How to make Pythagoras PickleCache work with custom classes 
+2. [Advanced Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_advanced_tutorial.ipynb): How to make Pythagoras PickleCache work with custom classes 
  
 ### Core Design Principles 
 
