@@ -8,9 +8,9 @@
 3. Fully **automate** your **feature engineering** process and free your time (*COMING SOON*)
 4. **Improve accuracy** of your predictions by creating **best-in-class regression models** (*COMING SOON*)
 
-### Major Classes
+### Major Components
 
-* **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom datatypes
+* **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes
 
 * **LoggableObject**: Simple base class that provides your objects with easy-to-use story-telling tools
 
@@ -20,8 +20,8 @@
 
 ### Tutorials
 
-1. Basic Cashing: How to speed up your code using PickleCache if you work with Pandas and Python build-in datatypes
-2. Advanced Caching: How to make PickleCache work with your and third-party classes 
+1. Basic Cashing: How to speed up your code using PickleCache if your Python code works with Pandas and build-in datatypes
+2. Advanced Caching: How to make PickleCache work with custom classes 
  
 ### Core design principles 
 
