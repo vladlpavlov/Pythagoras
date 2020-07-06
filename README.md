@@ -68,6 +68,6 @@ who was the first man to call himself a philosopher ("lover of wisdom").
 He is most recognised for his many mathematical findings, 
 including the Pythagorean theorem. 
 
-But not everyone knows that in antiquity, Pythagoras was also credited with discovering
-sphericity of the Earth and the identity of the morning and evening stars as the planet Venus. 
+But not everyone knows that in antiquity, Pythagoras was also credited with major astronomical discoveries,
+such as sphericity of the Earth and the identity of the morning and evening stars as the planet Venus. 
 Our logo depicts these, lesser known but not less important achievements of Pythagoras.
