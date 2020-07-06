@@ -1,4 +1,7 @@
 # from __future__ import annotations
+# Above is temporarily commented to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do nos support postponed evaluation
+
 import os
 import string, math
 import shutil, numbers
@@ -11,6 +14,8 @@ from functools import wraps
 from Pythagoras import NeatStr, LoggableObject, BasicStopwatch
 from Pythagoras import TempAttributeAssignmentIfNotNone
 
+# Workaround to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do nos support postponed evaluation
 class ReprBuilder:
     pass
 
@@ -115,6 +120,8 @@ class ReprBuilder(LoggableObject):
         return rez_str
 
 
+# Workaround to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do nos support postponed evaluation
 class SlimReprBuilder:
     pass
 
@@ -228,6 +235,9 @@ class SlimReprBuilder(ReprBuilder):
 
         return rez_str
 
+
+# Workaround to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do nos support postponed evaluation
 class FingerprintReprBuilder:
     pass
 

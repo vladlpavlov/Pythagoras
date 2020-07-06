@@ -1,9 +1,13 @@
 # from __future__ import annotations
+# Above is temporarily commented to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do nos support postponed evaluation
+
 import logging
-import inspect
 from typing import Optional, Any
 from Pythagoras import NeatStr
 
+# Workaround to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do nos support postponed evaluation
 class LoggableObject:
     pass
 

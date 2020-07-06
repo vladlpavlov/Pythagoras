@@ -1,4 +1,7 @@
 # from __future__ import annotations
+# Above is temporarily commented to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do nos support postponed evaluation
+
 import math
 import inspect
 import numbers, time
@@ -144,6 +147,9 @@ class NeatStr:
 
         return text_info
 
+
+# Workaround to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do nos support postponed evaluation
 class BasicStopwatch:
     pass
 
