@@ -339,7 +339,7 @@ class FingerprintReprBuilder(ReprBuilder):
                 repr_str += ', ' + x.__qualname__
             elif hasattr(x, "__name__"):
                 repr_str += ', ' + x.__name__
-            assert False, f"Can't create a hash digest for ({repr_str})"
+            raise NotImplementedError(f"Can't create a hash digest for ({repr_str})")
 
         return digest_str
 
@@ -359,12 +359,11 @@ class CacheFileWarden:
     @property
     def ext_str(self) -> str:
         """Filename extension for cache files that is used by this Warden."""
-        assert False, "Not Implemented"
-        return ""
+        raise NotImplementedError
 
     def read_dcs(self, file_name: str) -> Tuple[Any, float, str]:
         """Read dcs (Data, Cost_in_seconds, Source) from a file_name."""
-        assert False, "Not Implemented"
+        raise NotImplementedError
 
     def write_dcs(self
                   , *
@@ -373,7 +372,7 @@ class CacheFileWarden:
                   , cost_in_seconds: float
                   , source: str) -> None:
         """Write dcs (Data, Cost_in_seconds, Source) to a file_name."""
-        assert False, "Not Implemented"
+        raise NotImplementedError
 
     @property
     def max_file_name_len(self) -> int:
@@ -912,11 +911,11 @@ class CacheableObject:
                         , fprepr_builder: FingerprintReprBuilder
                         ) -> str:
         """Create ID string for the object to use for File Caching"""
-        assert False, "Abstract method, must be overload in child classes."
+        raise NotImplementedError
 
     # V-V-V-V-V-V-V-V-V-V-V---Virtual-Method---V-V-V-V-V-V-V-V-V-V-V-V-V-V-V
     def slim_repr(self
                   , srepr_builder: SlimReprBuilder
                   ) -> str:
         """Create human-readable object summary to use for File Caching"""
-        assert False, "Abstract method, must be overload in child classes."
+        raise NotImplementedError

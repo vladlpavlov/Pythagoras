@@ -196,4 +196,4 @@ class AssertableObject:
     # V-V-V-V-V-V-V-V-V-V-V---Virtual-Method---V-V-V-V-V-V-V-V-V-V-V-V-V-V-V
     def assert_sanity(self) -> None:
         """Check self for structural consistency; halt if there are errors"""
-        assert False, "Abstract method, must be overload in child classes."
+        raise NotImplementedError
