@@ -1,6 +1,6 @@
 # from __future__ import annotations
 # Above is temporarily commented to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do nos support postponed evaluation
+# Versions 3.6 and below do not support postponed evaluation
 
 import os
 import string, math
@@ -15,7 +15,7 @@ from Pythagoras import NeatStr, LoggableObject, BasicStopwatch
 from Pythagoras import TempAttributeAssignmentIfNotNone
 
 # Workaround to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do nos support postponed evaluation
+# Versions 3.6 and below do not support postponed evaluation
 class ReprBuilder:
     pass
 
@@ -121,7 +121,7 @@ class ReprBuilder(LoggableObject):
 
 
 # Workaround to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do nos support postponed evaluation
+# Versions 3.6 and below do not support postponed evaluation
 class SlimReprBuilder:
     pass
 
@@ -129,12 +129,12 @@ class SlimReprBuilder(ReprBuilder):
     """Build concise, human-readable summary representations of objects."""
 
     def __init__(self
-                 , *
-                 , max_atomic_str_length=20
-                 , custom_handler: Optional[Callable[
+            , *
+            , max_atomic_str_length=20
+            , custom_handler: Optional[Callable[
                 [Any, SlimReprBuilder], str]] = None
-                 , **kwargs
-                 ) -> None:
+            , **kwargs
+            ) -> None:
         super().__init__(custom_handler=custom_handler, **kwargs)
 
         assert max_atomic_str_length in range(5, 50)
@@ -237,7 +237,7 @@ class SlimReprBuilder(ReprBuilder):
 
 
 # Workaround to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do nos support postponed evaluation
+# Versions 3.6 and below do not support postponed evaluation
 class FingerprintReprBuilder:
     pass
 
@@ -495,7 +495,7 @@ class FileBasedCache(LoggableObject):
         return inside_input_dir_list
 
     def limit_filename_length(self, old_filename: str) -> str:
-
+        """Cut a name of a cache file if long, append with digital signature"""
         if len(old_filename) < self.cache_file_warden.max_file_name_len:
             return old_filename
 
@@ -906,7 +906,42 @@ class PickleCache(FileBasedCache):
 
 
 class CacheableObject:
-    """An abstract base class for cacheable containers and factories."""
+    """An abstract base class for cacheable containers.
+
+    If your class is expected to have some of its methods cache-enabled,
+    it is recommended to inherit the class from CacheableObject.
+
+    Attributes read_from_cache and write_to_cache impact how
+    File Caching executes decorated methods of a class.
+
+    Methods fingerpint_repr() and slim_repr() generate string representations
+    of your objects, the representations are used by File Caching to compose
+    names of cache files.
+
+    if read_from_cache is True, it instructs File Caching to
+    read cached files when they are present.
+    if read_from_cache is False, it instruct File Caching to
+    ignore cached files when they are present nad to re-generate the data.
+
+    If write_to_cache is True, it instructs File Caching to
+    save data to a cache file when the new data is generated.
+    If write_to_cache is False, it instructs File Caching not to
+    save data to a cache file when the new data is generated.
+
+    Both read_from_cache and write_to_cache attributes do not have any impact
+    on File Caching behavior when they are set to None or not present at all.
+
+    Both read_from_cache and write_to_cache attributes are ignored
+    when parameters with the same names are explicitly passed
+    to a decorated method at a time when it is called.
+
+    If neither the object has attributes with these names,
+    nor parameters with these names are explicitly passed
+    to a decorated method at a time when it is called,
+    then the behavior of File Caching is
+    defined by read_from_cache and write_to_cache attributes of
+    FileBasedCache object which served as a decorator for cacheable methods.
+    """
 
     read_from_cache: Optional[bool] = None
     write_to_cache: Optional[bool] = None

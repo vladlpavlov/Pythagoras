@@ -1,6 +1,6 @@
 # from __future__ import annotations
 # Above is temporarily commented to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do nos support postponed evaluation
+# Versions 3.6 and below do not support postponed evaluation
 
 import math
 import inspect
@@ -12,7 +12,7 @@ class TempAttributeAssignmentIfNotNone:
 
     This class is designed to be used with a "with" statement, and it allows
     to temporarily change an attribute of an object to a new value,
-     provided that the new value is not None.
+    provided that the new value is not None.
     """
     def __init__(self, an_object:Any, attr_name:str, tmp_value:Any):
         self.an_object = an_object
@@ -149,7 +149,7 @@ class NeatStr:
 
 
 # Workaround to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do nos support postponed evaluation
+# Versions 3.6 and below do not support postponed evaluation
 class BasicStopwatch:
     pass
 
