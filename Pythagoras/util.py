@@ -15,6 +15,9 @@ class TempAttributeAssignmentIfNotNone:
     provided that the new value is not None.
     """
     def __init__(self, an_object:Any, attr_name:str, tmp_value:Any):
+        assert hasattr(an_object,attr_name), (
+            f"Object {NeatStr.object_info(an_object)} is required"
+            + f" to have an attribute {attr_name}")
         self.an_object = an_object
         self.attr_name = attr_name
         self.tmp_value = tmp_value
