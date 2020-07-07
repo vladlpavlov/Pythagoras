@@ -5,7 +5,6 @@ from Pythagoras.util import *
 from Pythagoras.logging import *
 
 
-
 class AbstractFeatureMaker(LoggableObject):
     """An base class for transformers that create new features"""
 

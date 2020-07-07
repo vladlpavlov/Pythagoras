@@ -29,11 +29,11 @@ class ReprBuilder(LoggableObject):
     right_bkt_ch: str = ')'
 
     def __init__(self
-                 , custom_handler: Optional[
+            , custom_handler: Optional[
                 Callable[[Any, ReprBuilder], str]] = None
-                 , *args
-                 , **kwargs
-                 ) -> None:
+            , *args
+            , **kwargs
+            ) -> None:
         super().__init__(*args, **kwargs)
         assert type(self) != ReprBuilder, (
             f"Class {type(self).__name__} can not be instantiated.")
@@ -53,9 +53,9 @@ class ReprBuilder(LoggableObject):
     ]
 
     def build_repr(self
-                   , x: Any
-                   , post_processor: Optional[Callable[[Any], str]] = None
-                   ) -> Optional[str]:
+            , x: Any
+            , post_processor: Optional[Callable[[Any], str]] = None
+            ) -> Optional[str]:
         repr_str = None
         for b_name in self.REPR_BUILDERS:
             assert hasattr(self, b_name), f"{b_name} must be implemented"
@@ -114,7 +114,7 @@ class ReprBuilder(LoggableObject):
         rez_str = type(self).__name__
         if self.instance_defined_custom_handler is not None:
             rez_str += (" with handler "
-                        + self.instance_defined_custom_handler.__name__)
+                + self.instance_defined_custom_handler.__name__)
         else:
             rez_str += f" with no custom handler."
         return rez_str
@@ -157,11 +157,14 @@ class SlimReprBuilder(ReprBuilder):
 
         return repr_str
 
-    def put_into_brackets(self, prefix: str, body: str,
-                          suffix: str = "") -> str:
+    def put_into_brackets(self
+            , prefix: str
+            , body: str
+            ,suffix: str = ""
+            ) -> str:
         return (str(prefix)
-                + self.left_bkt_ch + str(body) + self.right_bkt_ch
-                + str(suffix))
+            + self.left_bkt_ch + str(body) + self.right_bkt_ch
+            + str(suffix))
 
     def for_dataframe(self
                       , df: Any
@@ -227,11 +230,11 @@ class SlimReprBuilder(ReprBuilder):
     def __str__(self):
         rez_str = super().__str__().rstrip(".")
         rez_str += (
-                f", special chars: "
-                + self.left_bkt_ch + self.glue_ch + self.div_ch
-                + self.eq_ch + self.right_bkt_ch
-                + f" , cuts strings longer"
-                + f" than {self.max_atomic_str_length} chars.")
+            f", special chars: "
+            + self.left_bkt_ch + self.glue_ch + self.div_ch
+            + self.eq_ch + self.right_bkt_ch
+            + f" , cuts strings longer"
+            + f" than {self.max_atomic_str_length} chars.")
 
         return rez_str
 
@@ -245,12 +248,12 @@ class FingerprintReprBuilder(ReprBuilder):
     """Build hash-based fingerprint representations of objects."""
 
     def __init__(self
-                 , *
-                 , hex_digest_length: int = 14
-                 , custom_handler: Optional[Callable[
+             , *
+             , hex_digest_length: int = 14
+             , custom_handler: Optional[Callable[
                 [str, FingerprintReprBuilder], str]] = None
-                 , **kwargs
-                 ) -> None:
+             , **kwargs
+             ) -> None:
         super().__init__(custom_handler=custom_handler, **kwargs)
         assert hex_digest_length in range(5, 17)
         self.hex_digest_length = hex_digest_length
@@ -275,8 +278,8 @@ class FingerprintReprBuilder(ReprBuilder):
         return digest_str
 
     def shorten_digest_str(self
-                           , digest_str: Optional[str]
-                           ) -> Optional[str]:
+            , digest_str: Optional[str]
+            ) -> Optional[str]:
         if digest_str is None:
             return None
         n_beginning = math.floor(self.hex_digest_length / 2)
@@ -376,11 +379,11 @@ class CacheFileWarden:
         raise NotImplementedError
 
     def write_dcs(self
-                  , *
-                  , data: Any
-                  , file_name: str
-                  , cost_in_seconds: float
-                  , source: str) -> None:
+            , *
+            , data: Any
+            , file_name: str
+            , cost_in_seconds: float
+            , source: str) -> None:
         """Write dcs (Data, Cost_in_seconds, Source) to a file_name."""
         raise NotImplementedError
 
@@ -390,9 +393,9 @@ class CacheFileWarden:
         return 250
 
     def replace_invalid_chars(self
-                              , file_name: str
-                              , replacement_ch: str = "_"
-                              ) -> str:
+            , file_name: str
+            , replacement_ch: str = "_"
+            ) -> str:
         """Remove disallowed characters from a file_name string."""
         valid_chars = "~-_=.()<>" + string.ascii_letters + string.digits
 
@@ -417,8 +420,8 @@ class PickleFileWarden(CacheFileWarden):
         return ".pkl"
 
     def read_dcs(self
-                 , file_name: str
-                 ) -> Tuple[Any, float, str]:
+            , file_name: str
+            ) -> Tuple[Any, float, str]:
         """Read dcs (Data, Cost_in_seconds, Source) from a file_name."""
         result = pd.read_pickle(file_name)
         assert result["cost_in_seconds"] > 0
@@ -426,11 +429,11 @@ class PickleFileWarden(CacheFileWarden):
         return (result["data"], result["cost_in_seconds"], result["source"])
 
     def write_dcs(self
-                  , *
-                  , data: Any
-                  , file_name: str
-                  , cost_in_seconds: float
-                  , source: str) -> None:
+            , *
+            , data: Any
+            , file_name: str
+            , cost_in_seconds: float
+            , source: str) -> None:
         """Write dcs (Data, Cost_in_seconds, Source) to a file_name."""
         assert cost_in_seconds > 0
         assert isinstance(source, str)
@@ -445,18 +448,18 @@ class FileBasedCache(LoggableObject):
     """Generic file-based persistent cache manager."""
 
     def __init__(self
-                 , *
-                 , input_dir: str = "."
-                 , cache_dir: str = "./FileBasedCache"
-                 , slim_repr_builder: SlimReprBuilder = SlimReprBuilder()
-                 , fingerprint_repr_builder: FingerprintReprBuilder = (
-                    FingerprintReprBuilder())
-                 , id_str: str = ""
-                 , write_to_cache: bool = True
-                 , read_from_cache: bool = True
-                 , cache_file_warden: CacheFileWarden = PickleFileWarden()
-                 , **kwargs
-                 ) -> None:
+            , *
+            , input_dir: str = "."
+            , cache_dir: str = "./FileBasedCache"
+            , slim_repr_builder: SlimReprBuilder = SlimReprBuilder()
+            , fingerprint_repr_builder: FingerprintReprBuilder = (
+                FingerprintReprBuilder())
+            , id_str: str = ""
+            , write_to_cache: bool = True
+            , read_from_cache: bool = True
+            , cache_file_warden: CacheFileWarden = PickleFileWarden()
+            , **kwargs
+            ) -> None:
         super().__init__(**kwargs)
         if not os.path.exists(cache_dir):
             self.warning(f"Creating new cache folder {cache_dir}. \n")
@@ -543,39 +546,39 @@ class FileBasedCache(LoggableObject):
     def __str__(self) -> str:
         """Create textual description of the cache object and its state."""
         description = (
-                f"{type(self).__name__} in directory <{self.cache_dir}>"
-                + f" contains {self.cache_dir_len()} files,"
-                + f" with total size"
-                + f" {NeatStr.mem_size(self.cache_dir_size())}. ")
+            f"{type(self).__name__} in directory <{self.cache_dir}>"
+            + f" contains {self.cache_dir_len()} files,"
+            + f" with total size"
+            + f" {NeatStr.mem_size(self.cache_dir_size())}. ")
 
         description += (f"There are {NeatStr.mem_size(self.free_space())}"
-                        + f" of free space available in the directory. ")
+            + f" of free space available in the directory. ")
 
         description += (f"Cache files are expected to have"
-                        + f" <{self.cache_file_warden.ext_str}> extension. ")
+            + f" <{self.cache_file_warden.ext_str}> extension. ")
 
         description += (f"Input files should be"
-                        + f" located in <{self.input_dir}> folder,"
-                        + f" which contains {self.input_dir_len()} files,"
-                        + f" with total size"
-                        + f" {NeatStr.mem_size(self.input_dir_size())}. ")
+            + f" located in <{self.input_dir}> folder,"
+            + f" which contains {self.input_dir_len()} files,"
+            + f" with total size"
+            + f" {NeatStr.mem_size(self.input_dir_size())}. ")
 
         if len(self.id_str) > 0:
             description += f"Cache ID is {self.id_str} . "
 
         if self.read_from_cache:
             description += (f"Cache READER is ACTIVE:"
-                            + f" cached versions of objects are loaded from disk"
-                            + f" if they are available there. ")
+                + f" cached versions of objects are loaded from disk"
+                + f" if they are available there. ")
         else:
             description += (f"Cache READER is NOT active:"
-                            + f" cached versions of objects are ignored. ")
+                + f" cached versions of objects are ignored. ")
 
         if self.write_to_cache:
             description += (f"Cache WRITER is ACTIVE: new objects"
-                            + f" get saved to disk as they are created."
-                            + f" Names of cache files can not be longer than"
-                            + f" {self.cache_file_warden.max_file_name_len} characters. ")
+                + f" get saved to disk as they are created."
+                + f" Names of cache files can not be longer than"
+                + f" {self.cache_file_warden.max_file_name_len} characters. ")
         else:
             description += (f"Cache WRITER is NOT active: new objects"
                             + " do not get saved. ")
@@ -585,12 +588,12 @@ class FileBasedCache(LoggableObject):
         return description
 
     def read_file(self
-                  , input_file_name: str
-                  , *
-                  , file_reader_func: Callable[..., Any]
-                  , read_from_cache: Optional[bool] = None
-                  , write_to_cache: Optional[bool] = None
-                  , **ka) -> Any:
+            , input_file_name: str
+            , *
+            , file_reader_func: Callable[..., Any]
+            , read_from_cache: Optional[bool] = None
+            , write_to_cache: Optional[bool] = None
+            , **ka) -> Any:
 
         with TempAttributeAssignmentIfNotNone(
                 self, "read_from_cache", read_from_cache):
@@ -604,10 +607,10 @@ class FileBasedCache(LoggableObject):
         return result
 
     def _read_file_impl(self
-                        , input_file_name: str
-                        , *
-                        , file_reader_func: Callable[..., Any]
-                        , **kwargs) -> Any:
+            , input_file_name: str
+            , *
+            , file_reader_func: Callable[..., Any]
+            , **kwargs) -> Any:
         stopwatch = BasicStopwatch(start=True)
         sorted_kwargs = {k: kwargs[k] for k in sorted(kwargs.keys())}
 
@@ -650,13 +653,13 @@ class FileBasedCache(LoggableObject):
             extra_args_str = ""
 
         cache_file_name = (input_file_digest_str + self.div_str
-                           + (self.id_str + self.div_str if len(
-                    self.id_str) else '')
-                           + 'size_' + input_file_size_str + self.div_str
-                           + 'mtime_' + input_modif_time_str
-                           + extra_args_str + self.div_str
-                           + self.fingerprint_repr_builder(**sorted_kwargs)
-                           )
+            + (self.id_str + self.div_str if len(
+                self.id_str) else '')
+            + 'size_' + input_file_size_str + self.div_str
+            + 'mtime_' + input_modif_time_str
+            + extra_args_str + self.div_str
+            + self.fingerprint_repr_builder(**sorted_kwargs)
+            )
 
         cache_file_name = self.limit_filename_length(cache_file_name)
 
@@ -674,11 +677,11 @@ class FileBasedCache(LoggableObject):
             stopwatch.stop_timer()
             new_cost = stopwatch.get_float_repr()
             message_str = ("Finished reading"
-                           + f" {NeatStr.mem_size(os.path.getsize(full_cache_file_name))}"
-                           + f" file {full_cache_file_name}."
-                           + f" The process took {NeatStr.time_diff(new_cost)} now, while"
-                           + f" in the past it costed {NeatStr.time_diff(cost)}"
-                           + f" to read the same data from the original file {source}.\n")
+                + f" {NeatStr.mem_size(os.path.getsize(full_cache_file_name))}"
+                + f" file {full_cache_file_name}."
+                + f" The process took {NeatStr.time_diff(new_cost)} now, while"
+                + f" in the past it costed {NeatStr.time_diff(cost)}"
+                + f" to read the same data from the original file {source}.\n")
             if new_cost >= cost:
                 message_str = "Caching did not save time. " + message_str
                 self.warning(message_str)
@@ -708,12 +711,12 @@ class FileBasedCache(LoggableObject):
         return data
 
     def read_csv(self
-                 , input_file_name: str
-                 , *
-                 , read_from_cache: Optional[bool] = None
-                 , write_to_cache: Optional[bool] = None
-                 , **ka
-                 ) -> pd.core.frame.DataFrame:
+            , input_file_name: str
+            , *
+            , read_from_cache: Optional[bool] = None
+            , write_to_cache: Optional[bool] = None
+            , **ka
+            ) -> pd.core.frame.DataFrame:
         """Read and return a Pandas DataFrame from a CSV file.
 
         The input file should be located in input_dir.
@@ -738,7 +741,7 @@ class FileBasedCache(LoggableObject):
             , data_generator: Callable[..., Any]
             , *arguments
             , **kw_arguments
-    ) -> Any:
+            ) -> Any:
         stopwatch = BasicStopwatch(start=True)
         func_digest_builder = type(
             self.fingerprint_repr_builder)(hex_digest_length=5)
@@ -746,16 +749,15 @@ class FileBasedCache(LoggableObject):
             getattr(data_generator, "__qualname__"))
 
         subdir_name = (
-                "Func" + self.div_str + getattr(data_generator,
-                                                "__qualname__")
-                + self.div_str + func_digest_str)
+            "Func" + self.div_str + getattr(data_generator, "__qualname__")
+            + self.div_str + func_digest_str)
 
         file_name = (
-                func_digest_str + self.div_str
-                + (self.id_str + self.div_str if len(self.id_str) else '')
-                + self.slim_repr_builder(*arguments, **kw_arguments)
-                + self.div_str
-                + self.fingerprint_repr_builder(*arguments, **kw_arguments))
+            func_digest_str + self.div_str
+            + (self.id_str + self.div_str if len(self.id_str) else '')
+            + self.slim_repr_builder(*arguments, **kw_arguments)
+            + self.div_str
+            + self.fingerprint_repr_builder(*arguments, **kw_arguments))
 
         file_name = self.limit_filename_length(file_name)
         file_name = self.cache_file_warden.replace_invalid_chars(file_name)
@@ -777,11 +779,11 @@ class FileBasedCache(LoggableObject):
             stopwatch.stop_timer()
             new_cost = stopwatch.get_float_repr()
             message_str = ("Finished reading"
-                           + f" {NeatStr.mem_size(os.path.getsize(full_file_name))}"
-                           + f" file {full_file_name}."
-                           + f" The process took {NeatStr.time_diff(new_cost)} now, while"
-                           + f" in the past it costed {NeatStr.time_diff(cost)}"
-                           + f" to generate the same data using function {source}().\n")
+                + f" {NeatStr.mem_size(os.path.getsize(full_file_name))}"
+                + f" file {full_file_name}."
+                + f" The process took {NeatStr.time_diff(new_cost)} now, while"
+                + f" in the past it costed {NeatStr.time_diff(cost)}"
+                + f" to generate the same data using function {source}().\n")
             if new_cost >= cost:
                 message_str = "Caching did not save time. " + message_str
                 self.warning(message_str)
@@ -835,8 +837,8 @@ class FileBasedCache(LoggableObject):
         return True
 
     def __call__(self
-                 , a_function: Callable[..., Any]
-                 ) -> Callable[..., Any]:
+             , a_function: Callable[..., Any]
+             ) -> Callable[..., Any]:
         """ Decoration magic happens here.
 
         __call__() is only supposed to be executed once,
@@ -876,18 +878,18 @@ class PickleCache(FileBasedCache):
     """Pickle-based persistent cache manager."""
 
     def __init__(
-            self
-            , *
-            , input_dir: str = "."
-            , cache_dir: str = "./PickleCache"
-            , id_str: str = ""
-            , write_to_cache: bool = True
-            , read_from_cache: bool = True
-            , custom_slim_repr_handler: Optional[Callable[
-                [Any, SlimReprBuilder], Optional[str]]] = None
-            , custom_fingerprint_repr_handler: Optional[Callable[
-                [Any, FingerprintReprBuilder], Optional[str]]] = None
-            , **kwargs
+        self
+        , *
+        , input_dir: str = "."
+        , cache_dir: str = "./PickleCache"
+        , id_str: str = ""
+        , write_to_cache: bool = True
+        , read_from_cache: bool = True
+        , custom_slim_repr_handler: Optional[Callable[
+            [Any, SlimReprBuilder], Optional[str]]] = None
+        , custom_fingerprint_repr_handler: Optional[Callable[
+            [Any, FingerprintReprBuilder], Optional[str]]] = None
+        , **kwargs
     ) -> None:
         super().__init__(
             input_dir=input_dir
