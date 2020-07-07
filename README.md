@@ -37,12 +37,9 @@ Binary installers for the latest released version are available at the Python pa
 
 * **FeatureShower**: Automatic feature generator (COMING SOON) 
 
-* **SelfDrivingRegressor**: Top-performing regression algorithm that does everything for you right out-of-the-box (COMING SOON).  It requires from your side:
-    * no EDA,
-    * no data cleaning, 
-    * no feature engineering, 
-    * no customisation, 
-    * no hyperparameter tuning.
+* **RegressionMage**: Top-performing regression algorithm that does everything for you 
+right out-of-the-box (COMING SOON). It requires from its users: no EDA, no data cleaning, 
+no feature engineering, no customisation, and no hyperparameter tuning.
 
 ### Tutorials
 
