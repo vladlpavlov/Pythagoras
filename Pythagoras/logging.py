@@ -1,7 +1,7 @@
 # from __future__ import annotations
 # Above is temporarily commented to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
-
+import inspect
 import logging
 from typing import Optional, Any
 from Pythagoras import NeatStr
@@ -22,30 +22,34 @@ class LoggableObject:
 
     parent_logger_name: str
     reveal_identity: bool
+    reveal_calling_method: bool
     selflog_prefix: str = "__selflog__: "
     logging_level: Optional[int] = None
 
     def __init__(self
+             , *
              , parent_logger_name: str = "Pythagoras"
              , reveal_loggers_identity: bool = True
              , new_logging_handler: logging.Handler = None
              , new_logging_level: Optional[int] = None
+             , reveal_calling_method: bool = False
              , new_logging_formatter: logging.Formatter = None
              ) -> None:
         assert len(parent_logger_name), "parent_logger_name can not be empty"
         self.parent_logger_name = parent_logger_name
         self.reveal_identity = reveal_loggers_identity
+        self.reveal_calling_method = reveal_calling_method
         self.update_parent_logger(
             new_logging_level, new_logging_handler, new_logging_formatter)
 
-    @property
-    def logger(self):
+    def logger(self, suffix = ""):
         logger_name = self.parent_logger_name
         if self.reveal_identity:
             logger_name += "." + type(self).__qualname__
             self_names = NeatStr.object_names(self)
             if len(self_names):
                 logger_name += "." + self_names
+        logger_name += suffix
         return logging.getLogger(logger_name)
 
     def __str__(self) -> str:
@@ -130,6 +134,7 @@ class LoggableObject:
         holding the same object, object's type and str() representation),
         and this string will be used as a message to log.
         """
+
         if level is None:
             level = self.logging_level
 
@@ -141,4 +146,15 @@ class LoggableObject:
             msg_to_log = NeatStr.object_info(
                 msg, div_ch=" / ", stacks_to_skip = 2)
 
-        self.logger.log(level, msg_to_log, *args, **kwargs)
+        suffix = ""
+        if self.reveal_identity and self.reveal_calling_method:
+            frame2 = inspect.stack()[2]
+            calling_method_name = frame2.function
+            if hasattr(self,calling_method_name):
+                try:
+                    if frame2[0].f_locals["self"] is self:
+                        suffix = "." + calling_method_name + "()"
+                except:
+                    suffix = ""
+
+        self.logger(suffix).log(level, msg_to_log, *args, **kwargs)
