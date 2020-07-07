@@ -48,7 +48,7 @@ no feature engineering, no customisation, and no hyperparameter tuning.
  
 ### Core Design Principles 
 
-1. Transparency and explainability
+1. Full explainability on all levels
 2. Pandas-based data representation
 3. OOP and static typing 
 4. SKLearn-inspired interfaces
