@@ -792,12 +792,12 @@ class FileBasedCache(LoggableObject):
         else:
             generator_repr = getattr(data_generator, "__qualname__")
             self.info(
-                f"Starting generating data using {generator_repr}() ...")
+                f"==> Starting generating data using {generator_repr}() .")
             stopwatch.reset_timer(start=True)
             data = data_generator(*arguments, **kw_arguments)
             stopwatch.stop_timer()
             self.info(
-                f"...finished generating data using {generator_repr}()."
+                f"<== Data generation using {generator_repr}() has finished."
                 + f" The process took {str(stopwatch)}. \n")
             if data is None:
                 self.warning(f" {generator_repr}() returned None.")
