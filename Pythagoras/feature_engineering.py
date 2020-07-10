@@ -1,6 +1,6 @@
 import pandas as pd
 from copy import deepcopy
-from typing import Optional, Set
+from typing import Optional, Set, List
 from Pythagoras.util import *
 from Pythagoras.logging import *
 
@@ -151,3 +151,62 @@ class NaN_Inducer(AbstractFeatureMaker):
         log_message = f"<== Returning exactly the same dataframe with no changes."
         self.info(log_message)
         return X
+
+
+class Deduper(AbstractFeatureMaker):
+    """A transformer that removes duplicated columns (features)"""
+
+    keep:str
+    columns_to_keep: List[str]
+    columns_to_drop: List[str]
+
+    def __init__(self, keep="first", *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        assert keep in {"first","last"}
+        self.keep=keep
+        self.columns_to_keep = []
+        self.columns_to_drop = []
+
+    @property
+    def is_fitted(self) -> bool:
+        return bool(len(self.columns_to_keep))
+
+    def fit_transform(self
+                      , X: pd.core.frame.DataFrame
+                      , y=None
+                      ) -> pd.core.frame.DataFrame:
+        log_message = f"==> Starting discovering and removing duplicate "
+        log_message += "features from a dataframe named < "
+        log_message += NeatStr.object_names(X, div_ch=" / ")
+        log_message += f" > with the shape {X.shape}."
+        self.info(log_message)
+
+        X.columns = list(X.columns)
+        X_new = X.T.drop_duplicates(keep=self.keep).T
+        self.columns_to_keep = list(X_new.columns)
+        self.columns_to_drop = list(set(X.columns) - set(X_new.columns))
+
+        log_message = f"<== Dedup has finished, {len(self.columns_to_drop)}"
+        log_message += f" duplicate features have been removed, "
+        log_message += f"{len(self.columns_to_keep)} unique features left."
+        self.info(log_message)
+        return X_new
+
+    def transform(self
+                  , X: pd.core.frame.DataFrame
+                  ) -> pd.core.frame.DataFrame:
+        assert len(self.columns_to_keep)
+        assert set(self.columns_to_keep) <= set(X.columns)
+        assert set(self.columns_to_drop) < set(X.columns)
+        X_new = deepcopy(X[self.columns_to_keep])
+
+        # TODO: add check whether the columns to drop are actually duplicates
+
+        log_message = f"A dataframe named < "
+        log_message += NeatStr.object_names(X, div_ch=" / ")
+        log_message += f" > with the shape {X.shape} "
+        log_message += f"has been transformed by removing"
+        log_message += f" {len(self.columns_to_drop)} duplicate features."
+        self.info(log_message)
+
+        return X_new
