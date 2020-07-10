@@ -59,6 +59,10 @@ class NaN_Inducer(AbstractFeatureMaker):
         self.log_df = None
         self.columns = set()
 
+    @property
+    def is_fitted(self) -> bool:
+        return bool(len(self.columns))
+
     def fit_transform(self
                       , X: pd.core.frame.DataFrame
                       , y = None
