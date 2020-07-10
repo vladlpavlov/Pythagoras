@@ -4,14 +4,30 @@ from typing import Optional, Set
 from Pythagoras.util import *
 from Pythagoras.logging import *
 
+# Workaround to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do not support postponed evaluation
+class AbstractFeatureMaker(LoggableObject):
+    pass
 
 class AbstractFeatureMaker(LoggableObject):
-    """An base class for transformers that create new features"""
+    """A base class for transformers that create new features"""
 
     def __init__(self,  *args, **kwargs) -> None:
         kwargs["reveal_calling_method"] = kwargs.get(
             "reveal_calling_method", True)
         super().__init__(*args, **kwargs)
+
+    def fit(self
+            ,X:pd.core.frame.DataFrame
+            ,y=None
+            ) -> pd.core.frame.DataFrame:
+        raise NotImplementedError
+
+    def stack_fit(self
+            ,base_transformer: AbstractFeatureMaker
+            ) -> pd.core.frame.DataFrame:
+        """Fit a transformer using another, already fitted transformer"""
+        raise NotImplementedError
 
     def fit_transform(self
             ,X:pd.core.frame.DataFrame
@@ -22,6 +38,10 @@ class AbstractFeatureMaker(LoggableObject):
     def transform(self
             ,X:pd.core.frame.DataFrame
             ) -> pd.core.frame.DataFrame:
+        raise NotImplementedError
+
+    @property
+    def is_fitted(self) -> bool:
         raise NotImplementedError
 
 
