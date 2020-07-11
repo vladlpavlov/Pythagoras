@@ -64,9 +64,9 @@ class NaN_Inducer(AbstractFeatureMaker):
         return bool(len(self.columns))
 
     def fit_transform(self
-                      , X: pd.core.frame.DataFrame
-                      , y = None
-                      ) -> pd.core.frame.DataFrame:
+            , X: pd.core.frame.DataFrame
+            , y = None
+            ) -> pd.core.frame.DataFrame:
         self.log_df = pd.DataFrame()
         total_nans = int(X.isna().sum().sum())
         total_values = X.shape[0] * X.shape[1]
@@ -137,8 +137,8 @@ class NaN_Inducer(AbstractFeatureMaker):
         return X_new
 
     def transform(self
-                  , X: pd.core.frame.DataFrame
-                  ) -> pd.core.frame.DataFrame:
+            , X: pd.core.frame.DataFrame
+            ) -> pd.core.frame.DataFrame:
         log_message = "==> A dataframe named < "
         log_message += NeatStr.object_names(X, div_ch=" / ")
         log_message += f" > with shape {X.shape} and"
@@ -172,9 +172,9 @@ class Deduper(AbstractFeatureMaker):
         return bool(len(self.columns_to_keep))
 
     def fit_transform(self
-                      , X: pd.core.frame.DataFrame
-                      , y=None
-                      ) -> pd.core.frame.DataFrame:
+            , X: pd.core.frame.DataFrame
+            , y=None
+            ) -> pd.core.frame.DataFrame:
         log_message = f"==> Starting discovering and removing duplicate "
         log_message += "features from a dataframe named < "
         log_message += NeatStr.object_names(X, div_ch=" / ")
@@ -193,8 +193,8 @@ class Deduper(AbstractFeatureMaker):
         return X_new
 
     def transform(self
-                  , X: pd.core.frame.DataFrame
-                  ) -> pd.core.frame.DataFrame:
+            , X: pd.core.frame.DataFrame
+            ) -> pd.core.frame.DataFrame:
         assert len(self.columns_to_keep)
         assert set(self.columns_to_keep) <= set(X.columns)
         assert set(self.columns_to_drop) < set(X.columns)
