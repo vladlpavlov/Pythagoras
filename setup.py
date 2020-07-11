@@ -28,5 +28,5 @@ setuptools.setup(
     ]
     ,keywords='caching logging regression'
     ,python_requires='>=3.6'
-    ,install_requires=['pandas', 'xxhash']
+    ,install_requires=['pandas', 'xxhash','scikit-learn']
 )
