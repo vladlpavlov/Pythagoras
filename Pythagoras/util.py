@@ -213,7 +213,7 @@ class AssertableObject:
 
 
 ##########################################
-# 1-argument aggretor
+# 1-argument aggretors
 
 def percentile01(data):
     return np.nanpercentile(data, 1)
