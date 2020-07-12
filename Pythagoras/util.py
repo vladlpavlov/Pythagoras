@@ -3,9 +3,13 @@
 # Versions 3.6 and below do not support postponed evaluation
 
 import math
+import numpy as np
 import inspect
 import numbers, time
 from typing import Any, ClassVar
+
+from scipy import stats
+
 
 class TempAttributeAssignmentIfNotNone:
     """Context manager that temporarily changes a value of an object attribute
@@ -206,3 +210,74 @@ class AssertableObject:
     def assert_sanity(self) -> None:
         """Check self for structural consistency; halt if there are errors"""
         raise NotImplementedError
+
+
+##########################################
+# 1-argument aggretor
+
+def percentile01(data):
+    return np.nanpercentile(data, 1)
+
+
+def percentile05(data):
+    return np.nanpercentile(data, 5)
+
+
+def percentile10(data):
+    return np.nanpercentile(data, 10)
+
+
+def percentile20(data):
+    return np.nanpercentile(data, 20)
+
+
+def percentile25(data):
+    return np.nanpercentile(data, 25)
+
+
+def percentile30(data):
+    return np.nanpercentile(data, 30)
+
+
+def percentile40(data):
+    return np.nanpercentile(data, 40)
+
+
+def percentile50(data):
+    return np.nanpercentile(data, 50)
+
+
+def percentile60(data):
+    return np.nanpercentile(data, 60)
+
+
+def percentile70(data):
+    return np.nanpercentile(data, 70)
+
+
+def percentile75(data):
+    return np.nanpercentile(data, 75)
+
+
+def percentile80(data):
+    return np.nanpercentile(data, 80)
+
+
+def percentile90(data):
+    return np.nanpercentile(data, 90)
+
+
+def percentile95(data):
+    return np.nanpercentile(data, 95)
+
+
+def percentile99(data):
+    return np.nanpercentile(data, 99)
+
+
+def minmode(data):
+    return min(stats.mode(data, nan_policy="omit")[0])
+
+
+def maxmode(data):
+    return -min(stats.mode(-data, nan_policy="omit")[0])
