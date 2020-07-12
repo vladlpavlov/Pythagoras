@@ -215,17 +215,18 @@ class Deduper(AbstractFeatureMaker):
         return X_new
 
 
-class NumericNaNsFiller(AbstractFeatureMaker):
+class NumericImputer(AbstractFeatureMaker):
     """A transformer that creates NaN-less versions of numeric columns"""
 
     nan_aggr_funcs: Optional[List[Any]]
     nan_fill_values: Optional[pd.core.frame.DataFrame]
 
     def __init__(self
-                 , aggr_funcs = [np.min, np.max, np.mean,percentile50 , minmode, maxmode]
-                 , *args
-                 , **kwargs
-                 ) -> None:
+             , aggr_funcs =
+                [np.min, np.max, np.mean, percentile50 , minmode, maxmode]
+             , *args
+             , **kwargs
+             ) -> None:
         super().__init__(*args, **kwargs)
         self.nan_fill_values = None
         self.nan_aggr_funcs = aggr_funcs
@@ -236,9 +237,9 @@ class NumericNaNsFiller(AbstractFeatureMaker):
         return self.nan_fill_values is not None
 
     def fit_transform(self
-                      , X: pd.core.frame.DataFrame
-                      , y=None
-                      ) -> pd.core.frame.DataFrame:
+            , X: pd.core.frame.DataFrame
+            , y=None
+            ) -> pd.core.frame.DataFrame:
 
         X_num = X.select_dtypes(include="number")
         num_nans = int(X_num.isna().sum().sum())
@@ -266,8 +267,8 @@ class NumericNaNsFiller(AbstractFeatureMaker):
         return self.transform(X_num)
 
     def transform(self
-                  , X: pd.core.frame.DataFrame
-                  ) -> pd.core.frame.DataFrame:
+            , X: pd.core.frame.DataFrame
+            ) -> pd.core.frame.DataFrame:
 
         assert self.is_fitted
         X_num = X.select_dtypes(include="number")
