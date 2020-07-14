@@ -6,6 +6,9 @@ from numpy import mean, median
 
 from Pythagoras.util import *
 from Pythagoras.logging import *
+from Pythagoras.caching import *
+from Pythagoras.feature_engineering import *
+from Pythagoras.regression import *
 
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
