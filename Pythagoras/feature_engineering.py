@@ -21,26 +21,39 @@ class AbstractFeatureMaker(LoggableObject):
         super().__init__(*args, **kwargs)
 
     def fit(self
-            ,X:pd.core.frame.DataFrame
-            ,y=None
-            ) -> pd.core.frame.DataFrame:
-        raise NotImplementedError
+            ,X:pd.DataFrame
+            ,y:Optional[pd.Series]=None
+            ) -> AbstractFeatureMaker:
 
-    def stack_fit(self
-            ,base_transformer: AbstractFeatureMaker
-            ) -> pd.core.frame.DataFrame:
-        """Fit a transformer using another, already fitted transformer"""
-        raise NotImplementedError
+        if type(self) == AbstractFeatureMaker:
+            raise NotImplementedError
+
+        if y is not None:
+            X.sort_index(inplace=True)
+            y.sort_index(inplace=True)
+            assert (X.index == y.index).all()
+
+        return self
+
 
     def fit_transform(self
-            ,X:pd.core.frame.DataFrame
-            ,y=None
-            ) -> pd.core.frame.DataFrame:
-        raise NotImplementedError
+            ,X:pd.DataFrame
+            ,y:Optional[pd.Series]=None
+            ) -> pd.DataFrame:
+
+        if type(self) == AbstractFeatureMaker:
+            raise NotImplementedError
+
+        if y is not None:
+            X.sort_index(inplace=True)
+            y.sort_index(inplace=True)
+            assert (X.index == y.index).all()
+
+        return X
 
     def transform(self
-            ,X:pd.core.frame.DataFrame
-            ) -> pd.core.frame.DataFrame:
+            ,X:pd.DataFrame
+            ) -> pd.DataFrame:
         raise NotImplementedError
 
     @property
@@ -51,7 +64,7 @@ class AbstractFeatureMaker(LoggableObject):
 class NaN_Inducer(AbstractFeatureMaker):
     """A transformer that adds random NaN-s to a dataset"""
 
-    log_df: Optional[pd.core.frame.DataFrame]
+    log_df: Optional[pd.DataFrame]
     columns: Set[str]
     min_nan_level: float
 
@@ -67,9 +80,9 @@ class NaN_Inducer(AbstractFeatureMaker):
         return bool(len(self.columns))
 
     def fit_transform(self
-            , X: pd.core.frame.DataFrame
-            , y = None
-            ) -> pd.core.frame.DataFrame:
+            , X: pd.DataFrame
+            , y:Optional[pd.Series]=None
+            ) -> pd.DataFrame:
         self.log_df = pd.DataFrame()
         total_nans = int(X.isna().sum().sum())
         total_values = X.shape[0] * X.shape[1]
@@ -140,8 +153,8 @@ class NaN_Inducer(AbstractFeatureMaker):
         return X_new
 
     def transform(self
-            , X: pd.core.frame.DataFrame
-            ) -> pd.core.frame.DataFrame:
+            , X: pd.DataFrame
+            ) -> pd.DataFrame:
         log_message = "==> A dataframe named < "
         log_message += NeatStr.object_names(X, div_ch=" / ")
         log_message += f" > with shape {X.shape} and"
@@ -175,9 +188,9 @@ class Deduper(AbstractFeatureMaker):
         return bool(len(self.columns_to_keep))
 
     def fit_transform(self
-            , X: pd.core.frame.DataFrame
-            , y=None
-            ) -> pd.core.frame.DataFrame:
+            , X: pd.DataFrame
+            , y:Optional[pd.Series]=None
+            ) -> pd.DataFrame:
         log_message = f"==> Starting discovering and removing duplicate "
         log_message += "features from a dataframe named < "
         log_message += NeatStr.object_names(X, div_ch=" / ")
@@ -196,8 +209,8 @@ class Deduper(AbstractFeatureMaker):
         return X_new
 
     def transform(self
-            , X: pd.core.frame.DataFrame
-            ) -> pd.core.frame.DataFrame:
+            , X: pd.DataFrame
+            ) -> pd.DataFrame:
         assert len(self.columns_to_keep)
         assert set(self.columns_to_keep) <= set(X.columns)
         assert set(self.columns_to_drop) < set(X.columns)
@@ -219,7 +232,7 @@ class NumericImputer(AbstractFeatureMaker):
     """A transformer that creates NaN-less versions of numeric columns"""
 
     nan_aggr_funcs: Optional[List[Any]]
-    nan_fill_values: Optional[pd.core.frame.DataFrame]
+    nan_fill_values: Optional[pd.DataFrame]
 
     def __init__(self
              , aggr_funcs =
@@ -237,9 +250,9 @@ class NumericImputer(AbstractFeatureMaker):
         return self.nan_fill_values is not None
 
     def fit_transform(self
-            , X: pd.core.frame.DataFrame
-            , y=None
-            ) -> pd.core.frame.DataFrame:
+            , X:pd.DataFrame
+            , y:Optional[pd.Series]=None
+            ) -> pd.DataFrame:
 
         X_num = X.select_dtypes(include="number")
         num_nans = int(X_num.isna().sum().sum())
@@ -267,8 +280,8 @@ class NumericImputer(AbstractFeatureMaker):
         return self.transform(X_num)
 
     def transform(self
-            , X: pd.core.frame.DataFrame
-            ) -> pd.core.frame.DataFrame:
+            , X: pd.DataFrame
+            ) -> pd.DataFrame:
 
         assert self.is_fitted
         X_num = X.select_dtypes(include="number")
