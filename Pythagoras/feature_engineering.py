@@ -3,6 +3,8 @@ from copy import deepcopy
 from typing import Optional, Set, List
 
 from numpy import mean, median
+from sklearn import clone
+from sklearn.model_selection import cross_val_score, RepeatedKFold
 
 from Pythagoras.util import *
 from Pythagoras.logging import *
@@ -591,3 +593,16 @@ class NumericImputer(PFeatureMaker):
         self.info(log_message)
 
         return self.finish_transforming(result, write_to_log=False)
+
+
+class CV_Score(LoggableObject):
+    def __init__(self, model, n_splits=3, n_repeats=3):
+        self.rkf = RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats)
+        self.model = clone(model)
+
+    def __call__(self, X, y, ):
+        self.scores_ = cross_val_score(self.model, X, y, cv=self.rkf,
+                                       scoring="r2")
+        mean_score = np.mean(self.scores_)
+        median_score = np.median(self.scores_)
+        return min(mean_score, median_score)
