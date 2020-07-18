@@ -281,3 +281,12 @@ def minmode(data):
 
 def maxmode(data):
     return -min(stats.mode(-data, nan_policy="omit")[0])
+
+def root2(x):
+    return x**0.5
+
+def power2(x):
+    return x*x
+
+def power3(x):
+    return x*x*x
