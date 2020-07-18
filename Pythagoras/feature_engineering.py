@@ -606,3 +606,146 @@ class CV_Score(LoggableObject):
         mean_score = np.mean(self.scores_)
         median_score = np.median(self.scores_)
         return min(mean_score, median_score)
+
+
+class NumericFuncTransformer(PFeatureMaker):
+    """A transformer that applies math functions to numeric features"""
+
+    columns_to_a_transform_: Optional[List[str]]
+    columns_to_p_transform_: Optional[List[str]]
+    positive_arg_functions: List[Any]
+    any_arg_functions: List[Any]
+
+    def __init__(self
+                 , positive_arg_functions=[np.log1p, root2, power2]
+                 , any_arg_functions=[power3]
+                 , *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.set_params(positive_arg_functions, any_arg_functions)
+
+    def get_params(self, deep=True):
+        params = {"positive_arg_functions": self.positive_arg_functions
+            , "any_arg_functions": self.any_arg_functions}
+        return params
+
+    def set_params(self
+                   , positive_arg_functions
+                   , any_arg_functions
+                   ) -> PFeatureMaker:
+
+        for f in positive_arg_functions + any_arg_functions:
+            assert callable(f)
+
+        self.positive_arg_functions = positive_arg_functions
+        self.any_arg_functions = any_arg_functions
+        self.columns_to_p_transform = None
+        self.columns_to_a_transform = None
+        return self
+
+    @property
+    def is_fitted_(self):
+        result = (self.columns_to_a_transform_ is not None
+                  and self.columns_to_p_transform_ is not None)
+        return result
+
+    @property
+    def input_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def output_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def input_columns_(self) -> List[str]:
+        assert self.is_fitted_
+        return sorted(set(self.columns_to_a_transform_)
+                      | set(self.columns_to_p_transform_))
+
+    @property
+    def output_columns_(self) -> List[str]:
+
+        all_columns = []
+
+        for a_func in self.any_arg_functions:
+            f_columns = [a_func.__name__ + "(" + c + ")"
+                         for c in self.columns_to_a_transform_]
+            all_columns += f_columns
+
+        for p_func in self.positive_arg_functions:
+            f_columns = [p_func.__name__ + "(" + c + ")"
+                         for c in self.columns_to_p_transform_]
+            all_columns += f_columns
+
+        return sorted(all_columns)
+
+    def fit_transform(self
+                      , X: pd.DataFrame
+                      , y: Optional[pd.Series] = None
+                      ) -> pd.core.frame.DataFrame:
+
+        (X, y) = self.start_fitting(X, y)
+
+        self.columns_to_p_transform_ = None
+        self.columns_to_a_transform_ = None
+
+        X_numbers = X.select_dtypes(include="number")
+        assert len(X_numbers.columns)
+        self.columns_to_a_transform_ = list(X_numbers.columns)
+
+        feature_mins = X_numbers.min()
+        p_transformable_features = feature_mins[feature_mins >= 0]
+        self.columns_to_p_transform_ = list(p_transformable_features.index)
+
+        result = self.transform(X)
+
+        return result
+
+    def transform(self
+                  , X: pd.core.frame.DataFrame
+                  ) -> pd.core.frame.DataFrame:
+
+        all_funcs = self.positive_arg_functions + self.any_arg_functions
+        all_funcs = [f.__name__ for f in all_funcs]
+
+        X_numbers = self.start_transforming(
+            X, write_to_log=False).select_dtypes("number")
+
+        log_message = f"==> Starting generating features "
+        log_message += f"using a {type(X).__name__} named < "
+        log_message += NeatStr.object_names(X, div_ch=" / ")
+        log_message += f" > with the shape {X.shape} and the following "
+        log_message += f"{len(all_funcs)} functions: {all_funcs}."
+        self.info(log_message)
+
+        all_transformations = []
+
+        for a_func in self.any_arg_functions:
+            X_new = a_func(X_numbers)
+            X_new.columns = [a_func.__name__ + "(" + c + ")" for c in X_new]
+            all_transformations += [X_new]
+
+        if len(self.columns_to_p_transform_):
+            X_positive_numbers = deepcopy(
+                X_numbers[self.columns_to_p_transform_])
+            negative_flags = (X_positive_numbers < 0)
+            below_zero = negative_flags.sum().sum()
+            X_positive_numbers[negative_flags] = 0
+
+            if below_zero > 0:
+                log_message = f"{below_zero} negative values were found in "
+                log_message += "the features, scheduled for transformation "
+                log_message += "via functions that expect positive input "
+                log_message += "values. Negatives will be replaced "
+                log_message += "with zeros."
+                self.warning(log_message)
+
+            for p_func in self.positive_arg_functions:
+                X_new = p_func(X_positive_numbers)
+                X_new.columns = [p_func.__name__ + "(" + c + ")" for c in
+                                 X_new]
+                all_transformations += [X_new]
+
+        result = pd.concat(all_transformations, axis=1)
+
+        return self.finish_transforming(result)
