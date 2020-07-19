@@ -121,29 +121,6 @@ class PEstimator(LoggableObject):
     def output_can_have_nans(self) -> bool:
         raise NotImplementedError
 
-    def fit_transform(self
-            ,X:pd.DataFrame
-            ,y:Optional[pd.Series]=None
-            ) -> pd.DataFrame:
-
-        if type(self) == PFeatureMaker:
-            raise NotImplementedError
-
-        if y is not None:
-            X.sort_index(inplace=True)
-            y.sort_index(inplace=True)
-            assert (X.index == y.index).all()
-
-        return X
-
-    def transform(self
-            ,X:pd.DataFrame
-            ) -> pd.DataFrame:
-        raise NotImplementedError
-
-    @property
-    def is_fitted(self) -> bool:
-        raise NotImplementedError
 
 
 class PFeatureMaker(PEstimator):
@@ -197,6 +174,12 @@ class PFeatureMaker(PEstimator):
             assert X.isna().sum().sum() == 0
 
         return X
+
+    def fit_transform(self
+            ,X:pd.DataFrame
+            ,y:Optional[pd.Series]=None
+            ) -> pd.DataFrame:
+        raise NotImplementedError
 
 
 class NaN_Inducer(PFeatureMaker):
