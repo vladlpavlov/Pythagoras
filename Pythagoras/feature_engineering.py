@@ -1,6 +1,6 @@
 import pandas as pd
 from copy import deepcopy
-from typing import Optional, Set, List
+from typing import Optional, Set, List, Dict
 
 from numpy import mean, median
 from sklearn import clone
@@ -650,5 +650,435 @@ class NumericFuncTransformer(PFeatureMaker):
                 all_transformations += [X_new]
 
         result = pd.concat(all_transformations, axis=1)
+
+        return self.finish_transforming(result)
+
+class CatSelector(PFeatureMaker):
+    """ Abstract base class that finds categorical features"""
+
+    min_cat_size: int
+    max_uniques: int
+    cat_columns_: Optional[Set[str]]
+    cat_values_: Optional[Dict[str, Set[str]]]
+
+    def __init__(self
+                 , min_cat_size: int = 8
+                 , max_uniques: int = 100
+                 , *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.set_params(min_cat_size, max_uniques)
+
+    def get_params(self, deep=True):
+        params = {"min_cat_size": self.min_cat_size
+            , "max_uniques": self.max_uniques}
+        return params
+
+    def set_params(self
+                   , min_cat_size
+                   , max_uniques):
+        self.min_cat_size = min_cat_size
+        self.max_uniques = max_uniques
+        self.cat_columns_ = None
+        self.cat_values_ = None
+        return self
+
+    def start_fitting(self
+                      , X: Any
+                      , y: Any
+                      , write_to_log: bool = True
+                      ) -> pd.DataFrame:
+
+        X, y = super().start_fitting(X, y, write_to_log)
+        uniques = X.nunique()
+        uniques = uniques[uniques <= self.max_uniques]
+
+        self.cat_columns_ = set(uniques.index)
+        self.cat_values_ = dict()
+
+        for c in self.cat_columns_:
+            uniques = X[c].value_counts()
+            uniques = uniques[uniques >= self.min_cat_size]
+            self.cat_values_[c] = set(uniques.index)
+            if len(self.cat_values_[c]) == 0:
+                del self.cat_values_[c]
+
+        self.cat_columns_ = set(self.cat_values_)
+
+        return deepcopy(X[self.cat_columns_]), y
+
+
+class TargetMultiEncoder(CatSelector):
+    pass
+
+
+class TargetMultiEncoder(CatSelector):
+    tme_agg_funcs: List[Any]
+    tme_cat_values_: Optional[Dict[str, pd.DataFrame]]
+    tme_default_values_: Optional[Dict[str, float]]
+
+    def __init__(self
+                 , min_cat_size=8
+                 , max_uniques=100
+                 , agg_funcs=[
+                        percentile05
+                        , percentile50
+                        , percentile95
+                        , minmode
+                        , maxmode]
+                 , *args
+                 , **kwargs
+                 ) -> None:
+        super().__init__(*args, **kwargs)
+        self.set_params(min_cat_size, max_uniques, agg_funcs)
+
+    def get_params(self, deep=True):
+        params = super().get_params(deep)
+        params["tme_agg_funcs"] = self.tme_agg_funcs
+        return params
+
+    def set_params(self
+                   , min_cat_size
+                   , max_uniques
+                   , tme_agg_funcs=[
+                        percentile05
+                        , percentile50
+                        , percentile95
+                        , minmode
+                        , maxmode]
+                   ):
+        super().set_params(min_cat_size, max_uniques)
+        self.tme_agg_funcs = deepcopy(tme_agg_funcs)
+        self.tme_cat_values_ = None
+        self.tme_default_values_ = None
+        self.nan_string: str = "<<<<-----NaN----->>>>:" + str(id(self))
+        return self
+
+    @property
+    def is_fitted_(self):
+        return self.tme_default_values_ is not None
+
+    @property
+    def input_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def output_can_have_nans(self) -> bool:
+        return False
+
+    @property
+    def input_columns_(self) -> List[str]:
+        return sorted(self.tme_cat_values_)
+
+    @property
+    def output_columns_(self) -> List[str]:
+        assert self.is_fitted_
+        return sorted([self.tme_column_name(f, c)
+                       for c in self.tme_cat_values_ for f in
+                       self.tme_agg_funcs])
+
+    def tme_column_name(self, func, column: str) -> str:
+        if callable(func):
+            func = func.__name__
+        name = "targ_enc_" + func + "(" + column + ")"
+        return name
+
+    def convert_X(self, X: pd.DataFrame) -> pd.DataFrame:
+
+        assert set(X.columns) == set(self.cat_columns_)
+
+        for cat in X:
+            X[cat] = X[cat].astype("object")
+
+        X.fillna(self.nan_string, inplace=True)
+
+        for cat in self.cat_values_:
+            self.cat_values_[cat] |= {self.nan_string}
+            nan_idx = ~ (X[cat].isin(self.cat_values_[cat]))
+            X.loc[nan_idx, cat] = self.nan_string
+
+        return X
+
+    def fit_transform(self
+                      , X: pd.DataFrame
+                      , y
+                      ) -> TargetMultiEncoder:
+
+        X, y = self.start_fitting(X, y)
+
+        X = self.convert_X(X)
+
+        assert len(X) == len(y)
+
+        log_message = f"A total of {len(X.columns)} features "
+        log_message += f"will be encoded using {len(self.tme_agg_funcs)} "
+        log_message += f"functions: {[f.__name__ for f in self.tme_agg_funcs]}."
+        self.info(log_message)
+
+        columns = deepcopy(X.columns)
+        taget_name = "TAGET_" + y.name + "_TARGET"
+        assert taget_name not in columns
+        X[taget_name] = y
+
+        self.tme_default_values_ = {}
+        self.tme_cat_values_ = {}
+        for f in self.tme_agg_funcs:
+            self.tme_default_values_[f] = f(X[taget_name])
+
+        for col in columns:
+
+            v = pd.pivot_table(X[[col, taget_name]]
+                               , values=taget_name
+                               , index=col
+                               , aggfunc=self.tme_agg_funcs
+                               , dropna=False)
+
+            n_nans = v.isna().sum().sum()
+            if n_nans:
+                log_message = f"Got {n_nans} NaN-s while generating "
+                log_message += f"target encoding values for {col}."
+                log_message += " Replacing with default values."
+                self.warning(log_message)
+
+            for i in range(len(self.tme_agg_funcs)):
+                a_func = self.tme_agg_funcs[i]
+                def_value = self.tme_default_values_[a_func]
+                v[v.columns[i]] = v[v.columns[i]].fillna(def_value)
+
+            v.columns = [
+                self.tme_column_name(c[0], col) for c in v.columns]
+
+            self.tme_cat_values_[col] = v
+
+        X.drop(columns=taget_name, inplace=True)
+
+        result = self.transform(X)
+
+        return result
+
+    def transform(self
+                  , X: pd.DataFrame
+                  ) -> pd.DataFrame:
+
+        X = self.start_transforming(X)
+
+        X = self.convert_X(X)
+
+        columns = deepcopy(X.columns)
+
+        for col in X.columns:
+
+            index_col_name = "____>>__INDEX_<<_____"+str(id(self))
+            X[index_col_name] = X.index
+            X = X.merge(self.tme_cat_values_[col], on=col, how="inner")
+            X.index = X[index_col_name]
+            X.drop(columns=index_col_name, inplace = True)
+
+            for i in range(len(self.tme_agg_funcs)):
+                a_func = self.tme_agg_funcs[i]
+                a_column = self.tme_column_name(a_func, col)
+                def_value = self.tme_default_values_[a_func]
+                n_nans = X[a_column].isna().sum()
+                if n_nans:
+                    log_message = f"Found {n_nans} NaN-s in column {a_column}"
+                    log_message += f" after replacing know values"
+                    log_message += f" with targed-encodings,"
+                    log_message += f" filling NaN-s with default value."
+                    self.warning(log_message)
+                    X[a_column] = X[a_column].fillna(def_value)
+
+            X.drop(columns=col, inplace=True)
+
+        return self.finish_transforming(X)
+
+
+class LOOMeanTargetEncoder(CatSelector):
+    """Leave-One-Out Mean Target Encoder for categorical features"""
+
+    encodable_columns_: Optional[Set[str]]
+    sums_counts_: Optional[Dict[str, Dict[str, float]]]
+
+    def __init__(self
+                 , min_cat_size: int = 10
+                 , max_uniques: int = 50
+                 , *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.set_params(min_cat_size, max_uniques)
+
+    def get_params(self, deep=True):
+        super().get_params(deep)
+        return params
+
+    def set_params(self
+                   , min_cat_size
+                   , max_uniques):
+        super().set_params(min_cat_size, max_uniques)
+        self.sums_counts_ = None
+        self.encodable_columns_ = None
+        return self
+
+    @property
+    def is_fitted_(self):
+        return self.sums_counts_ is not None
+
+    @property
+    def input_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def output_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def input_columns_(self) -> List[str]:
+        return sorted(self.encodable_columns_)
+
+    @property
+    def output_columns_(self) -> List[str]:
+        return sorted(["LOOMean(" + c + ")" for c in self.input_columns_])
+
+    def fit_transform(self
+                      , X: pd.DataFrame
+                      , y=None
+                      ) -> pd.DataFrame:
+
+        X, y = self.start_fitting(X, y)
+
+        self.sums_counts_ = dict()
+
+        for c in self.cat_columns_:
+            self.sums_counts_[c] = dict()
+            for v in set(self.cat_values_[c]):
+                ix = (X[c] == v)
+                self.sums_counts_[c][v] = (y[ix].sum(), ix.sum())
+
+        X = X[self.cat_columns_]
+
+        nontrivial = X.nunique()
+        nontrivial = nontrivial[nontrivial > 1]
+        self.encodable_columns_ = set(nontrivial.index)
+        to_delete = set(self.cat_columns_) - set(self.encodable_columns_)
+        for c in to_delete:
+            del self.sums_counts_[c]
+
+        for c in self.sums_counts_:
+            vals = np.full(len(X), np.nan)
+            for cat, sum_count in self.sums_counts_[c].items():
+                #                 if not sum_count[1]>1:
+                #                     self.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!! not sum_count[1]>1")
+                ix = (X[c] == cat)
+                vals[ix] = (sum_count[0] - y[ix]) / (sum_count[1] - 1)
+            X[c] = vals
+
+        X = X[self.encodable_columns_]
+        X.columns = ["LOOMean(" + c + ")" for c in X.columns]
+
+        return self.finish_transforming(X)
+
+    def transform(self
+                  , X: pd.DataFrame
+                  ) -> pd.DataFrame:
+
+        X = self.start_transforming(X)
+
+        for c in self.input_columns_:
+            vals = np.full(len(X), np.nan)
+            for cat, sum_count in self.sums_counts_[c].items():
+                #                 if not sum_count[1]>0:
+                #                     self.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!! not sum_count[1]>0")
+                vals[X[c] == cat] = sum_count[0] / sum_count[1]
+            X[c] = vals
+
+        X.columns = ["LOOMean(" + c + ")" for c in X.columns]
+
+        return self.finish_transforming(X)
+
+
+class DummiesMaker(CatSelector):
+    dummy_names_: Optional[str]
+
+    def __init__(self
+                 , min_cat_size: int = 8
+                 , max_uniques: int = 100
+                 , *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.set_params(min_cat_size, max_uniques)
+
+    def get_params(self, deep=True):
+        params = super().get_params(deep)
+        return params
+
+    def set_params(self
+                   , min_cat_size
+                   , max_uniques):
+        super().set_params(min_cat_size, max_uniques)
+        self.dummy_names_ = None
+        return self
+
+    @property
+    def is_fitted_(self):
+        return self.dummy_names_ is not None
+
+    @property
+    def input_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def output_can_have_nans(self) -> bool:
+        return False
+
+    @property
+    def input_columns_(self) -> List[str]:
+        return sorted(self.cat_columns_)
+
+    @property
+    def output_columns_(self) -> List[str]:
+        return sorted(self.dummy_names_)
+
+    def _get_dummies(self, feature: pd.Series) -> pd.DataFrame:
+
+        all_dummies = []
+        new_dummy = feature.isna().astype(int)
+        new_dummy.name = f"{feature.name}==eNaN"
+        all_dummies += [new_dummy]
+
+        for val in self.cat_values_[feature.name]:
+            new_dummy = (feature == val).astype(int)
+            new_dummy.name = f"{feature.name}=={str(val)}"
+            all_dummies += [new_dummy]
+
+        result = pd.concat(all_dummies, axis=1)
+
+        return result
+
+    def fit_transform(self
+                      , X: pd.DataFrame
+                      , y=None
+                      ) -> pd.DataFrame:
+
+        X, y = self.start_fitting(X, y)
+
+        all_dummies = []
+
+        for col in self.cat_columns_:
+            all_dummies += [self._get_dummies(X[col])]
+
+        result = pd.concat(all_dummies, axis=1)
+
+        self.dummy_names_ = list(result.columns)
+
+        return self.finish_transforming(result)
+
+    def transform(self
+                  , X: pd.DataFrame
+                  ) -> pd.DataFrame:
+
+        X = self.start_transforming(X)
+
+        all_dummies = []
+
+        for col in self.cat_columns_:
+            all_dummies += [self._get_dummies(X[col])]
+
+        result = pd.concat(all_dummies, axis=1)
 
         return self.finish_transforming(result)
