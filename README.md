@@ -7,10 +7,10 @@
 
 ### Main Use Cases
 
-1. ***Speed up*** your Data Science code by employing persistent file-based caching 
-2. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
-3. Fully ***automate*** your ***feature engineering*** process and free your time (COMING SOON)
-4. ***Improve accuracy*** of your predictions by easily creating ***best-in-class regression models*** (COMING SOON)
+1. ***Improve accuracy*** of your predictions by using ***highly-efficient regression model*** 
+2. ***Speed up*** your Data Science code by employing persistent file-based caching 
+3. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
+4. Fully ***automate*** your ***feature engineering*** process and free your time (COMING SOON) 
 
 ### How To Get It?
 
@@ -32,8 +32,8 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Major Pythagoras Components
 
-* **DeterministicGarden**: Efficient regression algorithm based on assembling week 
-learnes that are built by boosted greedy stepwise feature selectors with early stopping.
+* **DeterministicGarden**: Efficient regression algorithm: an assembly of week 
+learnes that are built by boosted greedy stepwise feature selection process with early stopping.
 
 * **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes
 
@@ -42,8 +42,7 @@ learnes that are built by boosted greedy stepwise feature selectors with early s
 * **FeatureShower**: Automatic feature generator (COMING SOON) 
 
 * **RegressionMage**: Top-performing regression algorithm that does everything for you 
-right out-of-the-box (COMING SOON). It requires from its users: no EDA, no data cleaning, 
-no feature engineering, no customisation, and no hyperparameter tuning.
+right out-of-the-box (COMING SOON). 
 
 ### Tutorials
 
@@ -53,9 +52,9 @@ no feature engineering, no customisation, and no hyperparameter tuning.
 ### Core Design Principles 
 
 1. Full explainability on all levels
-2. Pandas-based data representation
-3. OOP and static typing 
-4. SKLearn-inspired interfaces
+2. Pandas-based data representation 
+3. Compatibility with SKLearn
+4. OOP and static typing
 
 ### Key Contacts
 
