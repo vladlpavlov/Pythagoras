@@ -47,7 +47,7 @@ class NewMagicalGarden(PRegressor):
         self.numeric_imputer = NumericImputer()
         self.target_multi_encoder = TargetMultiEncoder()
         self.deduper = Deduper()
-        self.d_garden = DeterministicGarden()
+        self.s_garden = SimpleGarden()
         self.is_fitted_flag_ = False
         return self
 
@@ -93,7 +93,7 @@ class NewMagicalGarden(PRegressor):
 
         X_final = self.deduper.fit_transform(X_full, y)
 
-        self.d_garden.fit(X_final, y)
+        self.s_garden.fit(X_final, y)
         self.is_fitted_flag_ = True
         return self
 
@@ -115,7 +115,7 @@ class NewMagicalGarden(PRegressor):
             [X_numeric_no_NaNs, X_target_encoded_cats,X_dummies], axis=1)
 
         X_final = self.deduper.transform(X_full)
-        result = self.d_garden.predict(X_final)
+        result = self.s_garden.predict(X_final)
         return self.finish_predicting(result)
 
 

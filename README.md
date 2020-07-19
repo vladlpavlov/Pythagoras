@@ -32,7 +32,7 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Major Pythagoras Components
 
-* **DeterministicGarden**: Efficient regression algorithm: an assembly of week 
+* **SimpleGarden**: Efficient regression algorithm: an assembly of week 
 learnes that are built by boosted greedy stepwise feature selection process with early stopping.
 
 * **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes

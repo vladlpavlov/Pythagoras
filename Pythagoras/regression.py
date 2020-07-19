@@ -93,7 +93,7 @@ class PRegressor(PEstimator):
 
 
 
-class DeterministicGarden(PRegressor):
+class SimpleGarden(PRegressor):
     pass
 
 
@@ -116,7 +116,7 @@ class DeterministicGarden(PRegressor):
                    , cv_score_threshold: Optional[float] = None
                    , cv_score_threshold_multiplier: Optional[float] = 0.75
                    , n_folds: int = 5
-                   ) -> DeterministicGarden:
+                   ) -> SimpleGarden:
 
         assert (int(cv_score_threshold is None) +
                 int(cv_score_threshold_multiplier is None) == 1)
@@ -187,7 +187,7 @@ class DeterministicGarden(PRegressor):
     def fit(self
             , X: pd.DataFrame
             , y: pd.Series
-            ) -> DeterministicGarden:
+            ) -> SimpleGarden:
 
         X, y = self.start_fitting(X, y)
 
