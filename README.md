@@ -7,10 +7,10 @@
 
 ### Main Use Cases
 
-1. ***Improve accuracy*** of your predictions by using ***highly-efficient regression model*** 
-2. ***Speed up*** your Data Science code by employing persistent file-based caching 
+1. ***Improve accuracy*** of your predictions by employing highly-efficient regression model
+2. ***Speed up*** your Data Science code by adding persistent file-based caching 
 3. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
-4. Fully ***automate*** your ***feature engineering*** process and free your time (COMING SOON) 
+4. Fully ***automate*** your ***data cleaning and feature engineering*** processes (COMING SOON) 
 
 ### How To Get It?
 
