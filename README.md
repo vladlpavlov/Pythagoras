@@ -32,11 +32,12 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Major Pythagoras Components
 
+* **DeterministicGarden**: Efficient regression algorithm based on assembling week 
+learnes that are built by boosted greedy stepwise feature selectors with early stopping.
+
 * **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes
 
 * **LoggableObject**: Simple base class that provides your objects with easy-to-use story-telling tools
-
-* **DeterministicGarden**: State-of-the-art regression algorithm that outperforms popular ones (COMING SOON)
 
 * **FeatureShower**: Automatic feature generator (COMING SOON) 
 
