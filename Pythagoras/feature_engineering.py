@@ -521,7 +521,7 @@ class NumericFuncTransformer(PFeatureMaker):
 
     def __init__(self
                  , positive_arg_functions=[np.log1p, root2, power2]
-                 , any_arg_functions=[power3]
+                 , any_arg_functions=[passthrough, power3]
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.set_params(positive_arg_functions, any_arg_functions)
@@ -541,8 +541,8 @@ class NumericFuncTransformer(PFeatureMaker):
 
         self.positive_arg_functions = positive_arg_functions
         self.any_arg_functions = any_arg_functions
-        self.columns_to_p_transform = None
-        self.columns_to_a_transform = None
+        self.columns_to_p_transform_ = None
+        self.columns_to_a_transform_ = None
         return self
 
     @property
@@ -605,8 +605,8 @@ class NumericFuncTransformer(PFeatureMaker):
         return result
 
     def transform(self
-                  , X: pd.core.frame.DataFrame
-                  ) -> pd.core.frame.DataFrame:
+                  , X: pd.DataFrame
+                  ) -> pd.DataFrame:
 
         all_funcs = self.positive_arg_functions + self.any_arg_functions
         all_funcs = [f.__name__ for f in all_funcs]

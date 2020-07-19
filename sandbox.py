@@ -29,8 +29,13 @@ Boston = DemoDB("Boston")
 California = DemoDB("California")
 
 nani = NaN_Inducer()
-a = nani.fit_transform(Boston.X, Boston.y)
-b = nani.transform(Boston.X)
+a_nans = nani.fit_transform(Boston.X, Boston.y)
+b_nans = nani.transform(Boston.X)
+
+nft = NumericFuncTransformer()
+a = nft.fit_transform(a_nans,Boston.y)
+
+b = nft.transform(b_nans)
 
 ni = NumericImputer()
 aa = ni.fit_transform(a, Boston.y)

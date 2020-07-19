@@ -7,6 +7,7 @@ import numpy as np
 import inspect
 import numbers, time
 from typing import Any, ClassVar
+from copy import deepcopy
 
 from scipy import stats
 
@@ -290,3 +291,6 @@ def power2(x):
 
 def power3(x):
     return x*x*x
+
+def passthrough(x):
+    return deepcopy(x)
