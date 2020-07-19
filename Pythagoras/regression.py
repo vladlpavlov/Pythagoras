@@ -3,7 +3,7 @@ import pandas as pd
 from Pythagoras.util import *
 from Pythagoras.logging import *
 from Pythagoras.feature_engineering import *
-
+from Pythagoras.caching import *
 
 
 # Workaround to ensure compatibility with Python <= 3.6

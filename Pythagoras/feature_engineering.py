@@ -9,16 +9,16 @@ from sklearn.model_selection import cross_val_score, RepeatedKFold
 from Pythagoras.util import *
 from Pythagoras.logging import *
 from Pythagoras.caching import *
-from Pythagoras.feature_engineering import *
-from Pythagoras.regression import *
 
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
+# class PEstimator(LoggableObject):
+#     pass
+
 class PEstimator(LoggableObject):
     pass
 
 class PEstimator(LoggableObject):
-
 
     def __init__(self, *args, **kwargs):
         kwargs["reveal_calling_method"] = kwargs.get(
@@ -126,7 +126,7 @@ class PEstimator(LoggableObject):
             ,y:Optional[pd.Series]=None
             ) -> pd.DataFrame:
 
-        if type(self) == AbstractFeatureMaker:
+        if type(self) == PFeatureMaker:
             raise NotImplementedError
 
         if y is not None:
