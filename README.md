@@ -24,7 +24,10 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Dependencies
 
-* [pandas](https://pypi.org/project/pandas/) 
+* [pandas](https://pandas.pydata.org/)
+* [scikit-learn](https://scikit-learn.org/) 
+* [numpy](https://numpy.org/)
+* [scipy](https://www.scipy.org/)
 * [xxhash](https://pypi.org/project/xxhash/)
 
 ### Major Pythagoras Components
