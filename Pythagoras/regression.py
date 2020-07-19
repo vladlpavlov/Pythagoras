@@ -97,7 +97,7 @@ class SimpleGarden(PRegressor):
     pass
 
 
-class DeterministicGarden(PRegressor):
+class SimpleGarden(PRegressor):
 
     def __init__(self
                  , *args
