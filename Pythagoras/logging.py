@@ -157,5 +157,6 @@ class LoggableObject:
                         suffix = "." + calling_method_name + "()"
                 except:
                     suffix = ""
-        suffix += f" [pid:{os.getpid()}]"
+        if self.reveal_identity:
+            suffix += f" [pid:{os.getpid()}]"
         self.logger(suffix).log(level, msg_to_log, *args, **kwargs)
