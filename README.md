@@ -32,16 +32,16 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Major Pythagoras Components
 
-* **SimpleGarden**: Efficient regression algorithm: an assembly of week 
-learnes that are constructed by boosted greedy feature selectors.
+* **SimpleGarden**: Efficient regression meta-algorithm:
+boosted greedy feature selection factories create an assembly of parsimonious regressors
+
+* **FeatureShower**: Automatic data cleaner and feature generator 
 
 * **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes
 
 * **LoggableObject**: Simple base class that provides your objects with easy-to-use story-telling tools
 
-* **FeatureShower**: Automatic feature generator (COMING SOON) 
-
-* **RegressionMage**: Top-performing regression algorithm that does everything for you 
+* **MagicGarden**: Top-performing regression meta-meta-algorithm that does everything for you 
 right out-of-the-box (COMING SOON). 
 
 ### Tutorials

@@ -1083,3 +1083,98 @@ class DummiesMaker(CatSelector):
         result = pd.concat(all_dummies, axis=1)
 
         return self.finish_transforming(result)
+
+
+
+class FeatureShower(PFeatureMaker):
+    pass
+
+
+class FeatureShower(PFeatureMaker):
+    is_fitted_flag_: bool
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.set_params()
+
+    def set_params(self, deep: bool = False) -> FeatureShower:
+        self.nan_inducer = NaN_Inducer()
+        self.dummies_maker = DummiesMaker()
+        self.numeric_func_trnsf = NumericFuncTransformer()
+        self.numeric_imputer = NumericImputer()
+        self.target_multi_encoder = TargetMultiEncoder()
+        self.deduper = Deduper()
+        self.is_fitted_flag_ = False
+        return self
+
+    def get_params(self, deep: bool = False) -> Dict[str, Any]:
+        return {}
+
+    @property
+    def is_fitted_(self):
+        return self.is_fitted_flag_
+
+
+    @property
+    def input_columns_(self) -> List[str]:
+        return self.nan_inducer.input_columns_
+
+
+    @property
+    def output_columns_(self) -> List[str]:
+        return self.deduper.output_columns_
+
+    @property
+    def input_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def output_can_have_nans(self) -> bool:
+        return False
+
+    def fit_transform(self
+                      , X:pd.DataFrame
+                      , y:pd.Series
+                      ) -> pd.DataFrame:
+        X, y = self.start_fitting(X, y)
+
+        X_with_NaNs = self.nan_inducer.fit_transform(X, y)
+
+        X_numeric_tr = self.numeric_func_trnsf.fit_transform(X_with_NaNs, y)
+        X_numeric_no_NaNs = self.numeric_imputer.fit_transform(X_numeric_tr, y)
+
+        X_dummies = self.dummies_maker.fit_transform(X_with_NaNs,y)
+
+        X_target_encoded_cats = self.target_multi_encoder.fit_transform(
+            X_with_NaNs, y)
+
+        X_full = pd.concat(
+            [X_numeric_no_NaNs, X_target_encoded_cats, X_dummies], axis=1)
+
+        X_final = self.deduper.fit_transform(X_full, y)
+
+        self.is_fitted_flag_ = True
+
+        return self.finish_transforming(X_final)
+
+
+    def transform(self, X):
+        X = self.start_transforming(X)
+
+        X_with_NaNs = self.nan_inducer.transform(X)
+
+        X_numeric_tr = self.numeric_func_trnsf.transform(X_with_NaNs)
+        X_numeric_no_NaNs = self.numeric_imputer.transform(X_numeric_tr)
+
+        X_dummies = self.dummies_maker.transform(X_with_NaNs)
+        for c in X_dummies:
+            X_dummies[c] =1
+
+        X_target_encoded_cats = self.target_multi_encoder.transform(
+            X_with_NaNs)
+        X_full = pd.concat(
+            [X_numeric_no_NaNs, X_target_encoded_cats,X_dummies], axis=1)
+
+        X_final = self.deduper.transform(X_full)
+
+        return self.finish_transforming(X_final)
