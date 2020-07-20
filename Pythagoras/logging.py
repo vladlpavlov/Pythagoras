@@ -3,6 +3,7 @@
 # Versions 3.6 and below do not support postponed evaluation
 import inspect
 import logging
+import os
 from typing import Optional, Any
 from Pythagoras import NeatStr
 
@@ -156,5 +157,5 @@ class LoggableObject:
                         suffix = "." + calling_method_name + "()"
                 except:
                     suffix = ""
-
+        suffix += f" [pid:{os.getpid()}]"
         self.logger(suffix).log(level, msg_to_log, *args, **kwargs)
