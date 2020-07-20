@@ -13,13 +13,15 @@ from Pythagoras.caching import *
 
 
 class CV_Score(LoggableObject):
-    def __init__(self, model, n_splits=3, n_repeats=3):
+    def __init__(self, model, n_splits=3, n_repeats=9, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.rkf = RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats)
         self.model = clone(model)
 
     def __call__(self, X, y, ):
-        self.scores_ = cross_val_score(self.model, X, y, cv=self.rkf,
-                                       scoring="r2", error_score="raise")
+        self.scores_ = cross_val_score(
+            self.model, X, y, cv=self.rkf, scoring="r2"
+            ,error_score="raise", n_jobs = -1)
         mean_score = np.mean(self.scores_)
         median_score = np.median(self.scores_)
         return min(mean_score, median_score)
@@ -68,7 +70,7 @@ class PRegressor(PEstimator):
     def finish_predicting(self
                           , y: pd.Series
                           , write_to_log: bool = True
-                          ) -> pd.DataFrame:
+                          ) -> pd.Series:
 
         assert len(y)
 
@@ -266,7 +268,7 @@ class SimpleGarden(PRegressor):
         return self
 
     def predict(self, X
-                ) -> pd.core.series.Series:
+                ) -> pd.Series:
 
         X = self.start_predicting(X)
         self.last_opredictions_ = []

@@ -40,13 +40,11 @@ class PEstimator(LoggableObject):
 
     def _fix_X(self,X:pd.DataFrame) -> pd.DataFrame:
 
-        if isinstance(X, pd.DataFrame):
-            X = deepcopy(X)
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(data=X, copy=True)
+            X.rename(columns = {c: "col_" + str(c) for c in X.columns}, inplace = True)
         else:
-            X = pd.DataFrame(X, copy=True)
-
-        if type(X.columns[0]) != str:
-            X.columns = ["col_"+str(c) for c in X.columns]
+            X = deepcopy(X)
 
         return X
 
@@ -82,8 +80,6 @@ class PEstimator(LoggableObject):
         if y is not None:
             y = self._fix_y(y)
             assert len(X) == len(y), "X and y must have equal length."
-        else:
-            y = None
 
         assert len(X), "X can not be empty."
         assert len(X.columns) == len(set(X.columns)), (
@@ -235,6 +231,7 @@ class NaN_Inducer(PFeatureMaker):
         type_of_x = type(X).__name__
         self.log_df_ = pd.DataFrame()
         (X, y) = self.start_fitting(X, y, write_to_log=False)
+        assert isinstance(X, pd.DataFrame)
         total_nans = int(X.isna().sum().sum())
         total_values = X.shape[0] * X.shape[1]
         current_nan_level = total_nans / total_values
@@ -585,7 +582,7 @@ class NumericFuncTransformer(PFeatureMaker):
     def fit_transform(self
                       , X: pd.DataFrame
                       , y: Optional[pd.Series] = None
-                      ) -> pd.core.frame.DataFrame:
+                      ) -> pd.DataFrame:
 
         (X, y) = self.start_fitting(X, y)
 
@@ -717,11 +714,13 @@ class TargetMultiEncoder(CatSelector):
     tme_default_values_: Optional[Dict[str, float]]
 
     def __init__(self
-                 , min_cat_size=8
+                 , min_cat_size=20
                  , max_uniques=100
                  , agg_funcs=[
                         percentile05
+                        , percentile25
                         , percentile50
+                        , percentile75
                         , percentile95
                         , minmode
                         , maxmode]
@@ -741,7 +740,9 @@ class TargetMultiEncoder(CatSelector):
                    , max_uniques
                    , tme_agg_funcs=[
                         percentile05
+                        , percentile25
                         , percentile50
+                        , percentile75
                         , percentile95
                         , minmode
                         , maxmode]
@@ -898,8 +899,8 @@ class LOOMeanTargetEncoder(CatSelector):
     sums_counts_: Optional[Dict[str, Dict[str, float]]]
 
     def __init__(self
-                 , min_cat_size: int = 10
-                 , max_uniques: int = 50
+                 , min_cat_size: int = 20
+                 , max_uniques: int = 100
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.set_params(min_cat_size, max_uniques)
@@ -938,7 +939,7 @@ class LOOMeanTargetEncoder(CatSelector):
 
     def fit_transform(self
                       , X: pd.DataFrame
-                      , y=None
+                      , y: pd.Series
                       ) -> pd.DataFrame:
 
         X, y = self.start_fitting(X, y)
@@ -997,7 +998,7 @@ class DummiesMaker(CatSelector):
     dummy_names_: Optional[str]
 
     def __init__(self
-                 , min_cat_size: int = 8
+                 , min_cat_size: int = 20
                  , max_uniques: int = 100
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
