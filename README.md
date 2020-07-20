@@ -33,7 +33,7 @@ Binary installers for the latest released version are available at the Python pa
 ### Major Pythagoras Components
 
 * **SimpleGarden**: Efficient regression meta-algorithm:
-boosted greedy feature selection factories create an assembly of parsimonious regressors
+boosted feature selection factory creates an assembly of parsimonious regressors
 
 * **FeatureShower**: Automatic data cleaner and feature generator 
 
