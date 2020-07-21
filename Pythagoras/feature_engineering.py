@@ -799,7 +799,7 @@ class TargetMultiEncoder(CatSelector):
         return name
 
     def convert_X(self, X: pd.DataFrame) -> pd.DataFrame:
-        
+
         assert set(X.columns) == set(self.cat_columns_)
 
         for cat in X:
@@ -960,15 +960,18 @@ class LOOMeanTargetEncoder(CatSelector):
                       ) -> pd.DataFrame:
 
         X, y = self.start_fitting(X, y)
-        X.fillna()
+
+        # X.fillna(self.nan_string, inplace=True)
+
 
         self.sums_counts_ = dict()
 
         for c in self.cat_columns_:
             self.sums_counts_[c] = dict()
-            for v in set(self.cat_values_[c]):
+            for v in set(self.cat_values_[c] ):
                 ix = (X[c] == v)
                 self.sums_counts_[c][v] = (y[ix].sum(), ix.sum())
+            self.sums_counts_[c][self.nan_string] = (y.sum(),len(y))
 
         X = X[self.cat_columns_]
 
@@ -981,10 +984,11 @@ class LOOMeanTargetEncoder(CatSelector):
 
         for c in self.sums_counts_:
             vals = np.full(len(X), np.nan)
-            for cat, sum_count in self.sums_counts_[c].items():
-                #                 if not sum_count[1]>1:
-                #                     self.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!! not sum_count[1]>1")
-                ix = (X[c] == cat)
+            for cat_val, sum_count in self.sums_counts_[c].items():
+                if cat_val != self.nan_string:
+                    ix = (X[c] == cat_val)
+                else:
+                    ix = (X[c].isna())
                 vals[ix] = (sum_count[0] - y[ix]) / (sum_count[1] - 1)
             X[c] = vals
 
@@ -1001,13 +1005,16 @@ class LOOMeanTargetEncoder(CatSelector):
 
         for c in self.input_columns_:
             vals = np.full(len(X), np.nan)
-            for cat, sum_count in self.sums_counts_[c].items():
-                #                 if not sum_count[1]>0:
-                #                     self.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!! not sum_count[1]>0")
-                vals[X[c] == cat] = sum_count[0] / sum_count[1]
+            for cat_val, sum_count in self.sums_counts_[c].items():
+                if cat_val != self.nan_string:
+                    vals[X[c] == cat_val] = sum_count[0] / sum_count[1]
+                else:
+                    vals[X[c].isna()] = sum_count[0] / sum_count[1]
             X[c] = vals
 
         X.columns = ["LOOMean(" + c + ")" for c in X.columns]
+
+        self.error(f"X contains {X.isna().sum().sum()} NaNs")
 
         return self.finish_transforming(X)
 
