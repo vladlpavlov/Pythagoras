@@ -661,7 +661,7 @@ class CatSelector(PFeatureMaker):
     cat_values_: Optional[Dict[str, Set[str]]]
 
     def __init__(self
-                 , min_cat_size: int = 8
+                 , min_cat_size: int = 20
                  , max_uniques: int = 100
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -703,7 +703,26 @@ class CatSelector(PFeatureMaker):
 
         self.cat_columns_ = set(self.cat_values_)
 
-        return deepcopy(X[self.cat_columns_]), y
+        X = deepcopy(X[self.cat_columns_])
+
+        for col in X:
+            nan_idx = ~ X[col].isin(self.cat_values_[col])
+            X.loc[nan_idx, col] = None
+
+        return X, y
+
+    def start_transforming(self
+                           , X: pd.DataFrame
+                           , write_to_log: bool = True
+                           ) -> pd.DataFrame:
+        X = super().start_transforming(X,  write_to_log)
+
+        for col in X:
+            nan_idx = ~ X[col].isin(self.cat_values_[col])
+            X.loc[nan_idx, col] = None
+
+        return X
+
 
 
 class TargetMultiEncoder(CatSelector):
@@ -714,6 +733,7 @@ class TargetMultiEncoder(CatSelector):
     tme_agg_funcs: List[Any]
     tme_cat_values_: Optional[Dict[str, pd.DataFrame]]
     tme_default_values_: Optional[Dict[str, float]]
+    nan_string:str
 
     def __init__(self
                  , min_cat_size=20
@@ -746,7 +766,7 @@ class TargetMultiEncoder(CatSelector):
         self.tme_agg_funcs = deepcopy(tme_agg_funcs)
         self.tme_cat_values_ = None
         self.tme_default_values_ = None
-        self.nan_string: str = "<<<<-----NaN----->>>>:" + str(id(self))
+        self.nan_string: str = "<<<<-----TME-NaN----->>>>:" + str(id(self))
         return self
 
     @property
@@ -779,7 +799,7 @@ class TargetMultiEncoder(CatSelector):
         return name
 
     def convert_X(self, X: pd.DataFrame) -> pd.DataFrame:
-
+        
         assert set(X.columns) == set(self.cat_columns_)
 
         for cat in X:
@@ -892,6 +912,7 @@ class LOOMeanTargetEncoder(CatSelector):
 
     encodable_columns_: Optional[Set[str]]
     sums_counts_: Optional[Dict[str, Dict[str, float]]]
+    nan_string:str
 
     def __init__(self
                  , min_cat_size: int = 20
@@ -901,7 +922,7 @@ class LOOMeanTargetEncoder(CatSelector):
         self.set_params(min_cat_size, max_uniques)
 
     def get_params(self, deep=True):
-        super().get_params(deep)
+        params = super().get_params(deep)
         return params
 
     def set_params(self
@@ -910,6 +931,7 @@ class LOOMeanTargetEncoder(CatSelector):
         super().set_params(min_cat_size, max_uniques)
         self.sums_counts_ = None
         self.encodable_columns_ = None
+        self.nan_string: str = "<<<<-----LOO-NaN----->>>>:" + str(id(self))
         return self
 
     @property
@@ -922,7 +944,7 @@ class LOOMeanTargetEncoder(CatSelector):
 
     @property
     def output_can_have_nans(self) -> bool:
-        return True
+        return False
 
     @property
     def input_columns_(self) -> List[str]:
@@ -938,6 +960,7 @@ class LOOMeanTargetEncoder(CatSelector):
                       ) -> pd.DataFrame:
 
         X, y = self.start_fitting(X, y)
+        X.fillna()
 
         self.sums_counts_ = dict()
 

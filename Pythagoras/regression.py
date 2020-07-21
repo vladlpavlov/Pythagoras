@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.linear_model import Ridge
+from sklearn.model_selection import cross_validate
 
 from Pythagoras.util import *
 from Pythagoras.logging import *
@@ -20,7 +21,7 @@ class CV_Score(LoggableObject):
 
     def __call__(self, X, y, **kwargs):
         self.scores_ = cross_val_score(
-            self.model, X, y, cv=self.rkf, scoring="r2",**kwargs)
+            self.model, X, y, cv=self.rkf, scoring="r2", **kwargs)
         mean_score = np.mean(self.scores_)
         median_score = np.median(self.scores_)
         return min(mean_score, median_score)
