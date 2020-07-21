@@ -13,15 +13,14 @@ from Pythagoras.caching import *
 
 
 class CV_Score(LoggableObject):
-    def __init__(self, model, n_splits=3, n_repeats=9, *args, **kwargs):
+    def __init__(self, model, n_splits=3, n_repeats=5, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.rkf = RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats)
         self.model = clone(model)
 
-    def __call__(self, X, y, ):
+    def __call__(self, X, y, **kwargs):
         self.scores_ = cross_val_score(
-            self.model, X, y, cv=self.rkf, scoring="r2"
-            ,error_score="raise", n_jobs = -1)
+            self.model, X, y, cv=self.rkf, scoring="r2",**kwargs)
         mean_score = np.mean(self.scores_)
         median_score = np.median(self.scores_)
         return min(mean_score, median_score)
@@ -42,6 +41,9 @@ class PRegressor(PEstimator):
         self.target_name_ = y.name
         self.min_med_max_ = (min(y), percentile50(y), max(y))
         return X, y
+
+    def predict(self, X:pd.DataFrame) -> pd.Series:
+        raise NotImplementedError
 
     def start_predicting(self
                          , X: pd.DataFrame

@@ -42,7 +42,7 @@ class PEstimator(LoggableObject):
 
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(data=X, copy=True)
-            X.rename(columns = {c: "col_" + str(c) for c in X.columns}, inplace = True)
+            X.columns = ["col_" + str(c) for c in X.columns]
         else:
             X = deepcopy(X)
 
@@ -452,6 +452,8 @@ class NumericImputer(PFeatureMaker):
                       , y: Optional[pd.Series] = None
                       ) -> pd.DataFrame:
 
+        type_of_X = type(X).__name__
+
         X, y = self.start_fitting(X, y, write_to_log=False)
 
         X_num = X.select_dtypes(include="number")
@@ -460,8 +462,8 @@ class NumericImputer(PFeatureMaker):
         n_func = len(aggr_func_names)
 
         log_message = f"==> Starting removing NaNs from "
-        log_message += f"{len(X_num.columns)} numeric columns of a dataframe "
-        log_message += "named < " + NeatStr.object_names(X, div_ch=" / ")
+        log_message += f"{len(X_num.columns)} numeric columns of a {type_of_X}"
+        log_message += " named < " + NeatStr.object_names(X, div_ch=" / ")
         log_message += f" > with shape {X.shape}. "
         log_message += f"Currently, the numeric columns of a dataset"
         log_message += f" contain {num_nans} NaN-s. "
@@ -672,7 +674,7 @@ class CatSelector(PFeatureMaker):
 
     def set_params(self
                    , min_cat_size
-                   , max_uniques):
+                   , max_uniques, **kwards):
         self.min_cat_size = min_cat_size
         self.max_uniques = max_uniques
         self.cat_columns_ = None
@@ -738,14 +740,7 @@ class TargetMultiEncoder(CatSelector):
     def set_params(self
                    , min_cat_size
                    , max_uniques
-                   , tme_agg_funcs=[
-                        percentile05
-                        , percentile25
-                        , percentile50
-                        , percentile75
-                        , percentile95
-                        , minmode
-                        , maxmode]
+                   , tme_agg_funcs = None
                    ):
         super().set_params(min_cat_size, max_uniques)
         self.tme_agg_funcs = deepcopy(tme_agg_funcs)
