@@ -415,3 +415,147 @@ class MagicGarden(PRegressor):
         X_new = self.feature_shower.transform(X)
         result = self.simple_garden.predict(X_new)
         return self.finish_predicting(result)
+
+
+class RKFBaggingRegressor:
+    pass
+
+class RKFBaggingRegressor(PRegressor):
+    is_fitted_flag_: bool
+    n_splits:int
+    n_repeats:int
+    base_model:PRegressor
+    rkf:RepeatedKFold
+    models_: Optional[List[PRegressor]]
+    model_scores_:Optional[List[float]]
+    rejected_model_scores_:Optional[List[float]]
+    cv_score_: Optional[float]
+    inp_clmns_:Optional[List[str]]
+
+
+    def __init__(self
+                 ,base_model = MagicGarden()
+                 , n_splits:int=5
+                 , n_repeats:int=4
+                 , percentile:int=50
+                 , *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.set_params(
+            base_model=base_model
+            , n_splits=n_splits
+            , n_repeats=n_repeats
+            , percentile = percentile)
+
+    def set_params(self
+                    ,base_model
+                    , n_splits
+                    , n_repeats
+                    , percentile
+                    , deep: bool = False) -> RKFBaggingRegressor:
+        self.base_model = base_model
+        assert n_splits in range (2,100)
+        self.n_splits = n_splits
+        assert n_repeats in range(2, 100)
+        self.n_repeats = n_repeats
+        assert  percentile in range(10,91)
+        self.percentile = percentile
+        self.rkf = RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats)
+        self.is_fitted_flag_ = False
+        self.models = None
+        self.model_scores_ = None
+        self.rejected_model_scores_ = None
+        self.cv_score_ = None
+        self.inp_clmns_ = None
+        return self
+
+    def get_params(self, deep: bool = False) -> Dict[str, Any]:
+        params = dict(base_model = self.base_model
+                    , n_splits = self.n_splits
+                    , n_repeats = self.n_repeats
+                    , percentile = self.percentile)
+        return params
+
+    @property
+    def is_fitted_(self):
+        return self.is_fitted_flag_
+
+    @property
+    def input_columns_(self) -> List[str]:
+        return self.inp_clmns_
+
+    @property
+    def input_can_have_nans(self) -> bool:
+        return self.base_model.input_can_have_nans
+
+    @property
+    def output_can_have_nans(self) -> bool:
+        return self.base_model.output_can_have_nans
+
+    def fit(self, X, y):
+        X, y = self.start_fitting(X, y)
+        cv_results = cross_validate(self.base_model
+            ,X
+            ,y
+            ,scoring = "r2"
+            ,cv = self.rkf
+            ,return_estimator = True
+            ,n_jobs=-1)
+
+        score_threshold = np.nanpercentile(cv_results["test_score"], self.percentile)
+        n_scores = len(cv_results["test_score"])
+        self.model_scores_ = []
+        self.models_ = []
+        self.rejected_model_scores_ = []
+
+        for i in range(n_scores):
+            if cv_results["test_score"][i] >= score_threshold:
+                self.model_scores_ += [cv_results["test_score"][i]]
+                self.models_ += [cv_results["estimator"][i]]
+            else:
+                self.rejected_model_scores_ += [cv_results["test_score"][i]]
+
+        self.cv_score_ = score_threshold
+
+        input_columns = set()
+        for m in self.models_:
+            input_columns |= set(m.input_columns_)
+        self.inp_clmns_ = sorted(list(input_columns))
+
+        message_log = f"<== Fitting process has finished, expected CV_Score"
+        message_log += f" is {self.cv_score_}. "
+        message_log += f"{len(self.models_)} models have been included into "
+        message_log += f"the final asembly, {len(self.rejected_model_scores_)} "
+        message_log += f" models have been rejected. Included models have the "
+        message_log += f" following scores: {sorted(self.model_scores_)}, "
+        message_log += f" rejected scores are "
+        message_log += f"{sorted(self.rejected_model_scores_)}."
+        self.info(message_log)
+
+        assert min(self.model_scores_) >= self.cv_score_
+        assert max(self.rejected_model_scores_) <= self.cv_score_
+
+        self.is_fitted_flag_ = True
+
+        return self
+
+    def predict(self, X):
+        X = self.start_predicting(X)
+
+        self.last_opredictions_ = []
+        n_models = len(self.models_)
+
+        for i in range(n_models):
+            self.last_opredictions_ += [
+                self.models_[i].predict(X)]
+
+        result = self.last_opredictions_[0]
+        for i in range(1, n_models):
+            result += self.last_opredictions_[i]
+        if n_models > 1:
+            result /= n_models
+
+        if not isinstance(result, pd.Series):
+            result = pd.Series(
+                data=result, index=X.index, name=self.target_name_)
+
+        return self.finish_predicting(result)
