@@ -364,3 +364,54 @@ class SimpleGarden(PRegressor):
                 set(status_log[status_log.In_Model]["Feature"].unique()))
 
         return best_model, best_features, best_cv_score, status_log
+
+
+
+class MagicGarden(PRegressor):
+    pass
+
+
+class MagicGarden(PRegressor):
+    is_fitted_flag_: bool
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.set_params()
+
+    def set_params(self, deep: bool = False) -> MagicGarden:
+        self.feature_shower = FeatureShower()
+        self.simple_garden = SimpleGarden()
+        self.is_fitted_flag_ = False
+        return self
+
+    def get_params(self, deep: bool = False) -> Dict[str, Any]:
+        return {}
+
+    @property
+    def is_fitted_(self):
+        return self.is_fitted_flag_
+
+    @property
+    def input_columns_(self) -> List[str]:
+        return self.feature_shower.input_columns_
+
+    @property
+    def input_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def output_can_have_nans(self) -> bool:
+        return False
+
+    def fit(self, X, y):
+        X, y = self.start_fitting(X, y)
+        X_new = self.feature_shower.fit_transform(X,y)
+        self.simple_garden.fit(X_new,y)
+        self.is_fitted_flag_ = True
+        return self
+
+    def predict(self, X):
+        X = self.start_predicting(X)
+        X_new = self.feature_shower.transform(X)
+        result = self.simple_garden.predict(X_new)
+        return self.finish_predicting(result)
