@@ -1203,3 +1203,111 @@ class FeatureShower(PFeatureMaker):
         X_final = self.deduper.transform(X_full)
 
         return self.finish_transforming(X_final)
+
+
+class RectifierSplitter(PFeatureMaker):
+    percentiles: List[int]
+    is_fitted_flag_: bool
+    numeric_columns_: Optional[List[str]]
+    generated_columns_: Optional[List[str]]
+    percentiles_values_: Optional[Dict[str, List[float]]]
+
+    def __init__(self
+                 , percentiles=[5, 25, 50, 75, 95]
+                 , *args
+                 , **kwargs
+                 ) -> None:
+        super().__init__(*args, **kwargs)
+        self.set_params(percentiles)
+
+    def get_params(self, deep=True):
+        params = dict(percentiles=self.percentiles)
+        return params
+
+    def set_params(self, percentiles: List[int]):
+        assert len(percentiles)
+        for p in percentiles:
+            assert 0 < p < 100
+        self.percentiles = percentiles
+        self.is_fitted_flag_ = False
+        self.numeric_columns_ = None
+        self.generated_columns_ = None
+        self.percentiles_values_ = None
+        return self
+
+    @property
+    def is_fitted_(self):
+        return self.is_fitted_flag_
+
+    @property
+    def input_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def output_can_have_nans(self) -> bool:
+        return False  ## ?!?!?!?
+
+    @property
+    def input_columns_(self) -> List[str]:
+        assert self.is_fitted_
+        return sorted(self.numeric_columns_)
+
+    @property
+    def output_columns_(self) -> List[str]:
+        assert self.is_fitted_
+        return self.generated_columns_
+
+    def fit_transform(self
+                      , X: pd.DataFrame
+                      , y
+                      ) -> pd.DataFrame:
+
+        X, y = self.start_fitting(X, y)
+        self.percentiles_values_ = dict()
+        X_num = X.select_dtypes("number")
+        self.numeric_columns_ = X_num.columns
+        for col in X_num:
+            column_percentiles = []
+            for p in self.percentiles:
+                column_percentiles += [ np.nanpercentile(X_num[col], p)]
+            self.percentiles_values_[col] = sorted(column_percentiles)
+
+        self.is_fitted_flag_ = True
+        print()
+        result = self.transform(X, generate_column_names=True)
+
+        return result
+
+    def transform(self
+                  , X: pd.DataFrame
+                  , generate_column_names=False
+                  ) -> pd.DataFrame:
+
+        X = self.start_transforming(X)
+
+        for col in X:
+            for threshold in self.percentiles_values_[col]:
+                above_idx = (X[col] >= threshold).astype(int)
+                new_col_name = f"{col} >= {threshold}"
+                X[new_col_name] = above_idx
+
+                below_idx = (X[col] < threshold).astype(int)
+                new_col_name = f"{col} < {threshold}"
+                X[new_col_name] = below_idx
+
+                above_values = above_idx * X[col] + below_idx * threshold
+                new_col_name = f"{col} if ({col} >= {threshold})"
+                new_col_name += f" else {threshold}"
+                X[new_col_name] = above_values
+
+                below_values = below_idx * X[col] + above_idx * threshold
+                new_col_name = f"{col} if ({col} < {threshold})"
+                new_col_name += f" else {threshold}"
+                X[new_col_name] = below_values
+
+            X.drop(columns=[col], inplace=True)
+
+        if generate_column_names:
+            self.generated_columns_ = sorted(X.columns)
+
+        return self.finish_transforming(X)
