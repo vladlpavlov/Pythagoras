@@ -13,7 +13,7 @@ from Pythagoras.caching import *
 
 
 class CV_Score(LoggableObject):
-    def __init__(self, model, n_splits=3, n_repeats=5, *args, **kwargs):
+    def __init__(self, model, n_splits=5, n_repeats=4, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.rkf = RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats)
         self.model = clone(model)
@@ -28,6 +28,7 @@ class CV_Score(LoggableObject):
 
 class PRegressor(PEstimator):
     target_name_: Optional[str]
+    prediction_index_:Optional[pd.Series]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -61,6 +62,7 @@ class PRegressor(PEstimator):
             self.info(log_message)
 
         X = self._fix_X(X)
+        self.prediction_index_ = deepcopy(X.index)
         assert set(self.input_columns_) <= set(X)
         X = deepcopy(X[self.input_columns_])
 
@@ -92,6 +94,7 @@ class PRegressor(PEstimator):
             assert n_nans == 0
 
         y.name = self.target_name_
+        y.index = self.prediction_index_
 
         return y
 
@@ -104,22 +107,34 @@ class SimpleGarden(PRegressor):
 class SimpleGarden(PRegressor):
 
     def __init__(self
-                 , *args
+                 , base_model_type=Ridge
+                 , base_model_params={"alpha": 0.01, "normalize": True}
+                 , feature_cr_threshold: float = 0.05
+                 , max_features_per_omodel: Optional[int] = None
+                 , max_omodels_per_garden: int = 15
+                 , cv_score_threshold: Optional[float] = None
+                 , cv_score_threshold_multiplier: Optional[float] = 0.8
                  , **kwargs
                  ) -> None:
 
-        super().__init__(*args, **kwargs)
-        self.set_params(**kwargs)
+        super().__init__( **kwargs)
+        self.set_params(base_model_type=base_model_type
+                   , base_model_params=base_model_params
+                   , feature_cr_threshold=feature_cr_threshold
+                   , max_features_per_omodel=max_features_per_omodel
+                   , max_omodels_per_garden=max_omodels_per_garden
+                   , cv_score_threshold=cv_score_threshold
+                   , cv_score_threshold_multiplier=cv_score_threshold_multiplier
+                )
 
     def set_params(self
-                   , base_model_type=Ridge
-                   , base_model_params={"alpha": 0.01, "normalize": True}
-                   , feature_cr_threshold: float = 0.075
-                   , max_features_per_omodel: Optional[int] = None
-                   , max_omodels_per_garden: int = 10
-                   , cv_score_threshold: Optional[float] = None
-                   , cv_score_threshold_multiplier: Optional[float] = 0.75
-                   , n_folds: int = 5
+                   , base_model_type
+                   , base_model_params
+                   , feature_cr_threshold
+                   , max_features_per_omodel
+                   , max_omodels_per_garden
+                   , cv_score_threshold
+                   , cv_score_threshold_multiplier
                    ) -> SimpleGarden:
 
         assert (int(cv_score_threshold is None) +
@@ -135,7 +150,6 @@ class SimpleGarden(PRegressor):
         self.base_model_cv_score = CV_Score(self.base_model_)
         self.feature_cr_threshold = feature_cr_threshold
         self.max_features_per_omodel = max_features_per_omodel
-        self.n_folds = n_folds
         self.max_omodels_per_garden = max_omodels_per_garden
         self.cv_score_threshold = cv_score_threshold
         self.cv_score_threshold_multiplier = cv_score_threshold_multiplier
@@ -156,9 +170,7 @@ class SimpleGarden(PRegressor):
             , "max_features_per_omodel": self.max_features_per_omodel
             , "max_omodels_per_garden": self.max_omodels_per_garden
             , "cv_score_threshold": self.cv_score_threshold
-            ,
-                  "cv_score_threshold_multiplier": self.cv_score_threshold_multiplier
-            , "n_folds": self.n_folds}
+            ,"cv_score_threshold_multiplier": self.cv_score_threshold_multiplier}
 
         return result
 
@@ -324,9 +336,10 @@ class SimpleGarden(PRegressor):
                 X[remaining_features], residuals)
             remaining_features.remove(new_feature)
             selected_features.append(new_feature)
-            cv_score = self.base_model_cv_score(X[sorted(selected_features)],
-                                                y)
-            work_model = work_model.fit(X[sorted(selected_features)], y)
+            cv_score = self.base_model_cv_score(
+                X[sorted(selected_features)],y)
+            work_model = work_model.fit(
+                X[sorted(selected_features)], y)
             predictions = work_model.predict(X[sorted(selected_features)])
             residuals = predictions - y
             status_log = status_log.append(
