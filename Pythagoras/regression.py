@@ -39,6 +39,7 @@ class CV_Score(LoggableObject):
 
 class PRegressor(PEstimator):
     """ Abstract base class for all Pythagoras regressors"""
+
     target_name_: Optional[str]
     prediction_index_:Optional[pd.Series]
 
@@ -111,7 +112,8 @@ class PRegressor(PEstimator):
         return y
 
 
-
+# Workaround to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do not support postponed evaluation
 class SimpleGarden(PRegressor):
     pass
 
