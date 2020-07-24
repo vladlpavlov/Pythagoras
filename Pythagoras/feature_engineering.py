@@ -16,6 +16,11 @@ class PEstimator(LoggableObject):
     pass
 
 class PEstimator(LoggableObject):
+    """ Abstract base class for all estimators (classes with fit() method).
+
+        Warning: This class should not be used directly. Use derived classes
+        instead.
+        """
 
     def __init__(self, * ,random_state = None, **kwargs):
         kwargs["reveal_calling_method"] = kwargs.get(
@@ -37,7 +42,7 @@ class PEstimator(LoggableObject):
         return self
 
 
-    def _fix_X(self,X:pd.DataFrame) -> pd.DataFrame:
+    def _preprocess_X(self, X:pd.DataFrame) -> pd.DataFrame:
 
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(data=X, copy=True)
@@ -47,7 +52,7 @@ class PEstimator(LoggableObject):
 
         return X
 
-    def _fix_y(self,y:pd.Series) -> pd.Series:
+    def _preprocess_y(self, y:pd.Series) -> pd.Series:
         if isinstance(y, pd.Series):
             y = deepcopy(y)
         else:
@@ -74,10 +79,10 @@ class PEstimator(LoggableObject):
             log_message += NeatStr.object_names(y, div_ch=" / ") + " >."
             self.info(log_message)
 
-        X = self._fix_X(X)
+        X = self._preprocess_X(X)
 
         if y is not None:
-            y = self._fix_y(y)
+            y = self._preprocess_y(y)
             assert len(X) == len(y), "X and y must have equal length."
 
         assert len(X), "X can not be empty."
@@ -143,7 +148,7 @@ class PFeatureMaker(PEstimator):
             log_message += f" > with the shape {X.shape}."
             self.info(log_message)
 
-        X = self._fix_X(X)
+        X = self._preprocess_X(X)
         assert set(self.input_columns_) <= set(X)
         X = deepcopy(X[self.input_columns_])
 
@@ -187,7 +192,7 @@ class NaN_Inducer(PFeatureMaker):
     min_nan_level: float
 
     def __init__(self, *
-            , min_nan_level: float = 0.10
+            , min_nan_level: float = 0.05
             , random_state
             , **kwargs) -> None:
         super().__init__(**kwargs)
@@ -201,7 +206,7 @@ class NaN_Inducer(PFeatureMaker):
         return params
 
     def set_params(self, *
-                   , min_nan_level = 0.10
+                   , min_nan_level = 0.05
                    , random_state = None
                    , **kwargs):
         assert 0 <= min_nan_level < 1
@@ -685,7 +690,11 @@ class NumericFuncTransformer(PFeatureMaker):
         return self.finish_transforming(result)
 
 class CatSelector(PFeatureMaker):
-    """ Abstract base class that finds categorical features"""
+    """ Abstract base class that finds categorical features.
+
+    Warning: This class should not be used directly. Use derived classes
+    instead.
+    """
 
     min_cat_size: int
     max_uniques: int
@@ -1298,6 +1307,7 @@ class FeatureShower(PFeatureMaker):
 
 class FeatureShower(PFeatureMaker):
     """ A transformer that creates large number of various new features"""
+
     is_fitted_flag_: bool
 
     def __init__(self, *, random_state = None, **kwargs) -> None:

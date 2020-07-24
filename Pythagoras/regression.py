@@ -27,7 +27,8 @@ class CV_Score(LoggableObject):
             n_splits=n_splits
             , n_repeats=n_repeats
             , random_state = random_state)
-        self.model = clone(model)
+        self.model = type(model)(**{**model.get_params()
+                                 ,"random_state":random_state})
 
     def __call__(self, X, y, **kwargs):
         self.scores_ = cross_val_score(
@@ -38,7 +39,11 @@ class CV_Score(LoggableObject):
 
 
 class PRegressor(PEstimator):
-    """ Abstract base class for all Pythagoras regressors"""
+    """ Abstract base class for all Pythagoras regressors.
+
+    Warning: This class should not be used directly. Use derived classes
+    instead.
+    """
 
     target_name_: Optional[str]
     prediction_index_:Optional[pd.Series]
@@ -74,7 +79,7 @@ class PRegressor(PEstimator):
             log_message += f" > with the shape {X.shape}."
             self.info(log_message)
 
-        X = self._fix_X(X)
+        X = self._preprocess_X(X)
         self.prediction_index_ = deepcopy(X.index)
         assert set(self.input_columns_) <= set(X)
         X = deepcopy(X[self.input_columns_])
@@ -121,9 +126,8 @@ class SimpleGarden(PRegressor):
 class SimpleGarden(PRegressor):
 
     def __init__(self
-                 , base_model_type=Ridge
-                 , base_model_params={"alpha": 0.01, "normalize": True}
-                 , feature_cr_threshold: float = 0.05
+                 , base_model=Ridge(alpha= 0.01, normalize=True)
+                 , feature_cr_threshold: float = 0.03
                  , max_features_per_omodel: Optional[int] = None
                  , max_omodels_per_garden: int = 15
                  , cv_score_threshold: Optional[float] = None
@@ -133,8 +137,7 @@ class SimpleGarden(PRegressor):
                  ) -> None:
 
         super().__init__( **kwargs)
-        self.set_params(base_model_type=base_model_type
-            , base_model_params=base_model_params
+        self.set_params(base_model=base_model
             , feature_cr_threshold=feature_cr_threshold
             , max_features_per_omodel=max_features_per_omodel
             , max_omodels_per_garden=max_omodels_per_garden
@@ -143,9 +146,8 @@ class SimpleGarden(PRegressor):
             , random_state = random_state)
 
     def set_params(self
-                   , base_model_type = Ridge
-                   , base_model_params = {"alpha": 0.01, "normalize": True}
-                   , feature_cr_threshold = 0.05
+                   , base_model = Ridge(alpha= 0.01, normalize=True)
+                   , feature_cr_threshold = 0.03
                    , max_features_per_omodel = None
                    , max_omodels_per_garden = 15
                    , cv_score_threshold = None
@@ -163,10 +165,11 @@ class SimpleGarden(PRegressor):
         if cv_score_threshold_multiplier is not None:
             assert 0 < cv_score_threshold_multiplier < 1
 
-        self.base_model_ = base_model_type(
-            **base_model_params, random_state = random_state)
+        self.base_model = type(base_model)(
+            **{**base_model.get_params()
+            , "random_state":random_state})
         self.base_model_cv_score = CV_Score(
-            self.base_model_, random_state = random_state)
+            self.base_model, random_state = random_state)
         self.feature_cr_threshold = feature_cr_threshold
         self.max_features_per_omodel = max_features_per_omodel
         self.max_omodels_per_garden = max_omodels_per_garden
@@ -184,8 +187,7 @@ class SimpleGarden(PRegressor):
 
     def get_params(self, deep: bool = False) -> Dict[str, Any]:
 
-        result = {"base_model_type": type(self.base_model_)
-            , "base_model_params": self.base_model_.get_params()
+        result = {"base_model": self.base_model
             , "feature_cr_threshold": self.feature_cr_threshold
             , "max_features_per_omodel": self.max_features_per_omodel
             , "max_omodels_per_garden": self.max_omodels_per_garden
@@ -331,7 +333,7 @@ class SimpleGarden(PRegressor):
                         ):
         X = deepcopy(X)
         y = deepcopy(y)
-        work_model = clone(self.base_model_)
+        work_model = clone(self.base_model)
         status_log = pd.DataFrame(
             columns=["Feature", "Correlation", "CV_Score"])
 
@@ -387,19 +389,20 @@ class SimpleGarden(PRegressor):
         return best_model, best_features, best_cv_score, status_log
 
 
-
-class MagicGarden(PRegressor):
+# Workaround to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do not support postponed evaluation
+class AmpleGarden(PRegressor):
     pass
 
 
-class MagicGarden(PRegressor):
+class AmpleGarden(PRegressor):
     is_fitted_flag_: bool
 
     def __init__(self, *, random_state = None, **kwargs) -> None:
         super().__init__( **kwargs)
         self.set_params(random_state = random_state, **kwargs)
 
-    def set_params(self, random_state = None, **kwargs) -> MagicGarden:
+    def set_params(self, random_state = None, **kwargs) -> AmpleGarden:
         self.feature_shower = FeatureShower(random_state=random_state)
         self.simple_garden = SimpleGarden(random_state=random_state)
         self.random_state = random_state
@@ -440,10 +443,10 @@ class MagicGarden(PRegressor):
         return self.finish_predicting(result)
 
 
-class RKFBaggingRegressor:
+class BaggingStabilizer:
     pass
 
-class RKFBaggingRegressor(PRegressor):
+class BaggingStabilizer(PRegressor):
     is_fitted_flag_: bool
     n_splits:int
     n_repeats:int
@@ -457,7 +460,7 @@ class RKFBaggingRegressor(PRegressor):
 
 
     def __init__(self
-                 ,base_model = MagicGarden()
+                 ,base_model = AmpleGarden()
                  , n_splits:int=5
                  , n_repeats:int=4
                  , percentile:int=50
@@ -472,15 +475,15 @@ class RKFBaggingRegressor(PRegressor):
             , random_state = random_state)
 
     def set_params(self
-                    ,base_model=MagicGarden()
+                    ,base_model=AmpleGarden()
                     , n_splits:int=5
                     , n_repeats:int=4
                     , percentile:int=50
                     , random_state=None
                     , deep: bool = False
-                   ,**kwargs) -> RKFBaggingRegressor:
-        self.base_model = base_model.set_params(
-            {**base_model.get_params(),"random_state": random_state})
+                   ,**kwargs) -> BaggingStabilizer:
+        self.base_model = type(base_model)(
+            **{**base_model.get_params(),"random_state": random_state})
         assert n_splits in range (2,100)
         self.n_splits = n_splits
         assert n_repeats in range(2, 100)
