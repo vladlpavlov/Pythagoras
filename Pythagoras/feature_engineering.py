@@ -12,29 +12,28 @@ from Pythagoras.caching import *
 
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
-# class PEstimator(LoggableObject):
-#     pass
-
 class PEstimator(LoggableObject):
     pass
 
 class PEstimator(LoggableObject):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, * ,random_state = None, **kwargs):
         kwargs["reveal_calling_method"] = kwargs.get(
             "reveal_calling_method", True)
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
+        self.set_params(random_state=random_state, **kwargs)
 
 
     def get_params(self, deep=True):
         if type(self) == PEstimator:
             raise NotImplementedError
-        return dict()
+        return dict(random_state = self.random_state)
 
 
-    def set_params(self, **params) -> PEstimator:
+    def set_params(self, *, random_state = None, **kwards) -> PEstimator:
         if type(self) == PEstimator:
             raise NotImplementedError
+        self.random_state = random_state
         return self
 
 
@@ -121,8 +120,9 @@ class PEstimator(LoggableObject):
 
 class PFeatureMaker(PEstimator):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *, random_state = None, **kwargs):
+        super().__init__(random_state=random_state, **kwargs)
+
 
     @property
     def output_columns_(self) -> List[str]:
@@ -167,7 +167,8 @@ class PFeatureMaker(PEstimator):
             self.info(log_message)
 
         if not self.output_can_have_nans:
-            assert X.isna().sum().sum() == 0
+            n_NaNs = X.isna().sum().sum()
+            assert n_NaNs==0, f"{n_NaNs} NaN-s found, while expecting 0"
 
         return X
 
@@ -185,21 +186,29 @@ class NaN_Inducer(PFeatureMaker):
     transformabe_columns_: Optional[List[str]]
     min_nan_level: float
 
-    def __init__(self, min_nan_level: float = 0.05, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.set_params(min_nan_level)
+    def __init__(self, *
+            , min_nan_level: float = 0.10
+            , random_state
+            , **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.set_params(min_nan_level=min_nan_level
+                        , random_state=random_state
+                        , **kwargs)
 
     def get_params(self, deep=True):
-        params = {"min_nan_level": self.min_nan_level}
+        params = dict(min_nan_level=self.min_nan_level
+            , random_state = self.random_state)
         return params
 
-    def set_params(self
-                   , min_nan_level
-                   ):
+    def set_params(self, *
+                   , min_nan_level = 0.10
+                   , random_state = None
+                   , **kwargs):
         assert 0 <= min_nan_level < 1
         self.min_nan_level = min_nan_level
         self.transformabe_columns_ = None
         self.log_df_ = None
+        self.random_state = random_state
         return self
 
     @property
@@ -262,7 +271,8 @@ class NaN_Inducer(PFeatureMaker):
                 n_updated_columns += 1
                 nans_to_add = target_n_nans_per_feature - n_nans_before
                 not_nans = a_column[a_column.notna()]
-                set_to_nan_index = not_nans.sample(nans_to_add).index
+                set_to_nan_index = not_nans.sample(
+                    nans_to_add, random_state=self.random_state).index
                 X.loc[set_to_nan_index, f] = None
 
             n_nans_after = X[f].isna().sum()
@@ -321,17 +331,24 @@ class Deduper(PFeatureMaker):
     def __init__(self
                  , keep: str = "first"
                  , allow_nans: bool = False
+                 , random_state = None
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.set_params(keep, allow_nans)
+        self.set_params(keep=keep
+                        , allow_nans=allow_nans
+                        , random_state=random_state)
 
     def get_params(self, deep=True):
-        params = {"keep": self.keep, "allow_nans": self.allow_nans}
+        params = dict(keep=self.keep
+            , allow_nans=self.allow_nans
+            , random_state = self.random_state)
         return params
 
-    def set_params(self
-                   , keep: str
-                   , allow_nans: bool
+    def set_params(self , *
+                   , keep:str = "first"
+                   , allow_nans:bool = False
+                   , random_state = None
+                   ,**kwargs
                    ) -> PFeatureMaker:
         assert keep in {"first", "last"}
         self.keep = keep
@@ -379,8 +396,8 @@ class Deduper(PFeatureMaker):
         return self.finish_transforming(X_dd)
 
     def transform(self
-                  , X: pd.DataFrame
-                  ) -> pd.DataFrame:
+            , X: pd.DataFrame
+            ) -> pd.DataFrame:
         X = self.start_transforming(X)
 
         log_message = f"{len(self.columns_to_drop_)}"
@@ -397,26 +414,34 @@ class NumericImputer(PFeatureMaker):
     aggr_funcs: Optional[List[Any]]
     fill_values_: Optional[pd.DataFrame]
 
-    def __init__(self
-                 , aggr_funcs=
-                 [np.min, np.max, np.mean, percentile50, minmode, maxmode]
-                 , *args
-                 , **kwargs
-                 ) -> None:
-        super().__init__(*args, **kwargs)
-        self.set_params(aggr_funcs)
+    def __init__(self, *
+            , aggr_funcs= [
+                np.min, np.max, percentile50, minmode, maxmode]
+            , random_state = None
+            , **kwargs
+            ) -> None:
+        super().__init__(**kwargs)
+        self.set_params(
+            aggr_funcs = aggr_funcs, random_state = random_state, **kwargs)
 
     def get_params(self, deep=True):
-        params = {"aggr_funcs": self.aggr_funcs}
+        params = dict(aggr_funcs=self.aggr_funcs
+            , random_state = self.random_state)
         return params
 
-    def set_params(self
-                   , aggr_funcs: List[Any]
-                   ) -> PFeatureMaker:
-        for f in aggr_funcs:
-            assert callable(f)
+    def set_params(self, *
+            , aggr_funcs = None
+            # [
+            #     np.min, np.max, percentile50, minmode, maxmode]
+            , random_state = None
+            , **kwargs
+            ) -> PFeatureMaker:
+        # for f in aggr_funcs:
+        #     assert callable(f)
         self.aggr_funcs = aggr_funcs
+        self.random_state = random_state
         self.fill_values_ = None
+
         return self
 
     @property
@@ -518,28 +543,35 @@ class NumericFuncTransformer(PFeatureMaker):
     positive_arg_functions: List[Any]
     any_arg_functions: List[Any]
 
-    def __init__(self
+    def __init__(self, *
                  , positive_arg_functions=[np.log1p, root2, power2]
                  , any_arg_functions=[passthrough, power3]
-                 , *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.set_params(positive_arg_functions, any_arg_functions)
+                 , random_state = None
+                 , **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.set_params(
+            positive_arg_functions, any_arg_functions, random_state,**kwargs)
 
     def get_params(self, deep=True):
-        params = {"positive_arg_functions": self.positive_arg_functions
-            , "any_arg_functions": self.any_arg_functions}
+        params = dict(positive_arg_functions=self.positive_arg_functions
+            , any_arg_functions=self.any_arg_functions
+            , random_state = self.random_state)
         return params
 
     def set_params(self
-                   , positive_arg_functions
-                   , any_arg_functions
+                   , positive_arg_functions = None
+                   , any_arg_functions = None
+                   , random_state = None
+                   , **kwargs
                    ) -> PFeatureMaker:
 
-        for f in positive_arg_functions + any_arg_functions:
-            assert callable(f)
+        if positive_arg_functions is not None:
+            for f in positive_arg_functions + any_arg_functions:
+                assert callable(f)
 
         self.positive_arg_functions = positive_arg_functions
         self.any_arg_functions = any_arg_functions
+        self.random_state = random_state
         self.columns_to_p_transform_ = None
         self.columns_to_a_transform_ = None
         return self
@@ -661,22 +693,30 @@ class CatSelector(PFeatureMaker):
     cat_values_: Optional[Dict[str, Set[str]]]
 
     def __init__(self
+                 , *
                  , min_cat_size: int = 20
                  , max_uniques: int = 100
-                 , *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.set_params(min_cat_size, max_uniques)
+                 , random_state = None
+                 , **kwargs) -> None:
+        super().__init__( **kwargs)
+        self.set_params(min_cat_size=min_cat_size
+                        , max_uniques=max_uniques
+                        , random_state = random_state)
 
     def get_params(self, deep=True):
-        params = {"min_cat_size": self.min_cat_size
-            , "max_uniques": self.max_uniques}
+        params = dict(min_cat_size = self.min_cat_size
+            , max_uniques = self.max_uniques
+            , random_state = self.random_state)
         return params
 
-    def set_params(self
-                   , min_cat_size
-                   , max_uniques, **kwards):
+    def set_params(self, *
+            , min_cat_size = None
+            , max_uniques = None
+            , random_state = None
+            , **kwards):
         self.min_cat_size = min_cat_size
         self.max_uniques = max_uniques
+        self.random_state = random_state
         self.cat_columns_ = None
         self.cat_values_ = None
         return self
@@ -724,33 +764,39 @@ class CatSelector(PFeatureMaker):
         return X
 
 
-
+# Workaround to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do not support postponed evaluation
 class TargetMultiEncoder(CatSelector):
     pass
 
 
 class TargetMultiEncoder(CatSelector):
+    """ A transformer for target-encoding categorical features"""
+
     tme_agg_funcs: List[Any]
     tme_cat_values_: Optional[Dict[str, pd.DataFrame]]
     tme_default_values_: Optional[Dict[str, float]]
     nan_string:str
 
-    def __init__(self
+    def __init__(self, *
                  , min_cat_size=20
                  , max_uniques=100
                  , agg_funcs=[
-                        percentile05
+                        percentile01
                         , percentile25
                         , percentile50
                         , percentile75
-                        , percentile95
+                        , percentile99
                         , minmode
                         , maxmode]
-                 , *args
+                 , random_state = None
                  , **kwargs
                  ) -> None:
-        super().__init__(*args, **kwargs)
-        self.set_params(min_cat_size, max_uniques, agg_funcs)
+        super().__init__(**kwargs)
+        self.set_params(min_cat_size=min_cat_size
+            , max_uniques=max_uniques
+            , agg_funcs=agg_funcs
+            , random_state=random_state)
 
     def get_params(self, deep=True):
         params = super().get_params(deep)
@@ -758,12 +804,16 @@ class TargetMultiEncoder(CatSelector):
         return params
 
     def set_params(self
-                   , min_cat_size
-                   , max_uniques
-                   , tme_agg_funcs = None
-                   ):
-        super().set_params(min_cat_size, max_uniques)
-        self.tme_agg_funcs = deepcopy(tme_agg_funcs)
+                   , min_cat_size=None
+                   , max_uniques=None
+                   , agg_funcs = None
+                   , random_state = None
+                   ,**kwargs
+                   ) -> TargetMultiEncoder:
+        super().set_params(min_cat_size=min_cat_size
+            , max_uniques=max_uniques
+            , random_state=random_state, **kwargs)
+        self.tme_agg_funcs = deepcopy(agg_funcs)
         self.tme_cat_values_ = None
         self.tme_default_values_ = None
         self.nan_string: str = "<<<<-----TME-NaN----->>>>:" + str(id(self))
@@ -816,8 +866,8 @@ class TargetMultiEncoder(CatSelector):
 
     def fit_transform(self
                       , X: pd.DataFrame
-                      , y
-                      ) -> TargetMultiEncoder:
+                      , y: pd.Series
+                      ) -> pd.DataFrame:
 
         X, y = self.start_fitting(X, y)
 
@@ -917,18 +967,26 @@ class LOOMeanTargetEncoder(CatSelector):
     def __init__(self
                  , min_cat_size: int = 20
                  , max_uniques: int = 100
+                 , random_state = None
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.set_params(min_cat_size, max_uniques)
+        self.set_params(min_cat_size=min_cat_size
+                        , max_uniques=max_uniques
+                        , random_state=random_state)
 
     def get_params(self, deep=True):
         params = super().get_params(deep)
         return params
 
     def set_params(self
-                   , min_cat_size
-                   , max_uniques):
-        super().set_params(min_cat_size, max_uniques)
+            , min_cat_size = None
+            , max_uniques = None
+            , random_state = None
+            , **kwargs):
+        super().set_params(min_cat_size=min_cat_size
+            , max_uniques=max_uniques
+            , random_state= random_state
+            , **kwargs)
         self.sums_counts_ = None
         self.encodable_columns_ = None
         self.nan_string: str = "<<<<-----LOO-NaN----->>>>:" + str(id(self))
@@ -1020,23 +1078,33 @@ class LOOMeanTargetEncoder(CatSelector):
 
 
 class DummiesMaker(CatSelector):
+    """ A tramsformer that creates dummies for categorical features"""
+
     dummy_names_: Optional[str]
 
     def __init__(self
                  , min_cat_size: int = 20
                  , max_uniques: int = 100
+                 , random_state = None
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.set_params(min_cat_size, max_uniques)
+        self.set_params(min_cat_size=min_cat_size
+                        , max_uniques=max_uniques
+                        , random_state=random_state)
 
     def get_params(self, deep=True):
         params = super().get_params(deep)
         return params
 
     def set_params(self
-                   , min_cat_size
-                   , max_uniques):
-        super().set_params(min_cat_size, max_uniques)
+            , min_cat_size = None
+            , max_uniques = None
+            , random_state = None
+            ,**kwargs):
+        super().set_params(min_cat_size=min_cat_size
+            ,max_uniques=max_uniques
+            ,random_state=random_state
+            ,**kwargs)
         self.dummy_names_ = None
         return self
 
@@ -1110,101 +1178,6 @@ class DummiesMaker(CatSelector):
         return self.finish_transforming(result)
 
 
-
-class FeatureShower(PFeatureMaker):
-    pass
-
-
-class FeatureShower(PFeatureMaker):
-    is_fitted_flag_: bool
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.set_params()
-
-    def set_params(self, deep: bool = False) -> FeatureShower:
-        self.nan_inducer = NaN_Inducer()
-        self.dummies_maker = DummiesMaker()
-        self.numeric_func_trnsf = NumericFuncTransformer()
-        self.numeric_imputer = NumericImputer()
-        self.target_multi_encoder = TargetMultiEncoder()
-        self.deduper = Deduper()
-        self.is_fitted_flag_ = False
-        return self
-
-    def get_params(self, deep: bool = False) -> Dict[str, Any]:
-        return {}
-
-    @property
-    def is_fitted_(self):
-        return self.is_fitted_flag_
-
-
-    @property
-    def input_columns_(self) -> List[str]:
-        return self.nan_inducer.input_columns_
-
-
-    @property
-    def output_columns_(self) -> List[str]:
-        return self.deduper.output_columns_
-
-    @property
-    def input_can_have_nans(self) -> bool:
-        return True
-
-    @property
-    def output_can_have_nans(self) -> bool:
-        return False
-
-    def fit_transform(self
-                      , X:pd.DataFrame
-                      , y:pd.Series
-                      ) -> pd.DataFrame:
-        X, y = self.start_fitting(X, y)
-
-        X_with_NaNs = self.nan_inducer.fit_transform(X, y)
-
-        X_numeric_tr = self.numeric_func_trnsf.fit_transform(X_with_NaNs, y)
-        X_numeric_no_NaNs = self.numeric_imputer.fit_transform(X_numeric_tr, y)
-
-        X_dummies = self.dummies_maker.fit_transform(X_with_NaNs,y)
-
-        X_target_encoded_cats = self.target_multi_encoder.fit_transform(
-            X_with_NaNs, y)
-
-        X_full = pd.concat(
-            [X_numeric_no_NaNs, X_target_encoded_cats, X_dummies], axis=1)
-
-        X_final = self.deduper.fit_transform(X_full, y)
-
-        self.is_fitted_flag_ = True
-
-        return self.finish_transforming(X_final)
-
-
-    def transform(self, X):
-        X = self.start_transforming(X)
-
-        X_with_NaNs = self.nan_inducer.transform(X)
-
-        X_numeric_tr = self.numeric_func_trnsf.transform(X_with_NaNs)
-        X_numeric_no_NaNs = self.numeric_imputer.transform(X_numeric_tr)
-
-        X_dummies = self.dummies_maker.transform(X_with_NaNs)
-        for c in X_dummies:
-            X_dummies[c] =1
-
-        X_target_encoded_cats = self.target_multi_encoder.transform(
-            X_with_NaNs)
-        X_full = pd.concat(
-            [X_numeric_no_NaNs, X_target_encoded_cats,X_dummies], axis=1)
-
-        X_final = self.deduper.transform(X_full)
-
-        return self.finish_transforming(X_final)
-
-
 class RectifierSplitter(PFeatureMaker):
     percentiles: List[int]
     is_fitted_flag_: bool
@@ -1213,7 +1186,8 @@ class RectifierSplitter(PFeatureMaker):
     percentiles_values_: Optional[Dict[str, List[float]]]
 
     def __init__(self
-                 , percentiles=[5, 25, 50, 75, 95]
+                 , percentiles=[1, 25, 50, 75, 99]
+                 , random_state = None
                  , *args
                  , **kwargs
                  ) -> None:
@@ -1221,14 +1195,19 @@ class RectifierSplitter(PFeatureMaker):
         self.set_params(percentiles)
 
     def get_params(self, deep=True):
-        params = dict(percentiles=self.percentiles)
+        params = dict(percentiles=self.percentiles
+            , random_state = self.random_state)
         return params
 
-    def set_params(self, percentiles: List[int]):
+    def set_params(self
+                   , percentiles: List[int] = [1, 25, 50, 75, 99]
+                   , random_state = None
+                   ,**kwargs):
         assert len(percentiles)
         for p in percentiles:
             assert 0 < p < 100
         self.percentiles = percentiles
+        self.random_state = random_state
         self.is_fitted_flag_ = False
         self.numeric_columns_ = None
         self.generated_columns_ = None
@@ -1241,11 +1220,11 @@ class RectifierSplitter(PFeatureMaker):
 
     @property
     def input_can_have_nans(self) -> bool:
-        return True
+        return False
 
     @property
     def output_can_have_nans(self) -> bool:
-        return False  ## ?!?!?!?
+        return False
 
     @property
     def input_columns_(self) -> List[str]:
@@ -1259,7 +1238,7 @@ class RectifierSplitter(PFeatureMaker):
 
     def fit_transform(self
                       , X: pd.DataFrame
-                      , y
+                      , y: pd.Series
                       ) -> pd.DataFrame:
 
         X, y = self.start_fitting(X, y)
@@ -1273,7 +1252,6 @@ class RectifierSplitter(PFeatureMaker):
             self.percentiles_values_[col] = sorted(column_percentiles)
 
         self.is_fitted_flag_ = True
-        print()
         result = self.transform(X, generate_column_names=True)
 
         return result
@@ -1311,3 +1289,114 @@ class RectifierSplitter(PFeatureMaker):
             self.generated_columns_ = sorted(X.columns)
 
         return self.finish_transforming(X)
+
+# Workaround to ensure compatibility with Python <= 3.6
+# Versions 3.6 and below do not support postponed evaluation
+class FeatureShower(PFeatureMaker):
+    pass
+
+
+class FeatureShower(PFeatureMaker):
+    """ A transformer that creates large number of various new features"""
+    is_fitted_flag_: bool
+
+    def __init__(self, *, random_state = None, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.set_params(random_state = random_state, **kwargs)
+
+    def set_params(self
+            , random_state = None
+            , deep: bool = False
+            , **kwargs) -> FeatureShower:
+        self.random_state = random_state
+        self.nan_inducer = NaN_Inducer(random_state = random_state)
+        self.dummies_maker = DummiesMaker()
+        self.numeric_func_trnsf = NumericFuncTransformer(random_state = random_state)
+        self.numeric_imputer = NumericImputer(random_state = random_state)
+        self.target_multi_encoder = TargetMultiEncoder(random_state = random_state)
+        self.rectifier_splitter = RectifierSplitter()
+        self.deduper = Deduper()
+        self.is_fitted_flag_ = False
+        return self
+
+    def get_params(self, deep: bool = False) -> Dict[str, Any]:
+        params = dict(random_state = self.random_state)
+        return params
+
+    @property
+    def is_fitted_(self):
+        return self.is_fitted_flag_
+
+
+    @property
+    def input_columns_(self) -> List[str]:
+        return self.nan_inducer.input_columns_
+
+
+    @property
+    def output_columns_(self) -> List[str]:
+        return self.deduper.output_columns_
+
+    @property
+    def input_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def output_can_have_nans(self) -> bool:
+        return False
+
+    def fit_transform(self
+                      , X:pd.DataFrame
+                      , y:pd.Series
+                      ) -> pd.DataFrame:
+        X, y = self.start_fitting(X, y)
+
+        X_with_NaNs = self.nan_inducer.fit_transform(X, y)
+
+        X_numeric_tr = self.numeric_func_trnsf.fit_transform(X_with_NaNs, y)
+        X_numeric_no_NaNs = self.numeric_imputer.fit_transform(X_numeric_tr, y)
+
+        X_target_encoded_cats = self.target_multi_encoder.fit_transform(
+            X_with_NaNs, y)
+
+        X_full = pd.concat(
+            [X_numeric_no_NaNs, X_target_encoded_cats], axis=1)
+
+        per50_cols = [c for c in X_full.columns if "percentile50" in c]
+        targ_enc_cols = [c for c in per50_cols if "targ_enc" in c]
+        passthrough_cols = [c for c in per50_cols if "passthrough" in c]
+        ps_cols = targ_enc_cols + passthrough_cols
+        X_rs = self.rectifier_splitter.fit_transform(X_full[ps_cols],y)
+        X_pre_final = pd.concat([X_full, X_rs], axis = 1)
+
+        X_final = self.deduper.fit_transform(X_pre_final, y)
+
+        self.is_fitted_flag_ = True
+
+        return self.finish_transforming(X_final)
+
+
+    def transform(self, X):
+        X = self.start_transforming(X)
+
+        X_with_NaNs = self.nan_inducer.transform(X)
+
+        X_numeric_tr = self.numeric_func_trnsf.transform(X_with_NaNs)
+        X_numeric_no_NaNs = self.numeric_imputer.transform(X_numeric_tr)
+
+        X_target_encoded_cats = self.target_multi_encoder.transform(
+            X_with_NaNs)
+
+        X_full = pd.concat(
+            [X_numeric_no_NaNs, X_target_encoded_cats,], axis=1)
+
+        per50_cols = [c for c in X_full.columns if "percentile50" in c]
+        targ_enc_cols = [c for c in per50_cols if "targ_enc" in c]
+        passthrough_cols = [c for c in per50_cols if "passthrough" in c]
+        ps_cols = targ_enc_cols + passthrough_cols
+        X_rs = self.rectifier_splitter.transform(X_full[ps_cols])
+        X_pre_final = pd.concat([X_full, X_rs], axis=1)
+
+        X_final = self.deduper.transform(X_pre_final)
+
+        return self.finish_transforming(X_final)
