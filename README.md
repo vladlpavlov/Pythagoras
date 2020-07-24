@@ -22,14 +22,6 @@ Binary installers for the latest released version are available at the Python pa
 
         pip install Pythagoras
 
-### Dependencies
-
-* [pandas](https://pandas.pydata.org/)
-* [scikit-learn](https://scikit-learn.org/) 
-* [numpy](https://numpy.org/)
-* [scipy](https://www.scipy.org/)
-* [xxhash](https://pypi.org/project/xxhash/)
-
 ### Major Pythagoras Components
 
 * **SimpleGarden**: Efficient regression meta-algorithm:
@@ -55,6 +47,15 @@ right out-of-the-box (COMING SOON).
 2. Pandas-based data representation 
 3. Compatibility with SKLearn
 4. OOP and static typing
+
+### Dependencies
+
+* [pandas](https://pandas.pydata.org/)
+* [scikit-learn](https://scikit-learn.org/) 
+* [numpy](https://numpy.org/)
+* [scipy](https://www.scipy.org/)
+* [xxhash](https://pypi.org/project/xxhash/)
+
 
 ### Key Contacts
 
