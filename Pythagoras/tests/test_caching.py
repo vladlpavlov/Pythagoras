@@ -48,6 +48,11 @@ def fib(n):
         return 1
     return fib(n-1) + fib(n-2)
 
+
+# Function returns None
+def func_return_none():
+    return None
+
 # Testing value
 values = [12345, 678.9, True, "a string", [1, 2, 3], {1, 2, 3, 4}, (1, 2, 3, 4, 5)
           , "a very long string which should be processed differently, and reduced to a short string"]
@@ -94,7 +99,7 @@ def file_name_arg(request):
     return request.param
 
 
-class TestPickleCache:
+class TestCaching:
 
 # ------ Start Test for Basic Function and Method ---------
     def test_demo(self):
@@ -618,7 +623,7 @@ class TestPickleCache:
 
 # -------------------------- Test File Name Edge Cases ---------------------------------------
 
-    def test_filename_edge_case(self, tmpdir):
+    def test_filename_edge_case(self, tmpdir, file_name_arg):
         '''
         Testing two files with same content and different filename
         filename length: short (1) and long (230)
@@ -651,38 +656,6 @@ class TestPickleCache:
         assert my_cache.cache_dir_len() == 2
 
 # -------------------------- Test Function Argument Edge Case -----------------------------------
-
-    def test_function_change_output_only(self, tmpdir):
-        """
-        Real case: if user find a mistake in the function output and correct the fuction
-        without changing the name and input parameter of the function, PickleCache will
-        not help.
-
-        This is not the problem to be solved by CACHE but need to provide PRECAUTION message to
-        the users that they need to make sure the function itself is correct.
-        """
-        # Instantiate PickleCache
-        my_cache = PickleCache(
-            cache_dir=str(tmpdir),
-            write_to_cache=True,
-            read_from_cache=True)
-
-        def temp_func(a, b):
-            return a*b + 1
-
-        original_func = temp_func
-        new_func = my_cache(original_func)
-        output_1 = new_func(2, 3)
-
-        def temp_func(a, b):
-            return a*b
-
-        original_func = temp_func
-        new_func = my_cache(original_func)
-        output_2 = new_func(2, 3)
-
-        assert output_1 != output_2
-
     def test_function_tiny_change(self, tmpdir):
         """
         Test small changes to the input parameter for a one-arg function
@@ -744,6 +717,103 @@ class TestPickleCache:
         run_4 = new_func(arg_2, arg_2, arg_2)
         assert run_1 == run_4
         assert my_cache.cache_dir_len() == 4
+
+# ----------------------- Test Error Message Log ---------------------
+
+    def test_function_log(self, tmpdir, func_speed_arg, caplog):
+        """
+            Test the caching fast and slow functions:
+            1. Expect warning message when loading small files for not saving time
+            2. Expect no warning message when loading large file
+        """
+
+        # Instantiate PickleCache
+        my_cache = PickleCache(
+            cache_dir=str(tmpdir),
+            write_to_cache=True,
+            read_from_cache=True
+        )
+
+        # Apply PickleCache to fibonacci function
+        original_func = fib
+        new_func = my_cache(original_func)
+
+        # 1st Run
+        new_func(func_speed_arg[1])
+
+        # 2nd Run
+        new_func(func_speed_arg[1])
+
+        # Fast Function Test: expect 'Caching did not save time' warning
+        if func_speed_arg[0] == 'fast':
+            assert caplog.records[3].levelname == 'WARNING'
+            assert 'Caching did not save time' in caplog.text
+
+        # Slow Function Test: expect no warning
+        if func_speed_arg[0] == 'slow':
+            assert caplog.records[3].levelname != 'WARNING'
+            assert 'Caching did not save time' not in caplog.text
+
+    def test_none_return_function_log(self, tmpdir, caplog):
+        """
+            Test function returns None. Expect 2 warning messages
+            1. The function returns None
+            2. Cache does not save time
+        """
+
+        # Instantiate PickleCache
+        my_cache = PickleCache(
+            cache_dir=str(tmpdir),
+            write_to_cache=True,
+            read_from_cache=True)
+
+        original_func = func_return_none
+        new_func = my_cache(original_func)
+        output = new_func()
+
+        assert original_func() == new_func()
+        assert not output
+        assert my_cache.cache_dir_len() == 1
+        assert caplog.records[2].levelname == 'WARNING'
+        assert caplog.records[4].levelname == 'WARNING'
+        assert 'returned None' in caplog.text
+        assert 'Caching did not save time' in caplog.text
+
+    def test_load_csv_log(self, tmpdir, file_size_arg, caplog):
+        """
+            Test the logging for loading small and large files.
+            1. Expect warning message when loading small files for not saving time
+            2. Expect no warning message when loading large file
+        """
+
+        # Create a new testing csv file
+        tmp_dir = tmpdir.mkdir('original_file_temp')
+        input_file = tmp_dir.join('eggs.csv')
+        input_file.write('S' * file_size_arg[1])
+
+        # Instantiate PickleCache
+        my_cache = PickleCache(
+            cache_dir=str(tmpdir.mkdir('cache_temp')),
+            write_to_cache=sample_writing_flag,
+            read_from_cache=sample_reading_flag,
+            input_dir=tmp_dir
+        )
+
+        # 1st Read
+        my_cache.read_csv("eggs.csv", header=None)
+
+        # 1nd Read
+        my_cache.read_csv("eggs.csv", header=None)
+
+        # Small file test (Extreme case): expect 'Cache did not save time' warning
+        if file_size_arg[0] == 'small':
+            assert caplog.records[2].levelname == 'WARNING'
+            assert 'Caching did not save time' in caplog.text
+
+        # Large file test: expect no warning
+        if file_size_arg[0] == 'large':
+            assert caplog.records[2].levelname != 'WARNING'
+            assert 'Caching did not save time' not in caplog.text
 
 # --------- Test PickleCache extension: User Class, 3rd Party Class ---------------------
 
