@@ -206,10 +206,9 @@ class NaN_Inducer(PFeatureMaker):
         return params
 
     def set_params(self, *
-                   , min_nan_level = 0.05
+                   , min_nan_level = None
                    , random_state = None
                    , **kwargs):
-        assert 0 <= min_nan_level < 1
         self.min_nan_level = min_nan_level
         self.transformabe_columns_ = None
         self.log_df_ = None
@@ -241,6 +240,7 @@ class NaN_Inducer(PFeatureMaker):
                       , X: pd.DataFrame
                       , y: Optional[pd.Series] = None
                       ) -> pd.DataFrame:
+        assert 0 <= self.min_nan_level < 1
 
         type_of_x = type(X).__name__
         self.log_df_ = pd.DataFrame()
@@ -350,12 +350,11 @@ class Deduper(PFeatureMaker):
         return params
 
     def set_params(self , *
-                   , keep:str = "first"
-                   , allow_nans:bool = False
+                   , keep = None
+                   , allow_nans = None
                    , random_state = None
                    ,**kwargs
                    ) -> PFeatureMaker:
-        assert keep in {"first", "last"}
         self.keep = keep
         self.allow_nans = allow_nans
         self.columns_to_keep_ = []
@@ -387,6 +386,9 @@ class Deduper(PFeatureMaker):
                       , X: pd.DataFrame
                       , y: Optional[pd.Series] = None
                       ) -> pd.DataFrame:
+
+        assert self.keep in {"first", "last"}
+
         X, y = self.start_fitting(X, y)
 
         X_dd = X.T.drop_duplicates(keep=self.keep).T
@@ -416,34 +418,32 @@ class Deduper(PFeatureMaker):
 class NumericImputer(PFeatureMaker):
     """A transformer that creates NaN-less versions of numeric columns"""
 
-    aggr_funcs: Optional[List[Any]]
+    imputation_aggr_funcs: Optional[List[Any]]
     fill_values_: Optional[pd.DataFrame]
 
     def __init__(self, *
-            , aggr_funcs= [
+            , imputation_aggr_funcs= [
                 np.min, np.max, percentile50, minmode, maxmode]
             , random_state = None
             , **kwargs
             ) -> None:
         super().__init__(**kwargs)
         self.set_params(
-            aggr_funcs = aggr_funcs, random_state = random_state, **kwargs)
+            imputation_aggr_funcs = imputation_aggr_funcs
+            , random_state = random_state
+            , **kwargs)
 
     def get_params(self, deep=True):
-        params = dict(aggr_funcs=self.aggr_funcs
+        params = dict(imputation_aggr_funcs=self.imputation_aggr_funcs
             , random_state = self.random_state)
         return params
 
     def set_params(self, *
-            , aggr_funcs = None
-            # [
-            #     np.min, np.max, percentile50, minmode, maxmode]
+            , imputation_aggr_funcs = None
             , random_state = None
             , **kwargs
             ) -> PFeatureMaker:
-        # for f in aggr_funcs:
-        #     assert callable(f)
-        self.aggr_funcs = aggr_funcs
+        self.imputation_aggr_funcs = imputation_aggr_funcs
         self.random_state = random_state
         self.fill_values_ = None
 
@@ -470,7 +470,7 @@ class NumericImputer(PFeatureMaker):
     def output_columns_(self) -> List[str]:
         all_columns = []
         for col in self.input_columns_:
-            for f in self.aggr_funcs:
+            for f in self.imputation_aggr_funcs:
                 label = f.__name__
                 column_name = "fillna_" + label + "(" + col + ")"
                 all_columns += [column_name]
@@ -481,6 +481,8 @@ class NumericImputer(PFeatureMaker):
                       , X: pd.DataFrame
                       , y: Optional[pd.Series] = None
                       ) -> pd.DataFrame:
+        for f in self.imputation_aggr_funcs:
+            assert callable(f)
 
         type_of_X = type(X).__name__
 
@@ -488,7 +490,7 @@ class NumericImputer(PFeatureMaker):
 
         X_num = X.select_dtypes(include="number")
         num_nans = int(X_num.isna().sum().sum())
-        aggr_func_names = [f.__name__ for f in self.aggr_funcs]
+        aggr_func_names = [f.__name__ for f in self.imputation_aggr_funcs]
         n_func = len(aggr_func_names)
 
         log_message = f"==> Starting removing NaNs from "
@@ -504,7 +506,7 @@ class NumericImputer(PFeatureMaker):
 
         aggregations = {}
         for col in X_num:
-            aggregations[col] = [f(X_num[col]) for f in self.aggr_funcs]
+            aggregations[col] = [f(X_num[col]) for f in self.imputation_aggr_funcs]
 
         self.fill_values_ = pd.DataFrame(
             data=aggregations, index=aggr_func_names)
@@ -522,7 +524,7 @@ class NumericImputer(PFeatureMaker):
 
         all_columns = []
         for col in X_num.columns:
-            for f in self.aggr_funcs:
+            for f in self.imputation_aggr_funcs:
                 label = f.__name__
                 f_val = self.fill_values_.at[label, col]
                 filled_column = X_num[col].fillna(value=f_val)
@@ -533,7 +535,7 @@ class NumericImputer(PFeatureMaker):
         log_message = f"<== Returning a new, numeric-only dataframe"
         log_message += f" with shape {result.shape}."
         log_message += f" {num_nans} original NaN-s were removed"
-        log_message += f" by applying {len(self.aggr_funcs)}"
+        log_message += f" by applying {len(self.imputation_aggr_funcs)}"
         log_message += f" imputation functions."
         self.info(log_message)
 
@@ -545,37 +547,37 @@ class NumericFuncTransformer(PFeatureMaker):
 
     columns_to_a_transform_: Optional[List[str]]
     columns_to_p_transform_: Optional[List[str]]
-    positive_arg_functions: List[Any]
-    any_arg_functions: List[Any]
+    positive_arg_num_functions: List[Any]
+    any_arg_num_functions: List[Any]
 
     def __init__(self, *
-                 , positive_arg_functions=[np.log1p, root2, power2]
-                 , any_arg_functions=[passthrough, power3]
+                 , positive_arg_num_functions=[np.log1p, root2, power2]
+                 , any_arg_num_functions=[passthrough, power3]
                  , random_state = None
                  , **kwargs) -> None:
         super().__init__(**kwargs)
         self.set_params(
-            positive_arg_functions, any_arg_functions, random_state,**kwargs)
+            positive_arg_num_functions, any_arg_num_functions, random_state,**kwargs)
 
     def get_params(self, deep=True):
-        params = dict(positive_arg_functions=self.positive_arg_functions
-            , any_arg_functions=self.any_arg_functions
-            , random_state = self.random_state)
+        params = dict(positive_arg_num_functions=self.positive_arg_num_functions
+                      , any_arg_num_functions=self.any_arg_num_functions
+                      , random_state = self.random_state)
         return params
 
     def set_params(self
-                   , positive_arg_functions = None
-                   , any_arg_functions = None
+                   , positive_arg_num_functions = None
+                   , any_arg_num_functions = None
                    , random_state = None
                    , **kwargs
                    ) -> PFeatureMaker:
 
-        if positive_arg_functions is not None:
-            for f in positive_arg_functions + any_arg_functions:
+        if positive_arg_num_functions is not None:
+            for f in positive_arg_num_functions + any_arg_num_functions:
                 assert callable(f)
 
-        self.positive_arg_functions = positive_arg_functions
-        self.any_arg_functions = any_arg_functions
+        self.positive_arg_num_functions = positive_arg_num_functions
+        self.any_arg_num_functions = any_arg_num_functions
         self.random_state = random_state
         self.columns_to_p_transform_ = None
         self.columns_to_a_transform_ = None
@@ -606,12 +608,12 @@ class NumericFuncTransformer(PFeatureMaker):
 
         all_columns = []
 
-        for a_func in self.any_arg_functions:
+        for a_func in self.any_arg_num_functions:
             f_columns = [a_func.__name__ + "(" + c + ")"
                          for c in self.columns_to_a_transform_]
             all_columns += f_columns
 
-        for p_func in self.positive_arg_functions:
+        for p_func in self.positive_arg_num_functions:
             f_columns = [p_func.__name__ + "(" + c + ")"
                          for c in self.columns_to_p_transform_]
             all_columns += f_columns
@@ -644,7 +646,7 @@ class NumericFuncTransformer(PFeatureMaker):
                   , X: pd.DataFrame
                   ) -> pd.DataFrame:
 
-        all_funcs = self.positive_arg_functions + self.any_arg_functions
+        all_funcs = self.positive_arg_num_functions + self.any_arg_num_functions
         all_funcs = [f.__name__ for f in all_funcs]
 
         X_numbers = self.start_transforming(
@@ -659,7 +661,7 @@ class NumericFuncTransformer(PFeatureMaker):
 
         all_transformations = []
 
-        for a_func in self.any_arg_functions:
+        for a_func in self.any_arg_num_functions:
             X_new = a_func(X_numbers)
             X_new.columns = [a_func.__name__ + "(" + c + ")" for c in X_new]
             all_transformations += [X_new]
@@ -679,7 +681,7 @@ class NumericFuncTransformer(PFeatureMaker):
                 log_message += "with zeros."
                 self.warning(log_message)
 
-            for p_func in self.positive_arg_functions:
+            for p_func in self.positive_arg_num_functions:
                 X_new = p_func(X_positive_numbers)
                 X_new.columns = [p_func.__name__ + "(" + c + ")" for c in
                                  X_new]
@@ -689,6 +691,7 @@ class NumericFuncTransformer(PFeatureMaker):
 
         return self.finish_transforming(result)
 
+
 class CatSelector(PFeatureMaker):
     """ Abstract base class that finds categorical features.
 
@@ -697,34 +700,34 @@ class CatSelector(PFeatureMaker):
     """
 
     min_cat_size: int
-    max_uniques: int
+    max_uniques_per_cat: int
     cat_columns_: Optional[Set[str]]
     cat_values_: Optional[Dict[str, Set[str]]]
 
     def __init__(self
                  , *
                  , min_cat_size: int = 20
-                 , max_uniques: int = 100
+                 , max_uniques_per_cat: int = 100
                  , random_state = None
                  , **kwargs) -> None:
         super().__init__( **kwargs)
         self.set_params(min_cat_size=min_cat_size
-                        , max_uniques=max_uniques
+                        , max_uniques_per_cat=max_uniques_per_cat
                         , random_state = random_state)
 
     def get_params(self, deep=True):
         params = dict(min_cat_size = self.min_cat_size
-            , max_uniques = self.max_uniques
+            , max_uniques_per_cat = self.max_uniques_per_cat
             , random_state = self.random_state)
         return params
 
     def set_params(self, *
-            , min_cat_size = None
-            , max_uniques = None
-            , random_state = None
-            , **kwards):
+                   , min_cat_size = None
+                   , max_uniques_per_cat = None
+                   , random_state = None
+                   , **kwards) -> PFeatureMaker:
         self.min_cat_size = min_cat_size
-        self.max_uniques = max_uniques
+        self.max_uniques_per_cat = max_uniques_per_cat
         self.random_state = random_state
         self.cat_columns_ = None
         self.cat_values_ = None
@@ -734,11 +737,11 @@ class CatSelector(PFeatureMaker):
                       , X: Any
                       , y: Any
                       , write_to_log: bool = True
-                      ) -> pd.DataFrame:
+                      ) -> Tuple[pd.DataFrame,pd.Series]:
 
         X, y = super().start_fitting(X, y, write_to_log)
         uniques = X.nunique()
-        uniques = uniques[uniques <= self.max_uniques]
+        uniques = uniques[uniques <= self.max_uniques_per_cat]
 
         self.cat_columns_ = set(uniques.index)
         self.cat_values_ = dict()
@@ -758,7 +761,7 @@ class CatSelector(PFeatureMaker):
             nan_idx = ~ X[col].isin(self.cat_values_[col])
             X.loc[nan_idx, col] = None
 
-        return X, y
+        return X,y
 
     def start_transforming(self
                            , X: pd.DataFrame
@@ -782,15 +785,15 @@ class TargetMultiEncoder(CatSelector):
 class TargetMultiEncoder(CatSelector):
     """ A transformer for target-encoding categorical features"""
 
-    tme_agg_funcs: List[Any]
+    tme_aggr_funcs: List[Any]
     tme_cat_values_: Optional[Dict[str, pd.DataFrame]]
     tme_default_values_: Optional[Dict[str, float]]
     nan_string:str
 
     def __init__(self, *
                  , min_cat_size=20
-                 , max_uniques=100
-                 , agg_funcs=[
+                 , max_uniques_per_cat=100
+                 , tme_aggr_funcs=[
                         percentile01
                         , percentile25
                         , percentile50
@@ -803,26 +806,26 @@ class TargetMultiEncoder(CatSelector):
                  ) -> None:
         super().__init__(**kwargs)
         self.set_params(min_cat_size=min_cat_size
-            , max_uniques=max_uniques
-            , agg_funcs=agg_funcs
-            , random_state=random_state)
+                        , max_uniques_per_cat=max_uniques_per_cat
+                        , tme_aggr_funcs=tme_aggr_funcs
+                        , random_state=random_state)
 
     def get_params(self, deep=True):
         params = super().get_params(deep)
-        params["tme_agg_funcs"] = self.tme_agg_funcs
+        params["tme_aggr_funcs"] = self.tme_aggr_funcs
         return params
 
     def set_params(self
                    , min_cat_size=None
-                   , max_uniques=None
-                   , agg_funcs = None
+                   , max_uniques_per_cat=None
+                   , tme_aggr_funcs = None
                    , random_state = None
-                   ,**kwargs
+                   , **kwargs
                    ) -> TargetMultiEncoder:
         super().set_params(min_cat_size=min_cat_size
-            , max_uniques=max_uniques
-            , random_state=random_state, **kwargs)
-        self.tme_agg_funcs = deepcopy(agg_funcs)
+                           , max_uniques_per_cat=max_uniques_per_cat
+                           , random_state=random_state, **kwargs)
+        self.tme_aggr_funcs = deepcopy(tme_aggr_funcs)
         self.tme_cat_values_ = None
         self.tme_default_values_ = None
         self.nan_string: str = "<<<<-----TME-NaN----->>>>:" + str(id(self))
@@ -849,7 +852,7 @@ class TargetMultiEncoder(CatSelector):
         assert self.is_fitted_
         return sorted([self.tme_column_name(f, c)
                        for c in self.tme_cat_values_ for f in
-                       self.tme_agg_funcs])
+                       self.tme_aggr_funcs])
 
     def tme_column_name(self, func, column: str) -> str:
         if callable(func):
@@ -885,8 +888,8 @@ class TargetMultiEncoder(CatSelector):
         assert len(X) == len(y)
 
         log_message = f"A total of {len(X.columns)} features "
-        log_message += f"will be encoded using {len(self.tme_agg_funcs)} "
-        log_message += f"functions: {[f.__name__ for f in self.tme_agg_funcs]}."
+        log_message += f"will be encoded using {len(self.tme_aggr_funcs)} "
+        log_message += f"functions: {[f.__name__ for f in self.tme_aggr_funcs]}."
         self.info(log_message)
 
         columns = deepcopy(X.columns)
@@ -896,7 +899,7 @@ class TargetMultiEncoder(CatSelector):
 
         self.tme_default_values_ = {}
         self.tme_cat_values_ = {}
-        for f in self.tme_agg_funcs:
+        for f in self.tme_aggr_funcs:
             self.tme_default_values_[f] = f(X[taget_name])
 
         for col in columns:
@@ -904,7 +907,7 @@ class TargetMultiEncoder(CatSelector):
             v = pd.pivot_table(X[[col, taget_name]]
                                , values=taget_name
                                , index=col
-                               , aggfunc=self.tme_agg_funcs
+                               , aggfunc=self.tme_aggr_funcs
                                , dropna=False)
 
             n_nans = v.isna().sum().sum()
@@ -914,8 +917,8 @@ class TargetMultiEncoder(CatSelector):
                 log_message += " Replacing with default values."
                 self.warning(log_message)
 
-            for i in range(len(self.tme_agg_funcs)):
-                a_func = self.tme_agg_funcs[i]
+            for i in range(len(self.tme_aggr_funcs)):
+                a_func = self.tme_aggr_funcs[i]
                 def_value = self.tme_default_values_[a_func]
                 v[v.columns[i]] = v[v.columns[i]].fillna(def_value)
 
@@ -948,8 +951,8 @@ class TargetMultiEncoder(CatSelector):
             X.index = X[index_col_name]
             X.drop(columns=index_col_name, inplace = True)
 
-            for i in range(len(self.tme_agg_funcs)):
-                a_func = self.tme_agg_funcs[i]
+            for i in range(len(self.tme_aggr_funcs)):
+                a_func = self.tme_aggr_funcs[i]
                 a_column = self.tme_column_name(a_func, col)
                 def_value = self.tme_default_values_[a_func]
                 n_nans = X[a_column].isna().sum()
@@ -975,12 +978,12 @@ class LOOMeanTargetEncoder(CatSelector):
 
     def __init__(self
                  , min_cat_size: int = 20
-                 , max_uniques: int = 100
+                 , max_uniques_per_cat: int = 100
                  , random_state = None
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.set_params(min_cat_size=min_cat_size
-                        , max_uniques=max_uniques
+                        , max_uniques_per_cat=max_uniques_per_cat
                         , random_state=random_state)
 
     def get_params(self, deep=True):
@@ -988,14 +991,14 @@ class LOOMeanTargetEncoder(CatSelector):
         return params
 
     def set_params(self
-            , min_cat_size = None
-            , max_uniques = None
-            , random_state = None
-            , **kwargs):
+                   , min_cat_size = None
+                   , max_uniques_per_cat = None
+                   , random_state = None
+                   , **kwargs):
         super().set_params(min_cat_size=min_cat_size
-            , max_uniques=max_uniques
-            , random_state= random_state
-            , **kwargs)
+                           , max_uniques_per_cat=max_uniques_per_cat
+                           , random_state= random_state
+                           , **kwargs)
         self.sums_counts_ = None
         self.encodable_columns_ = None
         self.nan_string: str = "<<<<-----LOO-NaN----->>>>:" + str(id(self))
@@ -1093,12 +1096,12 @@ class DummiesMaker(CatSelector):
 
     def __init__(self
                  , min_cat_size: int = 20
-                 , max_uniques: int = 100
+                 , max_uniques_per_cat: int = 100
                  , random_state = None
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.set_params(min_cat_size=min_cat_size
-                        , max_uniques=max_uniques
+                        , max_uniques_per_cat=max_uniques_per_cat
                         , random_state=random_state)
 
     def get_params(self, deep=True):
@@ -1106,14 +1109,14 @@ class DummiesMaker(CatSelector):
         return params
 
     def set_params(self
-            , min_cat_size = None
-            , max_uniques = None
-            , random_state = None
-            ,**kwargs):
+                   , min_cat_size = None
+                   , max_uniques_per_cat = None
+                   , random_state = None
+                   , **kwargs):
         super().set_params(min_cat_size=min_cat_size
-            ,max_uniques=max_uniques
-            ,random_state=random_state
-            ,**kwargs)
+                           , max_uniques_per_cat=max_uniques_per_cat
+                           , random_state=random_state
+                           , **kwargs)
         self.dummy_names_ = None
         return self
 
@@ -1188,34 +1191,33 @@ class DummiesMaker(CatSelector):
 
 
 class RectifierSplitter(PFeatureMaker):
-    percentiles: List[int]
+    split_percentiles: List[int]
     is_fitted_flag_: bool
     numeric_columns_: Optional[List[str]]
     generated_columns_: Optional[List[str]]
     percentiles_values_: Optional[Dict[str, List[float]]]
 
     def __init__(self
-                 , percentiles=[1, 25, 50, 75, 99]
+                 , split_percentiles=[1, 25, 50, 75, 99]
                  , random_state = None
                  , *args
                  , **kwargs
                  ) -> None:
         super().__init__(*args, **kwargs)
-        self.set_params(percentiles)
+        self.set_params(
+            split_percentiles=deepcopy(split_percentiles)
+            ,random_state=random_state)
 
     def get_params(self, deep=True):
-        params = dict(percentiles=self.percentiles
+        params = dict(split_percentiles=deepcopy(self.split_percentiles)
             , random_state = self.random_state)
         return params
 
-    def set_params(self
-                   , percentiles: List[int] = [1, 25, 50, 75, 99]
+    def set_params(self, *
+                   , split_percentiles = None
                    , random_state = None
                    ,**kwargs):
-        assert len(percentiles)
-        for p in percentiles:
-            assert 0 < p < 100
-        self.percentiles = percentiles
+        self.split_percentiles = split_percentiles
         self.random_state = random_state
         self.is_fitted_flag_ = False
         self.numeric_columns_ = None
@@ -1250,13 +1252,17 @@ class RectifierSplitter(PFeatureMaker):
                       , y: pd.Series
                       ) -> pd.DataFrame:
 
+        assert len(self.split_percentiles)
+        for p in self.split_percentiles:
+            assert 0 < p < 100
+
         X, y = self.start_fitting(X, y)
         self.percentiles_values_ = dict()
         X_num = X.select_dtypes("number")
         self.numeric_columns_ = X_num.columns
         for col in X_num:
             column_percentiles = []
-            for p in self.percentiles:
+            for p in self.split_percentiles:
                 column_percentiles += [ np.nanpercentile(X_num[col], p)]
             self.percentiles_values_[col] = sorted(column_percentiles)
 
@@ -1310,27 +1316,85 @@ class FeatureShower(PFeatureMaker):
 
     is_fitted_flag_: bool
 
-    def __init__(self, *, random_state = None, **kwargs) -> None:
-        super().__init__(**kwargs)
-        self.set_params(random_state = random_state, **kwargs)
-
-    def set_params(self
+    def __init__(self, *,
+            min_nan_level: float = 0.05
+            , min_cat_size: int = 20
+            , max_uniques_per_cat: int = 100
+            , positive_arg_num_functions=[np.log1p, root2, power2]
+            , any_arg_num_functions=[passthrough, power3]
+            , imputation_aggr_funcs = [
+                np.min, np.max, percentile50, minmode, maxmode]
+            , tme_aggr_funcs = [percentile01
+                        , percentile25
+                        , percentile50
+                        , percentile75
+                        , percentile99
+                        , minmode
+                        , maxmode]
+            , split_percentiles=[1, 25, 50, 75, 99]
             , random_state = None
-            , deep: bool = False
-            , **kwargs) -> FeatureShower:
+            , **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.set_params(
+            min_nan_level=min_nan_level
+            , min_cat_size = min_cat_size
+            , max_uniques_per_cat= max_uniques_per_cat
+            , positive_arg_num_functions = deepcopy(positive_arg_num_functions)
+            , any_arg_num_functions=deepcopy(any_arg_num_functions)
+            , imputation_aggr_funcs = deepcopy(imputation_aggr_funcs)
+            , tme_aggr_funcs = deepcopy(tme_aggr_funcs)
+            , split_percentiles = split_percentiles
+            , random_state = random_state
+            , **kwargs)
+
+    def set_params(self, *
+                   , min_nan_level = None
+                   , min_cat_size = None
+                   , max_uniques_per_cat = None
+                   , positive_arg_num_functions = None
+                   , any_arg_num_functions = None
+                   , imputation_aggr_funcs = None
+                   , tme_aggr_funcs = None
+                   , split_percentiles = None
+                   , random_state = None
+                   , deep: bool = False
+                   , **kwargs) -> FeatureShower:
         self.random_state = random_state
-        self.nan_inducer = NaN_Inducer(random_state = random_state)
-        self.dummies_maker = DummiesMaker()
-        self.numeric_func_trnsf = NumericFuncTransformer(random_state = random_state)
-        self.numeric_imputer = NumericImputer(random_state = random_state)
-        self.target_multi_encoder = TargetMultiEncoder(random_state = random_state)
-        self.rectifier_splitter = RectifierSplitter()
+        self.nan_inducer = NaN_Inducer(
+            min_nan_level=min_nan_level
+            ,random_state = random_state)
+        self.dummies_maker = DummiesMaker(
+            min_cat_size = min_cat_size
+            , max_uniques_per_cat = max_uniques_per_cat)
+        self.numeric_func_trnsf = NumericFuncTransformer(
+            positive_arg_num_functions = positive_arg_num_functions
+            , any_arg_num_functions = any_arg_num_functions
+            ,random_state = random_state)
+        self.numeric_imputer = NumericImputer(
+            imputation_aggr_funcs = imputation_aggr_funcs
+            ,random_state = random_state)
+        self.target_multi_encoder = TargetMultiEncoder(
+            min_cat_size = min_cat_size
+            , max_uniques_per_cat = max_uniques_per_cat
+            , tme_aggr_funcs = tme_aggr_funcs
+            ,random_state = random_state)
+        self.rectifier_splitter = RectifierSplitter(
+            split_percentiles = split_percentiles)
         self.deduper = Deduper()
         self.is_fitted_flag_ = False
         return self
 
     def get_params(self, deep: bool = False) -> Dict[str, Any]:
-        params = dict(random_state = self.random_state)
+        params = dict(
+            min_nan_level = self.nan_inducer.min_nan_level
+            ,min_cat_size = self.dummies_maker.min_cat_size
+            ,max_uniques_per_cat = self.dummies_maker.max_uniques_per_cat
+            ,positive_arg_num_functions = deepcopy(self.numeric_func_trnsf.positive_arg_num_functions)
+            ,any_arg_num_functions = deepcopy(self.numeric_func_trnsf.any_arg_num_functions)
+            ,imputation_aggr_funcs = deepcopy(self.numeric_imputer.imputation_aggr_funcs)
+            ,tme_aggr_funcs = deepcopy(self.target_multi_encoder.tme_aggr_funcs)
+            ,split_percentiles = self.rectifier_splitter.split_percentiles
+            ,random_state = self.random_state)
         return params
 
     @property

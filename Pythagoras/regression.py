@@ -127,7 +127,7 @@ class SimpleGarden(PRegressor):
 
     def __init__(self
                  , base_model=Ridge(alpha= 0.01, normalize=True)
-                 , feature_cr_threshold: float = 0.03
+                 , feature_cr_threshold: float = 0.05
                  , max_features_per_omodel: Optional[int] = None
                  , max_omodels_per_garden: int = 15
                  , cv_score_threshold: Optional[float] = None
