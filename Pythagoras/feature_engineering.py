@@ -551,8 +551,8 @@ class NumericFuncTransformer(PFeatureMaker):
     any_arg_num_functions: List[Any]
 
     def __init__(self, *
-                 , positive_arg_num_functions=(np.log1p, root2, power2)
-                 , any_arg_num_functions=(passthrough, power3)
+                 , positive_arg_num_functions=(power_m1_1p, np.log1p, root_2, power_2)
+                 , any_arg_num_functions=(passthrough, power_3)
                  , random_state = None
                  , **kwargs) -> None:
         super().__init__(**kwargs)
@@ -1314,8 +1314,9 @@ class FeatureShower(PFeatureMaker):
             min_nan_level: float = 0.05
             , min_cat_size: int = 20
             , max_uniques_per_cat: int = 100
-            , positive_arg_num_functions=(np.log1p, root2, power2)
-            , any_arg_num_functions=(passthrough, power3)
+            , positive_arg_num_functions=(
+                    power_m1_1p, np.log1p, root_2, power_2)
+            , any_arg_num_functions=(passthrough, power_3)
             , imputation_aggr_funcs = (
                 np.min, np.max, percentile50, minmode, maxmode)
             , tme_aggr_funcs = (percentile01

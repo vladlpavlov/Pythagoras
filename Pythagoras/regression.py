@@ -415,8 +415,8 @@ class AmpleGarden(PRegressor):
                 , min_nan_level: float = 0.05
                 , min_cat_size: int = 20
                 , max_uniques_per_cat: int = 100
-                , positive_arg_num_functions = (np.log1p, root2, power2)
-                , any_arg_num_functions = (passthrough, power3)
+                , positive_arg_num_functions = (power_m1_1p, np.log1p, root_2, power_2)
+                , any_arg_num_functions = (passthrough, power_3)
                 , imputation_aggr_funcs = (
                     np.min, np.max, percentile50, minmode, maxmode)
                 , tme_aggr_funcs = (percentile01
@@ -495,7 +495,6 @@ class AmpleGarden(PRegressor):
         fs_params = self.feature_shower.get_params(deep)
         sg_params = self.simple_garden.get_params(deep)
         params = {**fs_params, **sg_params, "random_state":self.random_state}
-        self.info(params)
         return params
 
     @property
@@ -685,3 +684,143 @@ class BaggingStabilizer(PRegressor):
                 data=result, index=X.index, name=self.target_name_)
 
         return self.finish_predicting(result)
+
+
+class MagicGarden(PRegressor):
+    is_fitted_flag_: bool
+
+    def __init__(self, *
+                , garden_base_model=Ridge(alpha=0.01, normalize=True)
+                , garden_feature_cr_threshold: float = 0.05
+                , max_features_per_pmodel: Optional[int] = None
+                , max_pmodels_per_garden: int = 18
+                , garden_cv_score_threshold: Optional[float] = None
+                , garden_cv_score_threshold_multiplier: Optional[float] = 0.8
+
+                , min_nan_level: float = 0.05
+                , min_cat_size: int = 20
+                , max_uniques_per_cat: int = 100
+                , positive_arg_num_functions = (np.log1p, root_2, power_2) # power_m1_1p
+                , any_arg_num_functions = (passthrough, power_3)
+                , imputation_aggr_funcs = (
+                    np.min, np.max, percentile50, minmode, maxmode)
+                , tme_aggr_funcs = (percentile01
+                                   , percentile25
+                                   , percentile50
+                                   , percentile75
+                                   , percentile99
+                                   , minmode
+                                   , maxmode)
+                , split_percentiles = (1, 25, 50, 75, 99)
+
+                , stabilizer_n_splits: int = 5
+                , stabilizer_n_repeats: int = 4
+                , stabilizer_percentile: int = 50
+
+                , random_state = None
+                , **kwargs) -> None:
+        super().__init__( **kwargs)
+        self.set_params(garden_base_model=garden_base_model
+            , garden_feature_cr_threshold=garden_feature_cr_threshold
+            , max_features_per_pmodel= max_features_per_pmodel
+            , max_pmodels_per_garden= max_pmodels_per_garden
+            , garden_cv_score_threshold = garden_cv_score_threshold
+            , garden_cv_score_threshold_multiplier = garden_cv_score_threshold_multiplier
+            , min_nan_level = min_nan_level
+            , min_cat_size = min_cat_size
+            , max_uniques_per_cat = max_uniques_per_cat
+            , positive_arg_num_functions = positive_arg_num_functions
+            , any_arg_num_functions = any_arg_num_functions
+            , imputation_aggr_funcs = imputation_aggr_funcs
+            , tme_aggr_funcs = tme_aggr_funcs
+            , split_percentiles = split_percentiles
+            , stabilizer_n_splits = stabilizer_n_splits
+            , stabilizer_n_repeats = stabilizer_n_repeats
+            , stabilizer_percentile = stabilizer_percentile
+            , random_state = random_state
+            , **kwargs)
+
+    def set_params(self
+            , garden_base_model = None
+            , garden_feature_cr_threshold = None
+            , max_features_per_pmodel = None
+            , max_pmodels_per_garden = None
+            , garden_cv_score_threshold = None
+            , garden_cv_score_threshold_multiplier = None
+            , min_nan_level = None
+            , min_cat_size = None
+            , max_uniques_per_cat = None
+            , positive_arg_num_functions = None
+            , any_arg_num_functions = None
+            , imputation_aggr_funcs = None
+            , tme_aggr_funcs = None
+            , split_percentiles = None
+            , stabilizer_n_splits: int = None
+            , stabilizer_n_repeats: int = None
+            , stabilizer_percentile=None
+            , random_state = None
+            , **kwargs) -> PRegressor:
+        self.is_fitted_flag_ = False
+
+        self.random_state = random_state
+
+        self.ample_garden = AmpleGarden(
+            garden_base_model=garden_base_model
+            , garden_feature_cr_threshold=garden_feature_cr_threshold
+            , max_features_per_pmodel=max_features_per_pmodel
+            , max_pmodels_per_garden=max_pmodels_per_garden
+            , garden_cv_score_threshold=garden_cv_score_threshold
+            , garden_cv_score_threshold_multiplier=garden_cv_score_threshold_multiplier
+            , min_nan_level=min_nan_level
+            , min_cat_size=min_cat_size
+            , max_uniques_per_cat=max_uniques_per_cat
+            , positive_arg_num_functions=positive_arg_num_functions
+            , any_arg_num_functions=any_arg_num_functions
+            , imputation_aggr_funcs=imputation_aggr_funcs
+            , tme_aggr_funcs=tme_aggr_funcs
+            , split_percentiles=split_percentiles
+            , random_state=random_state)
+
+        self.bagging_stabilizer = BaggingStabilizer(
+            base_model = self.ample_garden
+            , stabilizer_n_splits = stabilizer_n_splits
+            , stabilizer_n_repeats = stabilizer_n_repeats
+            , stabilizer_percentile = stabilizer_percentile
+            , random_state=random_state)
+
+        return self
+
+    def get_params(self, deep: bool = False) -> Dict[str, Any]:
+        ag_params = self.ample_garden.get_params(deep)
+        st_params = self.bagging_stabilizer.get_params(deep)
+        params = {**ag_params, **st_params, "random_state":self.random_state}
+        self.info(params)
+        return params
+
+    @property
+    def is_fitted_(self):
+        return self.is_fitted_flag_
+
+    @property
+    def input_columns_(self) -> List[str]:
+        return self.bagging_stabilizer.input_columns_
+
+    @property
+    def input_can_have_nans(self) -> bool:
+        return True
+
+    @property
+    def output_can_have_nans(self) -> bool:
+        return False
+
+    def fit(self, X, y):
+        X, y = self.start_fitting(X, y)
+        X_new = self.bagging_stabilizer.fit(X,y)
+        self.is_fitted_flag_ = True
+        return self
+
+    def predict(self, X):
+        X = self.start_predicting(X)
+        result = self.bagging_stabilizer.predict(X)
+        return self.finish_predicting(result)
+

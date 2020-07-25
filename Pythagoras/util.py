@@ -284,14 +284,18 @@ def minmode(data):
 def maxmode(data):
     return -min(stats.mode(-data, nan_policy="omit")[0])
 
-def root2(x):
+def root_2(x):
     return x**0.5
 
-def power2(x):
+def power_2(x):
     return x*x
 
-def power3(x):
+def power_3(x):
     return x*x*x
 
 def passthrough(x):
     return deepcopy(x)
+
+def power_m1_1p(x):
+    return 1/(x+1)
+
