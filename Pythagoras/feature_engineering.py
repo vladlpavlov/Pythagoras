@@ -422,8 +422,8 @@ class NumericImputer(PFeatureMaker):
     fill_values_: Optional[pd.DataFrame]
 
     def __init__(self, *
-            , imputation_aggr_funcs= [
-                np.min, np.max, percentile50, minmode, maxmode]
+            , imputation_aggr_funcs= (
+                np.min, np.max, percentile50, minmode, maxmode)
             , random_state = None
             , **kwargs
             ) -> None:
@@ -551,8 +551,8 @@ class NumericFuncTransformer(PFeatureMaker):
     any_arg_num_functions: List[Any]
 
     def __init__(self, *
-                 , positive_arg_num_functions=[np.log1p, root2, power2]
-                 , any_arg_num_functions=[passthrough, power3]
+                 , positive_arg_num_functions=(np.log1p, root2, power2)
+                 , any_arg_num_functions=(passthrough, power3)
                  , random_state = None
                  , **kwargs) -> None:
         super().__init__(**kwargs)
@@ -776,12 +776,6 @@ class CatSelector(PFeatureMaker):
         return X
 
 
-# Workaround to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do not support postponed evaluation
-class TargetMultiEncoder(CatSelector):
-    pass
-
-
 class TargetMultiEncoder(CatSelector):
     """ A transformer for target-encoding categorical features"""
 
@@ -793,14 +787,14 @@ class TargetMultiEncoder(CatSelector):
     def __init__(self, *
                  , min_cat_size=20
                  , max_uniques_per_cat=100
-                 , tme_aggr_funcs=[
+                 , tme_aggr_funcs=(
                         percentile01
                         , percentile25
                         , percentile50
                         , percentile75
                         , percentile99
                         , minmode
-                        , maxmode]
+                        , maxmode)
                  , random_state = None
                  , **kwargs
                  ) -> None:
@@ -821,11 +815,11 @@ class TargetMultiEncoder(CatSelector):
                    , tme_aggr_funcs = None
                    , random_state = None
                    , **kwargs
-                   ) -> TargetMultiEncoder:
+                   ) -> CatSelector:
         super().set_params(min_cat_size=min_cat_size
                            , max_uniques_per_cat=max_uniques_per_cat
                            , random_state=random_state, **kwargs)
-        self.tme_aggr_funcs = deepcopy(tme_aggr_funcs)
+        self.tme_aggr_funcs = tme_aggr_funcs
         self.tme_cat_values_ = None
         self.tme_default_values_ = None
         self.nan_string: str = "<<<<-----TME-NaN----->>>>:" + str(id(self))
@@ -907,7 +901,7 @@ class TargetMultiEncoder(CatSelector):
             v = pd.pivot_table(X[[col, taget_name]]
                                , values=taget_name
                                , index=col
-                               , aggfunc=self.tme_aggr_funcs
+                               , aggfunc=list(self.tme_aggr_funcs)
                                , dropna=False)
 
             n_nans = v.isna().sum().sum()
@@ -1198,18 +1192,18 @@ class RectifierSplitter(PFeatureMaker):
     percentiles_values_: Optional[Dict[str, List[float]]]
 
     def __init__(self
-                 , split_percentiles=[1, 25, 50, 75, 99]
+                 , split_percentiles=(1, 25, 50, 75, 99)
                  , random_state = None
                  , *args
                  , **kwargs
                  ) -> None:
         super().__init__(*args, **kwargs)
         self.set_params(
-            split_percentiles=deepcopy(split_percentiles)
+            split_percentiles=split_percentiles
             ,random_state=random_state)
 
     def get_params(self, deep=True):
-        params = dict(split_percentiles=deepcopy(self.split_percentiles)
+        params = dict(split_percentiles=self.split_percentiles
             , random_state = self.random_state)
         return params
 
@@ -1320,18 +1314,18 @@ class FeatureShower(PFeatureMaker):
             min_nan_level: float = 0.05
             , min_cat_size: int = 20
             , max_uniques_per_cat: int = 100
-            , positive_arg_num_functions=[np.log1p, root2, power2]
-            , any_arg_num_functions=[passthrough, power3]
-            , imputation_aggr_funcs = [
-                np.min, np.max, percentile50, minmode, maxmode]
-            , tme_aggr_funcs = [percentile01
+            , positive_arg_num_functions=(np.log1p, root2, power2)
+            , any_arg_num_functions=(passthrough, power3)
+            , imputation_aggr_funcs = (
+                np.min, np.max, percentile50, minmode, maxmode)
+            , tme_aggr_funcs = (percentile01
                         , percentile25
                         , percentile50
                         , percentile75
                         , percentile99
                         , minmode
-                        , maxmode]
-            , split_percentiles=[1, 25, 50, 75, 99]
+                        , maxmode)
+            , split_percentiles=(1, 25, 50, 75, 99)
             , random_state = None
             , **kwargs) -> None:
         super().__init__(**kwargs)
@@ -1339,10 +1333,10 @@ class FeatureShower(PFeatureMaker):
             min_nan_level=min_nan_level
             , min_cat_size = min_cat_size
             , max_uniques_per_cat= max_uniques_per_cat
-            , positive_arg_num_functions = deepcopy(positive_arg_num_functions)
-            , any_arg_num_functions=deepcopy(any_arg_num_functions)
-            , imputation_aggr_funcs = deepcopy(imputation_aggr_funcs)
-            , tme_aggr_funcs = deepcopy(tme_aggr_funcs)
+            , positive_arg_num_functions = positive_arg_num_functions
+            , any_arg_num_functions=any_arg_num_functions
+            , imputation_aggr_funcs = imputation_aggr_funcs
+            , tme_aggr_funcs = tme_aggr_funcs
             , split_percentiles = split_percentiles
             , random_state = random_state
             , **kwargs)
@@ -1389,10 +1383,10 @@ class FeatureShower(PFeatureMaker):
             min_nan_level = self.nan_inducer.min_nan_level
             ,min_cat_size = self.dummies_maker.min_cat_size
             ,max_uniques_per_cat = self.dummies_maker.max_uniques_per_cat
-            ,positive_arg_num_functions = deepcopy(self.numeric_func_trnsf.positive_arg_num_functions)
-            ,any_arg_num_functions = deepcopy(self.numeric_func_trnsf.any_arg_num_functions)
-            ,imputation_aggr_funcs = deepcopy(self.numeric_imputer.imputation_aggr_funcs)
-            ,tme_aggr_funcs = deepcopy(self.target_multi_encoder.tme_aggr_funcs)
+            ,positive_arg_num_functions = self.numeric_func_trnsf.positive_arg_num_functions
+            ,any_arg_num_functions = self.numeric_func_trnsf.any_arg_num_functions
+            ,imputation_aggr_funcs = self.numeric_imputer.imputation_aggr_funcs
+            ,tme_aggr_funcs = self.target_multi_encoder.tme_aggr_funcs
             ,split_percentiles = self.rectifier_splitter.split_percentiles
             ,random_state = self.random_state)
         return params

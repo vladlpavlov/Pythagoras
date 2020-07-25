@@ -27,8 +27,9 @@ class CV_Score(LoggableObject):
             n_splits=n_splits
             , n_repeats=n_repeats
             , random_state = random_state)
-        self.model = type(model)(**{**model.get_params()
-                                 ,"random_state":random_state})
+
+        self.model = type(model)(
+            **{**model.get_params(),"random_state":random_state})
 
     def __call__(self, X, y, **kwargs):
         self.scores_ = cross_val_score(
@@ -126,57 +127,46 @@ class SimpleGarden(PRegressor):
 class SimpleGarden(PRegressor):
 
     def __init__(self
-                 , base_model=Ridge(alpha= 0.01, normalize=True)
-                 , feature_cr_threshold: float = 0.05
-                 , max_features_per_omodel: Optional[int] = None
-                 , max_omodels_per_garden: int = 15
-                 , cv_score_threshold: Optional[float] = None
-                 , cv_score_threshold_multiplier: Optional[float] = 0.8
+                 , garden_base_model=Ridge(alpha= 0.01, normalize=True)
+                 , garden_feature_cr_threshold: float = 0.05
+                 , max_features_per_pmodel: Optional[int] = None
+                 , max_pmodels_per_garden: int = 15
+                 , garden_cv_score_threshold: Optional[float] = None
+                 , garden_cv_score_threshold_multiplier: Optional[float] = 0.8
                  , random_state = None
                  , **kwargs
                  ) -> None:
 
         super().__init__( **kwargs)
-        self.set_params(base_model=base_model
-            , feature_cr_threshold=feature_cr_threshold
-            , max_features_per_omodel=max_features_per_omodel
-            , max_omodels_per_garden=max_omodels_per_garden
-            , cv_score_threshold=cv_score_threshold
-            , cv_score_threshold_multiplier=cv_score_threshold_multiplier
+        self.set_params(garden_base_model=garden_base_model
+            , garden_feature_cr_threshold=garden_feature_cr_threshold
+            , max_features_per_pmodel=max_features_per_pmodel
+            , max_pmodels_per_garden=max_pmodels_per_garden
+            , garden_cv_score_threshold=garden_cv_score_threshold
+            , garden_cv_score_threshold_multiplier=garden_cv_score_threshold_multiplier
             , random_state = random_state)
 
     def set_params(self
-                   , base_model = Ridge(alpha= 0.01, normalize=True)
-                   , feature_cr_threshold = 0.03
-                   , max_features_per_omodel = None
-                   , max_omodels_per_garden = 15
-                   , cv_score_threshold = None
-                   , cv_score_threshold_multiplier = 0.8
+                   , garden_base_model = None
+                   , garden_feature_cr_threshold = None
+                   , max_features_per_pmodel = None
+                   , max_pmodels_per_garden = None
+                   , garden_cv_score_threshold = None
+                   , garden_cv_score_threshold_multiplier = None
                    , random_state = None
                    , **kwargs
                    ) -> SimpleGarden:
 
-        assert (int(cv_score_threshold is None) +
-                int(cv_score_threshold_multiplier is None) == 1)
+        self.garden_base_model = garden_base_model
+        self.base_model_cv_score = None
 
-        if cv_score_threshold is not None:
-            assert 0 < cv_score_threshold < 1
+        self.garden_feature_cr_threshold = garden_feature_cr_threshold
+        self.max_features_per_pmodel = max_features_per_pmodel
+        self.max_pmodels_per_garden = max_pmodels_per_garden
+        self.garden_cv_score_threshold = garden_cv_score_threshold
+        self.garden_cv_score_threshold_multiplier = garden_cv_score_threshold_multiplier
 
-        if cv_score_threshold_multiplier is not None:
-            assert 0 < cv_score_threshold_multiplier < 1
-
-        self.base_model = type(base_model)(
-            **{**base_model.get_params()
-            , "random_state":random_state})
-        self.base_model_cv_score = CV_Score(
-            self.base_model, random_state = random_state)
-        self.feature_cr_threshold = feature_cr_threshold
-        self.max_features_per_omodel = max_features_per_omodel
-        self.max_omodels_per_garden = max_omodels_per_garden
-        self.cv_score_threshold = cv_score_threshold
-        self.cv_score_threshold_multiplier = cv_score_threshold_multiplier
-
-        self.omodels_ = []
+        self.pmodels_ = []
         self.feature_lists_ = []
         self.cv_scores_ = []
         self.log_df_ = None
@@ -187,12 +177,12 @@ class SimpleGarden(PRegressor):
 
     def get_params(self, deep: bool = False) -> Dict[str, Any]:
 
-        result = {"base_model": self.base_model
-            , "feature_cr_threshold": self.feature_cr_threshold
-            , "max_features_per_omodel": self.max_features_per_omodel
-            , "max_omodels_per_garden": self.max_omodels_per_garden
-            , "cv_score_threshold": self.cv_score_threshold
-            ,"cv_score_threshold_multiplier": self.cv_score_threshold_multiplier
+        result = {"garden_base_model": self.garden_base_model
+            ,"garden_feature_cr_threshold": self.garden_feature_cr_threshold
+            ,"max_features_per_pmodel": self.max_features_per_pmodel
+            ,"max_pmodels_per_garden": self.max_pmodels_per_garden
+            ,"garden_cv_score_threshold": self.garden_cv_score_threshold
+            ,"garden_cv_score_threshold_multiplier": self.garden_cv_score_threshold_multiplier
             ,"random_state": self.random_state}
 
         return result
@@ -221,44 +211,61 @@ class SimpleGarden(PRegressor):
 
     @property
     def is_fitted_(self) -> bool:
-        return bool(len(self.omodels_))
+        return bool(len(self.pmodels_))
 
     def fit(self
             , X: pd.DataFrame
             , y: pd.Series
             ) -> SimpleGarden:
 
+        assert (int(self.garden_cv_score_threshold is None) +
+                int(self.garden_cv_score_threshold_multiplier is None) == 1)
+
+        if self.garden_cv_score_threshold is not None:
+            assert 0 < self.garden_cv_score_threshold < 1
+
+        if self.garden_cv_score_threshold_multiplier is not None:
+            assert 0 < self.garden_cv_score_threshold_multiplier < 1
+
+
+        self.garden_base_model = type(self.garden_base_model)(
+                **{**self.garden_base_model.get_params()
+                , "random_state":self.random_state})
+        self.base_model_cv_score = CV_Score(
+            self.garden_base_model, random_state = self.random_state)
+
+
         X, y = self.start_fitting(X, y)
 
-        self.omodels_ = []
+        self.pmodels_ = []
         self.feature_lists_ = []
         self.cv_scores_ = []
         self.log_df_ = None
         omodel_logs = []
-        self.fit_cv_score_threshold_ = self.cv_score_threshold
+        self.fit_cv_score_threshold_ = self.garden_cv_score_threshold
         unprocessed_features = set(X.columns)
 
-        if self.max_features_per_omodel is not None:
-            self.current_max_max_features_per_omodel = (
-                self.max_features_per_omodel)
+        if self.max_features_per_pmodel is not None:
+            self.current_max_max_features_per_pmodel = (
+                self.max_features_per_pmodel)
         else:
-            self.current_max_max_features_per_omodel = 2*int(len(X) ** 0.5)
+            self.current_max_max_features_per_pmodel = 2*int(len(X) ** 0.5)
             log_message = "max_features_per_omodel was not provided, "
             log_message += f"defaulting to 2*square root of number of samples "
-            log_message += f"({self.current_max_max_features_per_omodel})"
+            log_message += f"({self.current_max_max_features_per_pmodel})"
             self.info(log_message)
 
-        recommended_min_features = (self.current_max_max_features_per_omodel
-                                    * self.max_omodels_per_garden * 3)
+        recommended_min_features = (self.current_max_max_features_per_pmodel
+                                    * self.max_pmodels_per_garden * 3)
 
         if recommended_min_features > len(X.columns):
             log_message = f"NUMBER OF FEATURES {len(X.columns)} IS TOO LOW, "
             log_message += f"RECOMMENDED MIN # IS {recommended_min_features}"
             self.warning(log_message)
 
-        for i in range(self.max_omodels_per_garden):
+        for i in range(self.max_pmodels_per_garden):
             log_message = f"Attempting to build {i + 1}-th "
-            log_message += f"(out of {self.max_omodels_per_garden}) "
+            log_message += f"(out of {self.max_pmodels_per_garden}) "
             log_message += f"model in a garden. "
             self.info(log_message)
 
@@ -269,7 +276,7 @@ class SimpleGarden(PRegressor):
 
             if self.fit_cv_score_threshold_ is None:
                 self.fit_cv_score_threshold_ = (
-                        cv_score_i * self.cv_score_threshold_multiplier)
+                        cv_score_i * self.garden_cv_score_threshold_multiplier)
 
             if cv_score_i < self.fit_cv_score_threshold_:
                 log_message = f"OModel # {i + 1} did not reach a minumum cv_score"
@@ -279,14 +286,14 @@ class SimpleGarden(PRegressor):
                 self.info(log_message)
                 break
 
-            self.omodels_ += [model_i]
+            self.pmodels_ += [model_i]
             self.feature_lists_ += [sorted(features_i)]
             self.cv_scores_ += [cv_score_i]
             log_i["ModelID"] = i
             omodel_logs += [log_i]
             unprocessed_features -= set(features_i)
 
-        n_models = len(self.omodels_)
+        n_models = len(self.pmodels_)
         n_features_used = len(X.columns) - len(unprocessed_features)
         if n_models == 0:
             self.error("No omodels were created for the garden")
@@ -309,11 +316,11 @@ class SimpleGarden(PRegressor):
 
         X = self.start_predicting(X)
         self.last_opredictions_ = []
-        n_models = len(self.omodels_)
+        n_models = len(self.pmodels_)
 
         for i in range(n_models):
             self.last_opredictions_ += [
-                self.omodels_[i].predict(X[sorted(self.feature_lists_[i])])]
+                self.pmodels_[i].predict(X[sorted(self.feature_lists_[i])])]
 
         ## TODO: refactor mean calculations below
         result = self.last_opredictions_[0]
@@ -333,7 +340,7 @@ class SimpleGarden(PRegressor):
                         ):
         X = deepcopy(X)
         y = deepcopy(y)
-        work_model = clone(self.base_model)
+        work_model = clone(self.garden_base_model)
         status_log = pd.DataFrame(
             columns=["Feature", "Correlation", "CV_Score"])
 
@@ -352,8 +359,8 @@ class SimpleGarden(PRegressor):
             , ignore_index=True)
 
         while (len(remaining_features)
-               and corr >= self.feature_cr_threshold
-               and num_iter < self.current_max_max_features_per_omodel):
+               and corr >= self.garden_feature_cr_threshold
+               and num_iter < self.current_max_max_features_per_pmodel):
             num_iter += 1
             (new_feature, corr) = self.one_best_feature(
                 X[remaining_features], residuals)
@@ -380,7 +387,7 @@ class SimpleGarden(PRegressor):
         log_message = f"<== New OModel has been built. The model has reached "
         log_message += f"the best cv_sore of {best_cv_score:.2%} on its "
         log_message += f"{best_iteration + 1} feature-search iteration "
-        log_message += f"(out of {self.current_max_max_features_per_omodel})."
+        log_message += f"(out of {self.current_max_max_features_per_pmodel})."
         self.info(log_message)
 
         assert (set(best_features) ==
@@ -394,23 +401,101 @@ class SimpleGarden(PRegressor):
 class AmpleGarden(PRegressor):
     pass
 
-
 class AmpleGarden(PRegressor):
     is_fitted_flag_: bool
 
-    def __init__(self, *, random_state = None, **kwargs) -> None:
-        super().__init__( **kwargs)
-        self.set_params(random_state = random_state, **kwargs)
+    def __init__(self, *
+                , garden_base_model=Ridge(alpha=0.01, normalize=True)
+                , garden_feature_cr_threshold: float = 0.05
+                , max_features_per_pmodel: Optional[int] = None
+                , max_pmodels_per_garden: int = 15
+                , garden_cv_score_threshold: Optional[float] = None
+                , garden_cv_score_threshold_multiplier: Optional[float] = 0.8
 
-    def set_params(self, random_state = None, **kwargs) -> AmpleGarden:
-        self.feature_shower = FeatureShower(random_state=random_state)
-        self.simple_garden = SimpleGarden(random_state=random_state)
-        self.random_state = random_state
+                , min_nan_level: float = 0.05
+                , min_cat_size: int = 20
+                , max_uniques_per_cat: int = 100
+                , positive_arg_num_functions = (np.log1p, root2, power2)
+                , any_arg_num_functions = (passthrough, power3)
+                , imputation_aggr_funcs = (
+                    np.min, np.max, percentile50, minmode, maxmode)
+                , tme_aggr_funcs = (percentile01
+                                   , percentile25
+                                   , percentile50
+                                   , percentile75
+                                   , percentile99
+                                   , minmode
+                                   , maxmode)
+                , split_percentiles = (1, 25, 50, 75, 99)
+
+                , random_state = None
+                , **kwargs) -> None:
+        super().__init__( **kwargs)
+        self.set_params(garden_base_model=garden_base_model
+            , garden_feature_cr_threshold=garden_feature_cr_threshold
+            , max_features_per_pmodel= max_features_per_pmodel
+            , max_pmodels_per_garden= max_pmodels_per_garden
+            , garden_cv_score_threshold = garden_cv_score_threshold
+            , garden_cv_score_threshold_multiplier = garden_cv_score_threshold_multiplier
+            , min_nan_level = min_nan_level
+            , min_cat_size = min_cat_size
+            , max_uniques_per_cat = max_uniques_per_cat
+            , positive_arg_num_functions = positive_arg_num_functions
+            , any_arg_num_functions = any_arg_num_functions
+            , imputation_aggr_funcs = imputation_aggr_funcs
+            , tme_aggr_funcs = tme_aggr_funcs
+            , split_percentiles = split_percentiles
+            , random_state = random_state
+            , **kwargs)
+
+    def set_params(self
+            , garden_base_model = None
+            , garden_feature_cr_threshold = None
+            , max_features_per_pmodel = None
+            , max_pmodels_per_garden = None
+            , garden_cv_score_threshold = None
+            , garden_cv_score_threshold_multiplier = None
+            , min_nan_level = None
+            , min_cat_size = None
+            , max_uniques_per_cat = None
+            , positive_arg_num_functions = None
+            , any_arg_num_functions = None
+            , imputation_aggr_funcs = None
+            , tme_aggr_funcs = None
+            , split_percentiles = None
+            , random_state = None
+            , **kwargs) -> AmpleGarden:
         self.is_fitted_flag_ = False
+
+        self.random_state = random_state
+
+        self.feature_shower = FeatureShower(
+            min_nan_level=min_nan_level
+            , min_cat_size=min_cat_size
+            , max_uniques_per_cat=max_uniques_per_cat
+            , positive_arg_num_functions=positive_arg_num_functions
+            , any_arg_num_functions=any_arg_num_functions
+            , imputation_aggr_funcs=imputation_aggr_funcs
+            , tme_aggr_funcs=tme_aggr_funcs
+            , split_percentiles=split_percentiles
+            , random_state=random_state)
+
+        self.simple_garden = SimpleGarden(
+            garden_base_model=garden_base_model
+            , garden_feature_cr_threshold=garden_feature_cr_threshold
+            , max_features_per_pmodel=max_features_per_pmodel
+            , max_pmodels_per_garden=max_pmodels_per_garden
+            , garden_cv_score_threshold=garden_cv_score_threshold
+            , garden_cv_score_threshold_multiplier=garden_cv_score_threshold_multiplier
+            , random_state=random_state)
+
         return self
 
     def get_params(self, deep: bool = False) -> Dict[str, Any]:
-        params = dict(random_state = self.random_state)
+        fs_params = self.feature_shower.get_params(deep)
+        sg_params = self.simple_garden.get_params(deep)
+        params = {**fs_params, **sg_params, "random_state":self.random_state}
+        self.info(params)
         return params
 
     @property
@@ -448,9 +533,10 @@ class BaggingStabilizer:
 
 class BaggingStabilizer(PRegressor):
     is_fitted_flag_: bool
-    n_splits:int
-    n_repeats:int
+    stabilizer_n_splits:int
+    stabilizer_n_repeats:int
     base_model:PRegressor
+    stabilizer_percentile:int
     rkf:RepeatedKFold
     models_: Optional[List[PRegressor]]
     model_scores_:Optional[List[float]]
@@ -458,40 +544,33 @@ class BaggingStabilizer(PRegressor):
     cv_score_: Optional[float]
     inp_clmns_:Optional[List[str]]
 
-
     def __init__(self
                  ,base_model = AmpleGarden()
-                 , n_splits:int=5
-                 , n_repeats:int=4
-                 , percentile:int=50
+                 , stabilizer_n_splits:int=5
+                 , stabilizer_n_repeats:int=4
+                 , stabilizer_percentile:int=50
                  , random_state = None
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.set_params(
             base_model=base_model
-            , n_splits=n_splits
-            , n_repeats=n_repeats
-            , percentile = percentile
+            , stabilizer_n_splits=stabilizer_n_splits
+            , stabilizer_n_repeats=stabilizer_n_repeats
+            , stabilizer_percentile = stabilizer_percentile
             , random_state = random_state)
 
     def set_params(self
-                    ,base_model=AmpleGarden()
-                    , n_splits:int=5
-                    , n_repeats:int=4
-                    , percentile:int=50
+                    ,base_model=None
+                    , stabilizer_n_splits:int=None
+                    , stabilizer_n_repeats:int=None
+                    , stabilizer_percentile = None
                     , random_state=None
                     , deep: bool = False
                    ,**kwargs) -> BaggingStabilizer:
-        self.base_model = type(base_model)(
-            **{**base_model.get_params(),"random_state": random_state})
-        assert n_splits in range (2,100)
-        self.n_splits = n_splits
-        assert n_repeats in range(2, 100)
-        self.n_repeats = n_repeats
-        assert percentile in range(10,91)
-        self.percentile = percentile
-        self.rkf = RepeatedKFold(
-            n_splits=n_splits, n_repeats=n_repeats, random_state=random_state)
+        self.base_model = base_model
+        self.stabilizer_n_splits = stabilizer_n_splits
+        self.stabilizer_n_repeats = stabilizer_n_repeats
+        self.stabilizer_percentile = stabilizer_percentile
         self.is_fitted_flag_ = False
         self.models = None
         self.model_scores_ = None
@@ -499,14 +578,13 @@ class BaggingStabilizer(PRegressor):
         self.cv_score_ = None
         self.inp_clmns_ = None
         self.random_state = random_state
-        self.base_model.random_state = random_state
         return self
 
     def get_params(self, deep: bool = False) -> Dict[str, Any]:
         params = dict(base_model = self.base_model
-                    , n_splits = self.n_splits
-                    , n_repeats = self.n_repeats
-                    , percentile = self.percentile
+                    , n_splits = self.stabilizer_n_splits
+                    , n_repeats = self.stabilizer_n_repeats
+                    , percentile = self.stabilizer_percentile
                     , random_state = self.random_state)
         return params
 
@@ -527,6 +605,18 @@ class BaggingStabilizer(PRegressor):
         return self.base_model.output_can_have_nans
 
     def fit(self, X, y):
+        assert self.stabilizer_n_splits in range(2, 100)
+        assert self.stabilizer_n_repeats in range(2, 100)
+        assert self.stabilizer_percentile in range(10, 91)
+
+        self.base_model = type(self.base_model)(
+            **{**self.base_model.get_params(), "random_state": self.random_state})
+
+        self.rkf = RepeatedKFold(
+            n_splits=self.stabilizer_n_splits
+            , n_repeats=self.stabilizer_n_repeats
+            , random_state=self.random_state)
+
         X, y = self.start_fitting(X, y)
         cv_results = cross_validate(self.base_model
             ,X
@@ -536,7 +626,8 @@ class BaggingStabilizer(PRegressor):
             ,return_estimator = True
             ,n_jobs=-1)
 
-        score_threshold = np.nanpercentile(cv_results["test_score"], self.percentile)
+        score_threshold = np.nanpercentile(
+            cv_results["test_score"], self.stabilizer_percentile)
         n_scores = len(cv_results["test_score"])
         self.model_scores_ = []
         self.models_ = []
