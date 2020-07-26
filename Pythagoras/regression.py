@@ -70,9 +70,6 @@ class PRegressor(PEstimator):
                          , write_to_log: bool = True
                          ) -> pd.DataFrame:
 
-        assert self.is_fitted_
-        assert len(X)
-
         if write_to_log:
             log_message = f"==> Starting generating predictions "
             log_message += f"using a {type(X).__name__} named < "
@@ -80,13 +77,15 @@ class PRegressor(PEstimator):
             log_message += f" > with the shape {X.shape}."
             self.info(log_message)
 
+        assert self.is_fitted_
         X = self._preprocess_X(X)
         self.prediction_index_ = deepcopy(X.index)
-        assert set(self.input_columns_) <= set(X)
-        X = deepcopy(X[self.input_columns_])
 
-        if not self.input_can_have_nans:
-            assert X.isna().sum().sum() == 0
+        if self.input_columns_ is NotProvided:
+            self.warning("Attribute input_columns_ was not provided.")
+        else:
+            assert set(self.input_columns_) <= set(X)
+            X = deepcopy(X[self.input_columns_])
 
         return X
 
@@ -94,8 +93,6 @@ class PRegressor(PEstimator):
                           , y: pd.Series
                           , write_to_log: bool = True
                           ) -> pd.Series:
-
-        assert len(y)
 
         n_val = len(y)
         p_min_med_max = (min(y), percentile50(y), max(y))
@@ -109,7 +106,12 @@ class PRegressor(PEstimator):
             log_message += f"while the taining data had {self.min_med_max_}."
             self.info(log_message)
 
-        if not self.output_can_have_nans:
+        assert len(y)
+        assert len(y) == len(self.prediction_index_)
+
+        if self.output_can_have_nans is NotProvided:
+            self.warning("Attribute output_can_have_nans was not provided.")
+        elif not self.output_can_have_nans:
             assert n_nans == 0
 
         y.name = self.target_name_

@@ -11,6 +11,16 @@ from Pythagoras.util import *
 from Pythagoras.logging import *
 from Pythagoras.caching import *
 
+class NotProvidedType:
+    not_provided_single_instance = None
+    def __new__(cls):
+        if cls.not_provided_single_instance is None:
+            cls.not_provided_single_instance = super().__new__(cls)
+        return cls.not_provided_single_instance
+
+NotProvided = NotProvidedType()
+
+
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
 class PEstimator(LoggableObject):
@@ -51,6 +61,19 @@ class PEstimator(LoggableObject):
         else:
             X = deepcopy(X)
 
+        assert len(X), "X can not be empty."
+        assert len(X.columns) == len(set(X.columns)), (
+            "Input columns must have unique names.")
+
+        X.columns = list(X.columns)
+
+        if self.input_can_have_nans is NotProvided:
+            self.warning("Flag input_can_have_nans was not provided.")
+        elif not self.input_can_have_nans:
+            assert X.isna().sum().sum() == 0, "NaN-s are not allowed."
+
+        X.sort_index(inplace=True)
+
         return X
 
     def _preprocess_y(self, y:pd.Series) -> pd.Series:
@@ -62,6 +85,8 @@ class PEstimator(LoggableObject):
         if y.name is None:
             y.name = "y_target"
 
+        y.sort_index(inplace=True)
+
         return y
 
 
@@ -70,7 +95,6 @@ class PEstimator(LoggableObject):
             ,y:Any
             ,write_to_log:bool=True
             ) -> Tuple[pd.DataFrame,pd.Series]:
-
         if write_to_log:
             log_message = f"==> Starting fittig {type(self).__name__} "
             log_message += f"using a {type(X).__name__} named < "
@@ -85,21 +109,7 @@ class PEstimator(LoggableObject):
         if y is not None:
             y = self._preprocess_y(y)
             assert len(X) == len(y), "X and y must have equal length."
-
-        assert len(X), "X can not be empty."
-        assert len(X.columns) == len(set(X.columns)), (
-            "Input columns must have unique names.")
-
-        if not self.input_can_have_nans:
-            assert X.isna().sum().sum() == 0, "NaN-s are not allowed."
-
-        X.sort_index(inplace=True)
-
-        if y is not None:
-            y.sort_index(inplace=True)
             assert set(X.index) == set(y.index)
-
-        X.columns = list(X.columns)
 
         return (X,y)
 
@@ -121,6 +131,7 @@ class PEstimator(LoggableObject):
     @property
     def output_can_have_nans(self) -> bool:
         raise NotImplementedError
+
 
 Estimator = Union[BaseEstimator, PEstimator]
 
@@ -150,10 +161,6 @@ class PFeatureMaker(PEstimator):
                            , X: pd.DataFrame
                            , write_to_log: bool = True
                            ) -> pd.DataFrame:
-
-        assert self.is_fitted_
-        assert len(X)
-
         if write_to_log:
             log_message = f"==> Starting generating features "
             log_message += f"using a {type(X).__name__} named < "
@@ -161,12 +168,14 @@ class PFeatureMaker(PEstimator):
             log_message += f" > with the shape {X.shape}."
             self.info(log_message)
 
+        assert self.is_fitted_
         X = self._preprocess_X(X)
-        assert set(self.input_columns_) <= set(X)
-        X = deepcopy(X[self.input_columns_])
 
-        if not self.input_can_have_nans:
-            assert X.isna().sum().sum() == 0
+        if self.input_columns_ is NotProvided:
+            self.warning("Attribute input_columns_ was not provided.")
+        else:
+            assert set(self.input_columns_) <= set(X)
+            X = deepcopy(X[self.input_columns_])
 
         return X
 
@@ -174,17 +183,22 @@ class PFeatureMaker(PEstimator):
                             , X: pd.DataFrame
                             , write_to_log: bool = True
                             ) -> pd.DataFrame:
-
-        assert len(X)
-        assert len(set(X.columns)) == len(X.columns)
-        assert set(X.columns) == set(self.output_columns_)
-
         if write_to_log:
             log_message = f"<== {len(X.columns)} features "
             log_message += "have been generated/returned."
             self.info(log_message)
 
-        if not self.output_can_have_nans:
+        assert len(X)
+        assert len(set(X.columns)) == len(X.columns)
+
+        if self.output_columns_ is NotProvided:
+            self.warning("Attribute output_columns_ was not provided.")
+        else:
+            assert set(X.columns) == set(self.output_columns_)
+
+        if self.output_can_have_nans is NotProvided:
+            self.warning("Attribute output_can_have_nans was not provided.")
+        elif not self.output_can_have_nans:
             n_NaNs = X.isna().sum().sum()
             assert n_NaNs==0, f"{n_NaNs} NaN-s found, while expecting 0"
 
