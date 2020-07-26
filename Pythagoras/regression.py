@@ -391,11 +391,6 @@ class SimpleGarden(PRegressor):
         return best_model, best_features, best_cv_score, status_log
 
 
-# Workaround to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do not support postponed evaluation
-class AmpleGarden(PRegressor):
-    pass
-
 class AmpleGarden(PRegressor):
     is_fitted_flag_: bool
 
@@ -459,7 +454,7 @@ class AmpleGarden(PRegressor):
             , tme_aggr_funcs = None
             , split_percentiles = None
             , random_state = None
-            , **kwargs) -> AmpleGarden:
+            , **kwargs) -> PRegressor:
         self.is_fitted_flag_ = False
 
         self.random_state = random_state
@@ -522,8 +517,6 @@ class AmpleGarden(PRegressor):
         return self.finish_predicting(result)
 
 
-class BaggingStabilizer:
-    pass
 
 class BaggingStabilizer(PRegressor):
     is_fitted_flag_: bool
@@ -560,7 +553,7 @@ class BaggingStabilizer(PRegressor):
                     , stabilizer_percentile = None
                     , random_state=None
                     , deep: bool = False
-                   ,**kwargs) -> BaggingStabilizer:
+                   ,**kwargs) -> PRegressor:
         self.base_model = base_model
         self.stabilizer_n_splits = stabilizer_n_splits
         self.stabilizer_n_repeats = stabilizer_n_repeats

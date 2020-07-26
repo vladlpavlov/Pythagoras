@@ -1312,11 +1312,6 @@ class RectifierSplitter(PFeatureMaker):
 
         return self.finish_transforming(X)
 
-# Workaround to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do not support postponed evaluation
-class FeatureShower(PFeatureMaker):
-    pass
-
 
 class FeatureShower(PFeatureMaker):
     """ A transformer that creates large number of various new features"""
@@ -1366,7 +1361,7 @@ class FeatureShower(PFeatureMaker):
                    , split_percentiles = None
                    , random_state = None
                    , deep: bool = False
-                   , **kwargs) -> FeatureShower:
+                   , **kwargs) -> PFeatureMaker:
         self.random_state = random_state
         self.nan_inducer = NaN_Inducer(
             min_nan_level=min_nan_level
