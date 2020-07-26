@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge, LinearRegression
 from sklearn.model_selection import cross_validate
 
 from Pythagoras.util import *
@@ -28,8 +28,8 @@ class CV_Score(LoggableObject):
             , n_repeats=n_repeats
             , random_state = random_state)
 
-        self.model = type(model)(
-            **{**model.get_params(),"random_state":random_state})
+        self.model = update_param_if_supported(
+            model,"random_state",random_state )
 
     def __call__(self, X, y, **kwargs):
         self.scores_ = cross_val_score(
@@ -118,12 +118,6 @@ class PRegressor(PEstimator):
         return y
 
 
-# Workaround to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do not support postponed evaluation
-class SimpleGarden(PRegressor):
-    pass
-
-
 class SimpleGarden(PRegressor):
 
     def __init__(self
@@ -155,7 +149,7 @@ class SimpleGarden(PRegressor):
                    , garden_cv_score_threshold_multiplier = None
                    , random_state = None
                    , **kwargs
-                   ) -> SimpleGarden:
+                   ) -> PRegressor:
 
         self.garden_base_model = garden_base_model
         self.base_model_cv_score = None
@@ -216,7 +210,7 @@ class SimpleGarden(PRegressor):
     def fit(self
             , X: pd.DataFrame
             , y: pd.Series
-            ) -> SimpleGarden:
+            ) -> PRegressor:
 
         assert (int(self.garden_cv_score_threshold is None) +
                 int(self.garden_cv_score_threshold_multiplier is None) == 1)
@@ -227,10 +221,11 @@ class SimpleGarden(PRegressor):
         if self.garden_cv_score_threshold_multiplier is not None:
             assert 0 < self.garden_cv_score_threshold_multiplier < 1
 
+        self.garden_base_model = update_param_if_supported(
+            self.garden_base_model
+            ,"random_state"
+            ,self.random_state)
 
-        self.garden_base_model = type(self.garden_base_model)(
-                **{**self.garden_base_model.get_params()
-                , "random_state":self.random_state})
         self.base_model_cv_score = CV_Score(
             self.garden_base_model, random_state = self.random_state)
 
@@ -413,7 +408,7 @@ class AmpleGarden(PRegressor):
                 , garden_cv_score_threshold_multiplier: Optional[float] = 0.8
 
                 , min_nan_level: float = 0.05
-                , min_cat_size: int = 20
+                , min_cat_size: int = 10
                 , max_uniques_per_cat: int = 100
                 , positive_arg_num_functions = (power_m1_1p, np.log1p, root_2, power_2)
                 , any_arg_num_functions = (passthrough, power_3)
@@ -690,10 +685,10 @@ class MagicGarden(PRegressor):
     is_fitted_flag_: bool
 
     def __init__(self, *
-                , garden_base_model=Ridge(alpha=0.01, normalize=True)
+                , garden_base_model= LinearRegression()
                 , garden_feature_cr_threshold: float = 0.05
                 , max_features_per_pmodel: Optional[int] = None
-                , max_pmodels_per_garden: int = 18
+                , max_pmodels_per_garden: int = 15
                 , garden_cv_score_threshold: Optional[float] = None
                 , garden_cv_score_threshold_multiplier: Optional[float] = 0.8
 

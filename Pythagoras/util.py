@@ -6,12 +6,10 @@ import math
 import numpy as np
 import inspect
 import numbers, time
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Union
 from copy import deepcopy
 
-
 from scipy import stats
-
 
 class TempAttributeAssignmentIfNotNone:
     """Context manager that temporarily changes a value of an object attribute
@@ -215,7 +213,7 @@ class AssertableObject:
 
 
 ##########################################
-# 1-argument aggretors
+# 1-argument aggregators
 
 def percentile01(data):
     return np.nanpercentile(data, 1)

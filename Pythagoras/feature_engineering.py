@@ -4,6 +4,7 @@ from typing import Optional, Set, List, Dict
 
 from numpy import mean, median
 from sklearn import clone
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_score, RepeatedKFold
 
 from Pythagoras.util import *
@@ -121,6 +122,18 @@ class PEstimator(LoggableObject):
     def output_can_have_nans(self) -> bool:
         raise NotImplementedError
 
+Estimator = Union[BaseEstimator, PEstimator]
+
+def update_param_if_supported(
+        estimator: Estimator
+        ,param_name:str
+        ,param_value:Any
+        ) -> Estimator:
+    current_params = estimator.get_params()
+    if param_name in current_params:
+        new_params = {**current_params, param_name:param_value}
+        return type(estimator)(**new_params)
+    return type(estimator)(**current_params)
 
 
 class PFeatureMaker(PEstimator):
@@ -1428,8 +1441,10 @@ class FeatureShower(PFeatureMaker):
         X_target_encoded_cats = self.target_multi_encoder.fit_transform(
             X_with_NaNs, y)
 
+        X_dummies = self.dummies_maker.fit_transform(X_with_NaNs, y)
+
         X_full = pd.concat(
-            [X_numeric_no_NaNs, X_target_encoded_cats], axis=1)
+            [X_numeric_no_NaNs, X_target_encoded_cats, X_dummies], axis=1)
 
         per50_cols = [c for c in X_full.columns if "percentile50" in c]
         targ_enc_cols = [c for c in per50_cols if "targ_enc" in c]
@@ -1456,8 +1471,10 @@ class FeatureShower(PFeatureMaker):
         X_target_encoded_cats = self.target_multi_encoder.transform(
             X_with_NaNs)
 
+        X_dummies = self.dummies_maker.transform(X_with_NaNs)
+
         X_full = pd.concat(
-            [X_numeric_no_NaNs, X_target_encoded_cats,], axis=1)
+            [X_numeric_no_NaNs, X_target_encoded_cats, X_dummies], axis=1)
 
         per50_cols = [c for c in X_full.columns if "percentile50" in c]
         targ_enc_cols = [c for c in per50_cols if "targ_enc" in c]
