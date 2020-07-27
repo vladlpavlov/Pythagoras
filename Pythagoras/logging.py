@@ -18,7 +18,9 @@ class LoggableObject:
     A wrapper for standard Python logging functionality,
     extended with an ability to automatically
     append logger's name with information
-    about an object that generated a message.
+    about an object that generated a message,
+    the object's method from which the message was created,
+    and its process ID.
     """
 
     parent_logger_name: str
