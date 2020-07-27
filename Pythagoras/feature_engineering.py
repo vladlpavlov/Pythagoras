@@ -85,6 +85,7 @@ class PEstimator(LoggableObject):
         if y.name is None:
             y.name = "y_target"
 
+        assert y.isna().sum() == 0
         y.sort_index(inplace=True)
 
         return y
@@ -384,6 +385,7 @@ class Deduper(PFeatureMaker):
                    ) -> PFeatureMaker:
         self.keep = keep
         self.allow_nans = allow_nans
+        self.random_state = random_state
         self.columns_to_keep_ = []
         self.columns_to_drop_ = []
         return self
@@ -1382,22 +1384,24 @@ class FeatureShower(PFeatureMaker):
             ,random_state = random_state)
         self.dummies_maker = DummiesMaker(
             min_cat_size = min_cat_size
-            , max_uniques_per_cat = max_uniques_per_cat)
+            ,max_uniques_per_cat = max_uniques_per_cat
+            ,random_state = random_state)
         self.numeric_func_trnsf = NumericFuncTransformer(
             positive_arg_num_functions = positive_arg_num_functions
-            , any_arg_num_functions = any_arg_num_functions
+            ,any_arg_num_functions = any_arg_num_functions
             ,random_state = random_state)
         self.numeric_imputer = NumericImputer(
             imputation_aggr_funcs = imputation_aggr_funcs
             ,random_state = random_state)
         self.target_multi_encoder = TargetMultiEncoder(
             min_cat_size = min_cat_size
-            , max_uniques_per_cat = max_uniques_per_cat
-            , tme_aggr_funcs = tme_aggr_funcs
+            ,max_uniques_per_cat = max_uniques_per_cat
+            ,tme_aggr_funcs = tme_aggr_funcs
             ,random_state = random_state)
         self.rectifier_splitter = RectifierSplitter(
-            split_percentiles = split_percentiles)
-        self.deduper = Deduper()
+            split_percentiles = split_percentiles
+            ,random_state = random_state)
+        self.deduper = Deduper(random_state = random_state)
         self.is_fitted_flag_ = False
         return self
 

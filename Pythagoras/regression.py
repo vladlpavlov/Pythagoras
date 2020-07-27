@@ -123,8 +123,8 @@ class PRegressor(PEstimator):
 class SimpleGarden(PRegressor):
 
     def __init__(self
-                 , garden_base_model=Ridge(alpha= 0.01, normalize=True)
-                 , garden_feature_cr_threshold: float = 0.05
+                 , garden_base_model=LinearRegression(normalize=True)
+                 , garden_feature_cr_threshold: float = 0.5
                  , max_features_per_pmodel: Optional[int] = None
                  , max_pmodels_per_garden: int = 15
                  , garden_cv_score_threshold: Optional[float] = None
@@ -397,15 +397,15 @@ class AmpleGarden(PRegressor):
     is_fitted_flag_: bool
 
     def __init__(self, *
-                , garden_base_model=Ridge(alpha=0.01, normalize=True)
-                , garden_feature_cr_threshold: float = 0.05
+                , garden_base_model=LinearRegression(normalize=True)
+                , garden_feature_cr_threshold: float = 0.08
                 , max_features_per_pmodel: Optional[int] = None
                 , max_pmodels_per_garden: int = 15
                 , garden_cv_score_threshold: Optional[float] = None
                 , garden_cv_score_threshold_multiplier: Optional[float] = 0.8
 
                 , min_nan_level: float = 0.05
-                , min_cat_size: int = 10
+                , min_cat_size: int = 20
                 , max_uniques_per_cat: int = 100
                 , positive_arg_num_functions = (power_m1_1p, np.log1p, root_2, power_2)
                 , any_arg_num_functions = (passthrough, power_3)
@@ -691,8 +691,8 @@ class MagicGarden(PRegressor):
     is_fitted_flag_: bool
 
     def __init__(self, *
-                , garden_base_model= LinearRegression()
-                , garden_feature_cr_threshold: float = 0.05
+                , garden_base_model= LinearRegression(normalize=True)
+                , garden_feature_cr_threshold: float = 0.07
                 , max_features_per_pmodel: Optional[int] = None
                 , max_pmodels_per_garden: int = 15
                 , garden_cv_score_threshold: Optional[float] = None
@@ -701,7 +701,7 @@ class MagicGarden(PRegressor):
                 , min_nan_level: float = 0.05
                 , min_cat_size: int = 20
                 , max_uniques_per_cat: int = 100
-                , positive_arg_num_functions = (np.log1p, root_2, power_2) # power_m1_1p
+                , positive_arg_num_functions = (power_m1_1p, np.log1p, root_2, power_2)
                 , any_arg_num_functions = (passthrough, power_3)
                 , imputation_aggr_funcs = (
                     np.min, np.max, percentile50, minmode, maxmode)
