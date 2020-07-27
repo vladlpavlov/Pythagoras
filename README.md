@@ -7,10 +7,10 @@
 
 ### Main Use Cases
 
-1. ***Improve accuracy*** of your predictions by employing highly-efficient regression model
-2. ***Speed up*** your Data Science code by adding persistent file-based caching 
-3. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
-4. Fully ***automate*** your ***data cleaning and feature engineering*** processes (COMING SOON) 
+1. Create ***well-performing baseline regression models*** that require no manual EDA, data cleaning, or feature engineering
+2. ***Improve accuracy*** of your predictions by employing new efficient regression algorithm
+3. ***Speed up*** your Data Science code by adding persistent file-based caching 
+4. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
 
 ### How To Get It?
 
@@ -24,6 +24,9 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Major Pythagoras Components
 
+* **MagicGarden**: Automated regression baseline creator. It builds well-performing regression models that 
+require no manual work from data scientists: no EDA, no data cleaning and no feature engineering. 
+
 * **SimpleGarden**: Efficient regression meta-algorithm:
 boosted feature selection factory creates an assembly of parsimonious regressors
 
@@ -33,13 +36,12 @@ boosted feature selection factory creates an assembly of parsimonious regressors
 
 * **LoggableObject**: Simple base class that provides your objects with easy-to-use story-telling tools
 
-* **MagicGarden**: Top-performing regression meta-meta-algorithm that does everything for you 
-right out-of-the-box (COMING SOON). 
-
 ### Tutorials
 
-1. [Basic Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_introductory_tutorial.ipynb): How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
-2. [Advanced Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_advanced_tutorial.ipynb): How to make Pythagoras PickleCache work with custom classes 
+1. [Basic Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_introductory_tutorial.ipynb): 
+How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
+2. [Advanced Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_advanced_tutorial.ipynb): 
+How to make Pythagoras PickleCache work with custom classes 
  
 ### Core Design Principles 
 
