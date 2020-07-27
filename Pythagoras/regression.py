@@ -526,6 +526,7 @@ class BaggingStabilizer(PRegressor):
     stabilizer_n_repeats:int
     base_model:PRegressor
     stabilizer_percentile:int
+    stabilizer_add_full_model:bool
     rkf:RepeatedKFold
     models_: Optional[List[PRegressor]]
     model_scores_:Optional[List[float]]
@@ -534,10 +535,11 @@ class BaggingStabilizer(PRegressor):
     inp_clmns_:Optional[List[str]]
 
     def __init__(self
-                 ,base_model = AmpleGarden()
+                 , base_model = AmpleGarden()
                  , stabilizer_n_splits:int=5
                  , stabilizer_n_repeats:int=4
                  , stabilizer_percentile:int=50
+                 , stabilizer_add_full_model:bool = False
                  , random_state = None
                  , *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -546,20 +548,23 @@ class BaggingStabilizer(PRegressor):
             , stabilizer_n_splits=stabilizer_n_splits
             , stabilizer_n_repeats=stabilizer_n_repeats
             , stabilizer_percentile = stabilizer_percentile
+            , stabilizer_add_full_model = stabilizer_add_full_model
             , random_state = random_state)
 
     def set_params(self
-                    ,base_model=None
-                    , stabilizer_n_splits:int=None
-                    , stabilizer_n_repeats:int=None
-                    , stabilizer_percentile = None
-                    , random_state=None
-                    , deep: bool = False
-                   ,**kwargs) -> PRegressor:
+            ,base_model=None
+            , stabilizer_n_splits:int=None
+            , stabilizer_n_repeats:int=None
+            , stabilizer_percentile = None
+            , stabilizer_add_full_model = None
+            , random_state=None
+            , deep: bool = False
+            ,**kwargs) -> PRegressor:
         self.base_model = base_model
         self.stabilizer_n_splits = stabilizer_n_splits
         self.stabilizer_n_repeats = stabilizer_n_repeats
         self.stabilizer_percentile = stabilizer_percentile
+        self.stabilizer_add_full_model = stabilizer_add_full_model
         self.is_fitted_flag_ = False
         self.models = None
         self.model_scores_ = None
@@ -571,10 +576,11 @@ class BaggingStabilizer(PRegressor):
 
     def get_params(self, deep: bool = False) -> Dict[str, Any]:
         params = dict(base_model = self.base_model
-                    , n_splits = self.stabilizer_n_splits
-                    , n_repeats = self.stabilizer_n_repeats
-                    , percentile = self.stabilizer_percentile
-                    , random_state = self.random_state)
+            , n_splits = self.stabilizer_n_splits
+            , n_repeats = self.stabilizer_n_repeats
+            , percentile = self.stabilizer_percentile
+            , stabilizer_add_full_model = self.stabilizer_add_full_model
+            , random_state = self.random_state)
         return params
 
     @property
@@ -598,8 +604,8 @@ class BaggingStabilizer(PRegressor):
         assert self.stabilizer_n_repeats in range(2, 100)
         assert self.stabilizer_percentile in range(10, 91)
 
-        self.base_model = type(self.base_model)(
-            **{**self.base_model.get_params(), "random_state": self.random_state})
+        self.base_model = update_param_if_supported(
+            self.base_model, "random_state", self.random_state)
 
         self.rkf = RepeatedKFold(
             n_splits=self.stabilizer_n_splits
@@ -631,10 +637,15 @@ class BaggingStabilizer(PRegressor):
 
         self.cv_score_ = score_threshold
 
+        if self.stabilizer_add_full_model:
+            self.models_ += [self.base_model.fit(X,y)]
+            self.model_scores_ += [self.cv_score_]
+
         input_columns = set()
         for m in self.models_:
             input_columns |= set(m.input_columns_)
         self.inp_clmns_ = sorted(list(input_columns))
+
 
         message_log = f"<== Fitting process has finished, expected CV_Score"
         message_log += f" is {self.cv_score_}. "
@@ -706,6 +717,7 @@ class MagicGarden(PRegressor):
                 , stabilizer_n_splits: int = 5
                 , stabilizer_n_repeats: int = 4
                 , stabilizer_percentile: int = 50
+                , stabilizer_add_full_model: bool = False
 
                 , random_state = None
                 , **kwargs) -> None:
@@ -727,6 +739,7 @@ class MagicGarden(PRegressor):
             , stabilizer_n_splits = stabilizer_n_splits
             , stabilizer_n_repeats = stabilizer_n_repeats
             , stabilizer_percentile = stabilizer_percentile
+            , stabilizer_add_full_model = stabilizer_add_full_model
             , random_state = random_state
             , **kwargs)
 
@@ -748,6 +761,7 @@ class MagicGarden(PRegressor):
             , stabilizer_n_splits: int = None
             , stabilizer_n_repeats: int = None
             , stabilizer_percentile=None
+            , stabilizer_add_full_model=None
             , random_state = None
             , **kwargs) -> PRegressor:
         self.is_fitted_flag_ = False
@@ -776,6 +790,7 @@ class MagicGarden(PRegressor):
             , stabilizer_n_splits = stabilizer_n_splits
             , stabilizer_n_repeats = stabilizer_n_repeats
             , stabilizer_percentile = stabilizer_percentile
+            , stabilizer_add_full_model = stabilizer_add_full_model
             , random_state=random_state)
 
         return self
