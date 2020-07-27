@@ -20,7 +20,10 @@ class ReprBuilder:
     pass
 
 class ReprBuilder(LoggableObject):
-    """Base class for class representation factories."""
+    """Base class for class representation factories.
+
+    Warning: This class should not be used directly. Use derived classes
+    instead."""
 
     glue_ch: str = ""
     div_ch: str = '__'
@@ -363,7 +366,11 @@ class FingerprintReprBuilder(ReprBuilder):
 
 
 class CacheFileWarden:
-    """Abstract IO-backend for FileBasedCache"""
+    """Abstract IO-backend for FileBasedCache.
+
+    Warning: This class should not be used directly. Use derived classes
+    instead.
+    """
 
     def __init__(self) -> None:
         assert type(self) != CacheFileWarden, (
@@ -412,7 +419,7 @@ class CacheFileWarden:
 
 
 class PickleFileWarden(CacheFileWarden):
-    """Pickle IO-backend for FileBasedCache."""
+    """Pickle-based IO-backend for FileBasedCache."""
 
     @property
     def ext_str(self) -> str:
