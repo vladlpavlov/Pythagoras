@@ -594,7 +594,7 @@ class FileBasedCache(LoggableObject):
             , read_from_cache: Optional[bool] = None
             , write_to_cache: Optional[bool] = None
             , **ka) -> Any:
-
+        """ Cache-enabled file reading operation."""
         with TempAttributeAssignmentIfNotNone(
                 self, "read_from_cache", read_from_cache):
             with TempAttributeAssignmentIfNotNone(
@@ -875,7 +875,17 @@ class FileBasedCache(LoggableObject):
 
 
 class PickleCache(FileBasedCache):
-    """Pickle-based persistent cache manager."""
+    """Pickle-based persistent cache manager.
+
+    This is the main class which is supposed to be employed
+    by the users of the library. Objects of this class are supposed to:
+
+    (1) Serve as a decorator to cache-enable user functions;
+    (2) Serve as a namespace for accelerated file-reading functions.
+
+    Consult Introductory Tutorial for details:
+    https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_introductory_tutorial.ipynb
+    """
 
     def __init__(
         self
@@ -943,6 +953,9 @@ class CacheableObject:
     then the behavior of File Caching is
     defined by read_from_cache and write_to_cache attributes of
     FileBasedCache object which served as a decorator for cacheable methods.
+
+    Consult Advanced Tutorial for further details:
+    https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_advanced_tutorial.ipynb
     """
 
     read_from_cache: Optional[bool] = None
