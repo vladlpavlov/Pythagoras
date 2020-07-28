@@ -5,6 +5,8 @@
 import os
 import string, math
 import shutil, numbers
+from copy import deepcopy
+
 import xxhash
 from datetime import datetime
 from typing import Optional, Callable, Any, Tuple, List, ClassVar
@@ -465,6 +467,7 @@ class FileBasedCache(LoggableObject):
             , write_to_cache: bool = True
             , read_from_cache: bool = True
             , cache_file_warden: CacheFileWarden = PickleFileWarden()
+            , uncacheable_attrs = "default"
             , **kwargs
             ) -> None:
         super().__init__(**kwargs)
@@ -485,6 +488,15 @@ class FileBasedCache(LoggableObject):
         self.write_to_cache = write_to_cache
         self.read_from_cache = read_from_cache
         self.cache_file_warden = cache_file_warden
+        if uncacheable_attrs.lower() == "default":
+            uncacheable_attrs = self.get_default_uncacheables()
+        assert isinstance(uncacheable_attrs, dict)
+        self.uncacheable_attrs = uncacheable_attrs
+
+    def get_default_uncacheables(self):
+        """Return default value for uncacheable_attrs"""
+        uncacheables = {"random_state":None}
+        return deepcopy(uncacheables)
 
     def files_in_cache_dir(self) -> List[str]:
         """List full names of all the files from all the cache (sub)folders"""
@@ -589,6 +601,13 @@ class FileBasedCache(LoggableObject):
         else:
             description += (f"Cache WRITER is NOT active: new objects"
                             + " do not get saved. ")
+
+        if self.uncacheable_attrs is not None:
+            description += f"The following key-value pairs will disable "
+            description += f"function caching if they are present among "
+            description += f"function parameters or attributes of the "
+            description += f"parameters on any nested level: "
+            description += f"{self.uncacheable_attrs}. "
 
         description = description + super().__str__()
 
@@ -723,7 +742,7 @@ class FileBasedCache(LoggableObject):
             , read_from_cache: Optional[bool] = None
             , write_to_cache: Optional[bool] = None
             , **ka
-            ) -> pd.core.frame.DataFrame:
+            ) -> pd.DataFrame:
         """Read and return a Pandas DataFrame from a CSV file.
 
         The input file should be located in input_dir.
@@ -821,6 +840,54 @@ class FileBasedCache(LoggableObject):
 
         return data
 
+    def attrs_include_uncacheable(self, *args, **kwargs):
+        """Check if any of forbidden attribute values are present in args/kwargs.
+
+        A wrapper for find_uncacheable_attrs() method.
+        """
+        self.checked_ids_ = set()
+        return self.find_uncacheable_attrs(args=args, kwargs = kwargs)
+
+    def find_uncacheable_attrs(self, **kwargs):
+        """Find if any of forbidden attribute values are present in kwargs"""
+        for kw in kwargs:
+            if (kw in self.uncacheable_attrs
+                and kwargs[kw] == self.uncacheable_attrs[kw]):
+                return f"{kw}=={self.uncacheable_attrs[kw]}"
+
+        for kw in kwargs:
+            current_id = id(kwargs[kw])
+            if not current_id in self.checked_ids_:
+                self.checked_ids_ |= {id(kwargs[kw])}
+
+                try:
+                    validation_result = self.find_uncacheable_attrs(
+                        **(kwargs[kw]))
+                    if validation_result:
+                        return f"{kw}." + validation_result
+                except:
+                    pass
+
+                try:
+                    validation_result = self.find_uncacheable_attrs(
+                        **vars(kwargs[kw]))
+                    if validation_result:
+                        return f"{kw}." + validation_result
+                except:
+                    pass
+
+                try:
+                    i = 0
+                    for x in kwargs[kw]:
+                        validation_result = self.find_uncacheable_attrs(_=x)
+                        if validation_result:
+                            return f"{kw}[{i}]{validation_result.lstrip('_')}"
+                        i += 1
+                except:
+                    pass
+
+        return False
+
     def was_a_method_called(self, a_func, *func_args) -> bool:
         """ Check if a callable is a non-static (instance or class) method."""
 
@@ -858,6 +925,16 @@ class FileBasedCache(LoggableObject):
                 , read_from_cache: Optional[bool] = None
                 , write_to_cache: Optional[bool] = None
                 , **kwargs) -> Any:
+
+            uncacheables = self.attrs_include_uncacheable(*args,**kwargs)
+            if uncacheables:
+                read_from_cache = False
+                write_to_cache = False
+                log_message = f"Found {uncacheables} in input parameters, "
+                log_message += "which means the function output is not "
+                log_message += "cacheable. Defaulting to read_from_cache=False"
+                log_message += " and write_cache=False. "
+                self.warning(log_message)
 
             sorted_kwargs = {k: kwargs[k] for k in sorted(kwargs.keys())}
 
@@ -906,6 +983,7 @@ class PickleCache(FileBasedCache):
             [Any, SlimReprBuilder], Optional[str]]] = None
         , custom_fingerprint_repr_handler: Optional[Callable[
             [Any, FingerprintReprBuilder], Optional[str]]] = None
+        , uncacheable_attrs =  "default"
         , **kwargs
     ) -> None:
         super().__init__(
@@ -920,6 +998,7 @@ class PickleCache(FileBasedCache):
             , fingerprint_repr_builder=FingerprintReprBuilder(
                 custom_handler=custom_fingerprint_repr_handler)
             , cache_file_warden=PickleFileWarden()
+            , uncacheable_attrs = uncacheable_attrs
             , **kwargs
         )
 
