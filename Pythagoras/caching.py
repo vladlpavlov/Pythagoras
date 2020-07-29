@@ -50,7 +50,7 @@ class ReprBuilder(LoggableObject):
         , "for_bool"
         , "for_numbers"
         , "for_str"
-        , "for_dataframe"
+        , "for_pandas"
         , "for_core_containers"
         , "for_custom_types"
         , "for_instance_defined_custom_types"
@@ -171,19 +171,32 @@ class SlimReprBuilder(ReprBuilder):
             + self.left_bkt_ch + str(body) + self.right_bkt_ch
             + str(suffix))
 
-    def for_dataframe(self
-                      , df: Any
-                      , prefix: str = "DataFrame"
-                      , suffix: str = ""
-                      ) -> Optional[str]:
+    def for_pandas(self
+            , pandas_object: Any
+            , df_prefix: str = "DataFrame"
+            , s_prefix: str = "Series"
+            , i_prefix:str = "Index"
+            , suffix: str = ""
+            ) -> Optional[str]:
         repr_str = None
 
-        if isinstance(df, type(pd.DataFrame())):
-            repr_str = f"{df.shape[0]}x{df.shape[1]}"
-            n_nans = df.isna().sum().sum()
+        if isinstance(pandas_object, pd.DataFrame):
+            repr_str = f"{pandas_object.shape[0]}x{pandas_object.shape[1]}"
+            n_nans = pandas_object.isna().sum().sum()
             if n_nans:
                 repr_str += self.glue_ch + 'nans' + str(n_nans)
-            repr_str = self.put_into_brackets(prefix, repr_str, suffix)
+            repr_str = self.put_into_brackets(df_prefix, repr_str, suffix)
+
+        if isinstance(pandas_object, pd.Series):
+            repr_str = f"{len(pandas_object)}"
+            n_nans = pandas_object.isna().sum().sum()
+            if n_nans:
+                repr_str += self.glue_ch + 'nans' + str(n_nans)
+            repr_str = self.put_into_brackets(s_prefix, repr_str, suffix)
+
+        if isinstance(pandas_object, pd.Index):
+            repr_str = f"{len(pandas_object)}"
+            repr_str = self.put_into_brackets(i_prefix, repr_str, suffix)
 
         return repr_str
 
@@ -293,23 +306,27 @@ class FingerprintReprBuilder(ReprBuilder):
 
         return short_digest_str
 
-    def for_dataframe(self, df) -> Optional[str]:
-        if not isinstance(df, type(pd.DataFrame())):
+    def for_pandas(self, pandas_obj) -> Optional[str]:
+        if not isinstance(pandas_obj, (pd.DataFrame, pd.Series, pd.Index)):
             return None
 
         values_digest_str = self.fingerprint(
-            pd.util.hash_pandas_object(df, index=False).values)
+            pd.util.hash_pandas_object(pandas_obj, index=True).values)
 
-        columns_digest_str = self.fingerprint(str(list(df.columns)))
-
-        index_digest_str = self.fingerprint(str(list(df.index)))
+        columns_digest_str = ""
+        if isinstance(pandas_obj, pd.DataFrame):
+            columns_digest_str = self.fingerprint(str(list(pandas_obj.columns)))
 
         final_digest_str = self.fingerprint(
-            values_digest_str + columns_digest_str + index_digest_str)
+            values_digest_str + columns_digest_str)
 
         return final_digest_str
 
     def for_dataframe_fast(self, df) -> Optional[str]:
+        """Fast and durty fingerprint calculator for DataFrames.
+
+        Warning: only use it if you really know what you are doing.
+         """
         if not isinstance(df, type(pd.DataFrame())):
             return None
 
