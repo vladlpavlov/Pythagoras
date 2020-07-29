@@ -10,6 +10,7 @@ from copy import deepcopy
 import xxhash
 from datetime import datetime
 from typing import Optional, Callable, Any, Tuple, List, ClassVar
+import numpy as np
 import pandas as pd
 import types
 from functools import wraps
@@ -51,6 +52,7 @@ class ReprBuilder(LoggableObject):
         , "for_numbers"
         , "for_str"
         , "for_pandas"
+        , "for_numpy"
         , "for_core_containers"
         , "for_custom_types"
         , "for_instance_defined_custom_types"
@@ -200,6 +202,15 @@ class SlimReprBuilder(ReprBuilder):
 
         return repr_str
 
+    def for_numpy(self, np_obj) -> Optional[str]:
+        if not isinstance(np_obj, np.ndarray):
+            return None
+
+        repr_str = f"{np_obj.shape}".replace(",","x").replace(" ","")
+        repr_str = repr_str.replace("(","").replace(")","")
+        repr_str = self.put_into_brackets("NDArray", repr_str, "")
+        return repr_str
+
     def for_str(self, s) -> Optional[str]:
         if not isinstance(s, str):
             return None
@@ -322,6 +333,20 @@ class FingerprintReprBuilder(ReprBuilder):
 
         return final_digest_str
 
+    def for_numpy(self, np_obj) -> Optional[str]:
+        if not isinstance(np_obj, np.ndarray):
+            return None
+
+        np_obj_flattened = np_obj.flatten()
+        np_obj_data = memoryview(np_obj_flattened.view(np.uint8))
+
+        digest_str = str(np_obj.shape)
+        digest_str += str(np_obj.dtype)
+        digest_str += self.fingerprint(np_obj_data)
+
+        return digest_str
+
+
     def for_dataframe_fast(self, df) -> Optional[str]:
         """Fast and durty fingerprint calculator for DataFrames.
 
@@ -356,10 +381,19 @@ class FingerprintReprBuilder(ReprBuilder):
             for k in c:
                 digest_str += self.build_repr(k) + ' '
                 digest_str += self.build_repr(c[k]) + ' '
-        elif isinstance(c, (list, set, tuple)):
+        elif isinstance(c, (list, tuple)):
             digest_str = type(c).__qualname__ + ' ' + str(len(c)) + ' '
             for i in c:
                 digest_str += self.build_repr(i) + ' '
+        elif isinstance(c, set):
+            digest_str = type(c).__qualname__ + ' ' + str(len(c)) + ' '
+            try:
+                c_ordered = sorted(c)
+                for i in c_ordered:
+                    digest_str += self.build_repr(i) + ' '
+            except:
+                c_ordered = sorted({hash(e) for e in c})
+                digest_str += str(c_ordered)
         else:
             digest_str = None
 
