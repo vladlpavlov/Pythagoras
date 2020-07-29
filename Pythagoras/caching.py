@@ -377,10 +377,11 @@ class FingerprintReprBuilder(ReprBuilder):
 
     def for_core_containers(self, c) -> Optional[str]:
         if isinstance(c, dict):
-            digest_str = type(c).__qualname__ + ' ' + str(len(c)) + ' '
+            digest_str = type(c).__qualname__ + '=' + str(len(c)) + '{'
             for k in c:
-                digest_str += self.build_repr(k) + ' '
-                digest_str += self.build_repr(c[k]) + ' '
+                digest_str += self.build_repr(k) + ':'
+                digest_str += self.build_repr(c[k]) + ','
+            digest_str += '}'
         elif isinstance(c, (list, tuple)):
             digest_str = type(c).__qualname__ + ' ' + str(len(c)) + ' '
             for i in c:
@@ -408,7 +409,15 @@ class FingerprintReprBuilder(ReprBuilder):
                 repr_str += ', ' + x.__qualname__
             elif hasattr(x, "__name__"):
                 repr_str += ', ' + x.__name__
-            raise NotImplementedError(f"Can't create a hash digest for ({repr_str})")
+
+            if hasattr(x, "__getstate__") and callable(x.__getstate__):
+                digest_str = repr_str + " " +self.build_repr(x.__getstate__())
+            else:
+                digest_str = repr_str + " " + self.build_repr(vars(x))
+
+            self.warning(
+                f"Building default type-based fingerprint_repr <{digest_str}>"
+                + f" for <{repr_str}>.")
 
         return digest_str
 
