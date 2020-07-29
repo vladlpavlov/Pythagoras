@@ -370,31 +370,38 @@ class FingerprintReprBuilder(ReprBuilder):
         if not isinstance(s, str):
             return None
 
-        digest_str = type(s).__qualname__ + ' ' + str(len(s)) + ' '
+        digest_str = type(s).__qualname__ + '_' + str(len(s)) + '_'
         digest_str += s
 
         return digest_str
 
     def for_core_containers(self, c) -> Optional[str]:
         if isinstance(c, dict):
-            digest_str = type(c).__qualname__ + '=' + str(len(c)) + '{'
+            digest_str = type(c).__qualname__ + '_' + str(len(c)) + '{'
             for k in c:
                 digest_str += self.build_repr(k) + ':'
                 digest_str += self.build_repr(c[k]) + ','
             digest_str += '}'
-        elif isinstance(c, (list, tuple)):
-            digest_str = type(c).__qualname__ + ' ' + str(len(c)) + ' '
+        elif isinstance(c, list):
+            digest_str = type(c).__qualname__ + '_' + str(len(c)) + '['
             for i in c:
-                digest_str += self.build_repr(i) + ' '
+                digest_str += self.build_repr(i)
+            digest_str += ']'
+        elif isinstance(c, tuple):
+            digest_str = type(c).__qualname__ + '_' + str(len(c)) + '('
+            for i in c:
+                digest_str += self.build_repr(i)
+            digest_str += ')'
         elif isinstance(c, set):
-            digest_str = type(c).__qualname__ + ' ' + str(len(c)) + ' '
+            digest_str = type(c).__qualname__ + '_' + str(len(c)) + '{'
             try:
                 c_ordered = sorted(c)
-                for i in c_ordered:
-                    digest_str += self.build_repr(i) + ' '
             except:
-                c_ordered = sorted({hash(e) for e in c})
-                digest_str += str(c_ordered)
+                c_ordered = c
+            for i in c_ordered:
+                digest_str += self.build_repr(i)
+            digest_str += '}'
+
         else:
             digest_str = None
 
@@ -411,9 +418,9 @@ class FingerprintReprBuilder(ReprBuilder):
                 repr_str += ', ' + x.__name__
 
             if hasattr(x, "__getstate__") and callable(x.__getstate__):
-                digest_str = repr_str + " " +self.build_repr(x.__getstate__())
+                digest_str = repr_str + "=" +self.build_repr(x.__getstate__())
             else:
-                digest_str = repr_str + " " + self.build_repr(vars(x))
+                digest_str = repr_str + "=" + self.build_repr(vars(x))
 
             self.warning(
                 f"Building default type-based fingerprint_repr <{digest_str}>"
