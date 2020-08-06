@@ -213,7 +213,39 @@ class PFeatureMaker(PEstimator):
 
 
 class NaN_Inducer(PFeatureMaker):
-    """A transformer that adds random NaN-s to a dataset"""
+    """A transformer that adds random NaN-s to a dataset
+
+    NaN_Inducer introduces random NaN values to the features dataframe
+    during the fitting process. Later, when the  .transform() method is called,
+    no NaNs are added. In other words, NaNs are only induced during the
+    training process, while during the inference original data are used
+    with not modification. It’s an equivalent of
+    a dropout layer in neural networks.
+
+    Parameters:
+    ----------
+    min_nan_level : float between 0 and 1, default = 0.05
+        Determines minimum level of NaN-s required for each column.
+        If an input column X[feature] has more than len(X)* min_nan_level NaNs,
+        no new NaNs are introduced. However, if the number of NaN-s is less than
+        len(X)* min_nan_level NaNs, they are randomly added until they reach the
+        required level. This process is repeated for all columns(features) in X.
+
+    random_state : int, RandomState instance, default=None
+        The seed of the pseudo random number generator.
+        Pass an int for reproducible output across multiple function calls.
+        When RandomState is set to None, it disables file caching functionality
+        (see documentation for PickleCache for details).
+
+    Attributes:
+    ----------
+    log_df_: Pandas DataFrame
+        a detailed report of actions, performed by NaN_Inducer during the
+        .fit_transform() call
+
+    transformabe_columns_: list of str
+        names of the columns, used by the .fit_transform() method
+    """
 
     log_df_: Optional[pd.DataFrame]
     transformabe_columns_: Optional[List[str]]
