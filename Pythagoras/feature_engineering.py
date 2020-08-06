@@ -851,7 +851,7 @@ class TargetMultiEncoder(CatSelector):
         self.tme_aggr_funcs = tme_aggr_funcs
         self.tme_cat_values_ = None
         self.tme_default_values_ = None
-        self.nan_string: str = "<<<<-----TME-NaN----->>>>:" + str(id(self))
+        self.nan_string: str = "<<<<-----TME-NaN----->>>>"
         return self
 
     @property
@@ -1024,7 +1024,7 @@ class LOOMeanTargetEncoder(CatSelector):
                            , **kwargs)
         self.sums_counts_ = None
         self.encodable_columns_ = None
-        self.nan_string: str = "<<<<-----LOO-NaN----->>>>:" + str(id(self))
+        self.nan_string: str = "<<<<-----LOO-NaN----->>>>"
         return self
 
     @property

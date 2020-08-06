@@ -6,6 +6,8 @@ from Pythagoras.util import *
 from Pythagoras.logging import *
 from Pythagoras.feature_engineering import *
 from Pythagoras.caching import *
+from Pythagoras.global_objects import *
+
 
 
 # Workaround to ensure compatibility with Python <= 3.6
@@ -420,6 +422,9 @@ class AmpleGarden(PRegressor):
                                    , maxmode)
                 , split_percentiles = (1, 25, 50, 75, 99)
 
+                , read_from_cache = True
+                , write_to_cache = True
+
                 , random_state = None
                 , **kwargs) -> None:
         super().__init__( **kwargs)
@@ -437,6 +442,8 @@ class AmpleGarden(PRegressor):
             , imputation_aggr_funcs = imputation_aggr_funcs
             , tme_aggr_funcs = tme_aggr_funcs
             , split_percentiles = split_percentiles
+            , read_from_cache = read_from_cache
+            , write_to_cache = write_to_cache
             , random_state = random_state
             , **kwargs)
 
@@ -455,11 +462,15 @@ class AmpleGarden(PRegressor):
             , imputation_aggr_funcs = None
             , tme_aggr_funcs = None
             , split_percentiles = None
+            , write_to_cache = None
+            , read_from_cache = None
             , random_state = None
             , **kwargs) -> PRegressor:
         self.is_fitted_flag_ = False
 
         self.random_state = random_state
+        self.read_from_cache = read_from_cache
+        self.write_to_cache = write_to_cache
 
         self.feature_shower = FeatureShower(
             min_nan_level=min_nan_level
@@ -486,7 +497,11 @@ class AmpleGarden(PRegressor):
     def get_params(self, deep: bool = False) -> Dict[str, Any]:
         fs_params = self.feature_shower.get_params(deep)
         sg_params = self.simple_garden.get_params(deep)
-        params = {**fs_params, **sg_params, "random_state":self.random_state}
+        params = {**fs_params
+            , **sg_params
+            , "random_state": self.random_state
+            , "read_from_cache": self.read_from_cache
+            , "write_to_cache": self.write_to_cache}
         return params
 
     @property
@@ -505,11 +520,21 @@ class AmpleGarden(PRegressor):
     def output_can_have_nans(self) -> bool:
         return False
 
-    def fit(self, X, y):
+    @Pythagoras_cache
+    def get_fitted_model(self,X,y):
         X, y = self.start_fitting(X, y)
-        X_new = self.feature_shower.fit_transform(X,y)
-        self.simple_garden.fit(X_new,y)
+        X_new = self.feature_shower.fit_transform(X, y)
+        self.simple_garden.fit(X_new, y)
         self.is_fitted_flag_ = True
+        return self
+
+
+    def fit(self, X, y):
+        new_self = self.get_fitted_model(X,y)
+        extra_keys = set(self.__dict__) - set(new_self.__dict__)
+        for k in extra_keys:
+            del self.__dict__[k]
+        self.__dict__.update(new_self.__dict__)
         return self
 
     def predict(self, X):
@@ -549,7 +574,9 @@ class BaggingStabilizer(PRegressor):
             , stabilizer_n_repeats=stabilizer_n_repeats
             , stabilizer_percentile = stabilizer_percentile
             , stabilizer_add_full_model = stabilizer_add_full_model
-            , random_state = random_state)
+            , random_state = random_state
+            , read_from_cache = False
+            , write_to_cache = False)
 
     def set_params(self
             ,base_model=None
@@ -558,6 +585,8 @@ class BaggingStabilizer(PRegressor):
             , stabilizer_percentile = None
             , stabilizer_add_full_model = None
             , random_state=None
+            , read_from_cache = None
+            , write_to_cache = None
             , deep: bool = False
             ,**kwargs) -> PRegressor:
         self.base_model = base_model
@@ -565,6 +594,8 @@ class BaggingStabilizer(PRegressor):
         self.stabilizer_n_repeats = stabilizer_n_repeats
         self.stabilizer_percentile = stabilizer_percentile
         self.stabilizer_add_full_model = stabilizer_add_full_model
+        self.read_from_cache = read_from_cache
+        self.write_to_cache = write_to_cache
         self.is_fitted_flag_ = False
         self.models = None
         self.model_scores_ = None
@@ -580,6 +611,8 @@ class BaggingStabilizer(PRegressor):
             , n_repeats = self.stabilizer_n_repeats
             , percentile = self.stabilizer_percentile
             , stabilizer_add_full_model = self.stabilizer_add_full_model
+            , write_to_cache = self.write_to_cache
+            , read_from_cache = self.read_from_cache
             , random_state = self.random_state)
         return params
 
@@ -692,13 +725,13 @@ class MagicGarden(PRegressor):
 
     def __init__(self, *
                 , garden_base_model= LinearRegression(normalize=True)
-                , garden_feature_cr_threshold: float = 0.07
-                , max_features_per_pmodel: Optional[int] = None
+                , garden_feature_cr_threshold: float = 0.05
+                , max_features_per_pmodel: Optional[int] = 80
                 , max_pmodels_per_garden: int = 15
                 , garden_cv_score_threshold: Optional[float] = None
                 , garden_cv_score_threshold_multiplier: Optional[float] = 0.8
 
-                , min_nan_level: float = 0.05
+                , min_nan_level: float = 0.055
                 , min_cat_size: int = 20
                 , max_uniques_per_cat: int = 100
                 , positive_arg_num_functions = (power_m1_1p, np.log1p, root_2, power_2)
@@ -715,7 +748,7 @@ class MagicGarden(PRegressor):
                 , split_percentiles = (1, 25, 50, 75, 99)
 
                 , stabilizer_n_splits: int = 5
-                , stabilizer_n_repeats: int = 4
+                , stabilizer_n_repeats: int = 3
                 , stabilizer_percentile: int = 50
                 , stabilizer_add_full_model: bool = False
 

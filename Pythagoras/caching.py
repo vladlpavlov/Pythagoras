@@ -419,8 +419,10 @@ class FingerprintReprBuilder(ReprBuilder):
 
             if hasattr(x, "__getstate__") and callable(x.__getstate__):
                 digest_str = repr_str + "=" +self.build_repr(x.__getstate__())
-            else:
+            elif hasattr(x, "__dict__"):
                 digest_str = repr_str + "=" + self.build_repr(vars(x))
+            else:
+                digest_str = repr_str
 
             self.warning(
                 f"Building default type-based fingerprint_repr <{digest_str}>"
