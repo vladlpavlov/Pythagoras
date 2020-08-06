@@ -354,7 +354,40 @@ class NaN_Inducer(PFeatureMaker):
 
 
 class Deduper(PFeatureMaker):
-    """A transformer that removes duplicated columns (features)"""
+    """A transformer that removes duplicated columns (features)
+
+    Deduper identifies duplicated columns in a dataframe used during
+    the fitting process, and removes these columns.
+    The same columns are later removed
+    when the .transform() method is called.
+
+    Parameters:
+    ----------
+    keep : str, default = ”first”
+	    Determines which duplicates to keep.
+            - first : Drop duplicates except for the first occurrence.
+            - last : Drop duplicates except for the last occurrence.
+
+    allow_nans : bool, default = False
+	    Determines whether NaN values are allowed
+	    in the input/output of the transformer.
+
+    random_state : int, RandomState instance, default=None
+	    The seed of the pseudo random number generator.
+	    Random number generator is not directly used by the Deduper;
+	    however, the parameter is present for compatibility with PEstimator
+	    class. When RandomState is set to None,
+	    it disables file caching functionality
+	    (see documentation for PickleCache for details).
+
+    Attributes:
+    ----------
+    columns_to_keep_ : list of str
+	    list of column names to keep
+
+    columns_to_drop_ : list of str
+        list of column names to delete
+    """
 
     keep: str
     allow_nans: bool
