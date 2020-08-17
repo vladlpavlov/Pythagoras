@@ -8,14 +8,15 @@ df = pd.DataFrame(data.data, columns=data.feature_names)
 
 
 def test_NaN_Inducer_error_quantity():
+    """This test evaluates the min_nan_level in incremental steps:
+        1. When there is no NaN, the function will generate NaN based on specified nan_level
+        2. When the current NaN is below the specify the nan_level, the NaN_Inducer will
+           introduce additional NaN until specified NaN level is reached.
+     """
+
     train = df.head(100)
 
     for min_nan_level in [.01, .02, .03, .04, .05, .1, .25, .5, .75, .9, .99]:
-        """This test the min_nan_level in increamental steps:
-           1. When there is no NaN, the function will generate NaN based on specified nan_level
-           2. When the current NaN is below the specify the nan_level, the NaN_Inducer will 
-              add NaN to the specified level.
-        """
         nan_inducer = NaN_Inducer(min_nan_level=min_nan_level, random_state=42)
         train = nan_inducer.fit_transform(train)
         assert train.isnull().sum().sum() == train.shape[0] * min_nan_level * train.shape[1]
@@ -53,11 +54,12 @@ def test_NaN_Inducer_random_state():
 
 
 def test_NaN_Inducer_randomness():
-    ''' The test is to verify the induction of nan is truly random without bias.
-        This test introduce 70% nan of a 100 sample data set 1000 times (simulation).
-        The data is fit_transformed without random_state. A 95% confidence interval of the
-        sample mean is constructed. The population mean is expected to fall inside the
-        sample mean confidence. 
+    ''' The test is to verify that NaN_inducer introduces NaN randomly without bias.
+        This test introduce 70% nan to a 100 sample data set using NaN_inducer. The data is
+        fit_transformed without random_state. This process is repeated 1,000 times, and the mean
+        of independent fit data set are calculated. A 95% confidence interval of the sample mean
+        is constructed using the sample means and the standard deviation of the sample mean.
+        The population mean is expected to fall inside the sample mean confidence.
     '''
     train = df.head(100)
     pop_mean = train.mean()[0]
