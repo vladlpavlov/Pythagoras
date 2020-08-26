@@ -57,9 +57,10 @@ class PEstimator(LoggableObject):
 
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(data=X, copy=True)
-            X.columns = ["col_" + str(c) for c in X.columns]
         else:
             X = deepcopy(X)
+
+        X.columns = [str(c) for c in X.columns]
 
         assert len(X), "X can not be empty."
         assert len(X.columns) == len(set(X.columns)), (
@@ -945,7 +946,7 @@ class TargetMultiEncoder(CatSelector):
     def tme_column_name(self, func, column: str) -> str:
         if callable(func):
             func = func.__name__
-        name = "targ_enc_" + func + "(" + column + ")"
+        name = "targ_enc_" + func + "(" + str(column) + ")"
         return name
 
     def convert_X(self, X: pd.DataFrame) -> pd.DataFrame:
