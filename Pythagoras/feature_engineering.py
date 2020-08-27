@@ -1010,6 +1010,7 @@ class TargetMultiEncoder(CatSelector):
                 a_func = self.tme_aggr_funcs[i]
                 def_value = self.tme_default_values_[a_func]
                 v[v.columns[i]] = v[v.columns[i]].fillna(def_value)
+                v.at[self.nan_string,v.columns[i]] = def_value
 
             v.columns = [
                 self.tme_column_name(c[0], col) for c in v.columns]
