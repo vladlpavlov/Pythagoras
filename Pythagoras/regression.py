@@ -747,7 +747,7 @@ class MagicGarden(PRegressor):
                                    , maxmode)
                 , split_percentiles = (1, 25, 50, 75, 99)
 
-                , stabilizer_n_splits: int = 5
+                , stabilizer_n_splits: int = 9
                 , stabilizer_n_repeats: int = 2
                 , stabilizer_percentile: int = 50
                 , stabilizer_add_full_model: bool = False
