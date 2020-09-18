@@ -999,6 +999,8 @@ class TargetMultiEncoder(CatSelector):
                                , aggfunc=list(self.tme_aggr_funcs)
                                , dropna=False)
 
+            v = v.astype(float)
+
             n_nans = v.isna().sum().sum()
             if n_nans:
                 log_message = f"Got {n_nans} NaN-s while generating "
