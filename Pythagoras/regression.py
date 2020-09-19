@@ -549,6 +549,7 @@ class BaggingStabilizer(PRegressor):
     is_fitted_flag_: bool
     stabilizer_n_splits:int
     stabilizer_n_repeats:int
+    stabilizer_group_name: Optional[str]
     base_model:PRegressor
     stabilizer_percentile:int
     stabilizer_add_full_model:bool
@@ -563,6 +564,7 @@ class BaggingStabilizer(PRegressor):
                  , base_model = AmpleGarden()
                  , stabilizer_n_splits:int=5
                  , stabilizer_n_repeats:int=4
+                 , stabilizer_group_name = None
                  , stabilizer_percentile:int=50
                  , stabilizer_add_full_model:bool = False
                  , random_state = None
@@ -572,6 +574,7 @@ class BaggingStabilizer(PRegressor):
             base_model=base_model
             , stabilizer_n_splits=stabilizer_n_splits
             , stabilizer_n_repeats=stabilizer_n_repeats
+            , stabilizer_group_name=stabilizer_group_name
             , stabilizer_percentile = stabilizer_percentile
             , stabilizer_add_full_model = stabilizer_add_full_model
             , random_state = random_state
@@ -582,6 +585,7 @@ class BaggingStabilizer(PRegressor):
             ,base_model=None
             , stabilizer_n_splits:int=None
             , stabilizer_n_repeats:int=None
+            , stabilizer_group_name:Optional[str]=None
             , stabilizer_percentile = None
             , stabilizer_add_full_model = None
             , random_state=None
@@ -592,6 +596,7 @@ class BaggingStabilizer(PRegressor):
         self.base_model = base_model
         self.stabilizer_n_splits = stabilizer_n_splits
         self.stabilizer_n_repeats = stabilizer_n_repeats
+        self.stabilizer_group_name = stabilizer_group_name
         self.stabilizer_percentile = stabilizer_percentile
         self.stabilizer_add_full_model = stabilizer_add_full_model
         self.read_from_cache = read_from_cache
@@ -609,6 +614,7 @@ class BaggingStabilizer(PRegressor):
         params = dict(base_model = self.base_model
             , n_splits = self.stabilizer_n_splits
             , n_repeats = self.stabilizer_n_repeats
+            , stabilizer_group_name = self.stabilizer_group_name
             , percentile = self.stabilizer_percentile
             , stabilizer_add_full_model = self.stabilizer_add_full_model
             , write_to_cache = self.write_to_cache
@@ -646,12 +652,21 @@ class BaggingStabilizer(PRegressor):
             , random_state=self.random_state)
 
         X, y = self.start_fitting(X, y)
+
+        if self.stabilizer_group_name is None:
+            groups = None
+        else:
+            groups = deepcopy(X[self.stabilizer_group_name]).astype("category")
+            groups = groups.astype(int)
+            del X[self.stabilizer_group_name]
+
         cv_results = cross_validate(self.base_model
             ,X
             ,y
-            ,scoring = "r2"
-            ,cv = self.rkf
-            ,return_estimator = True
+            ,scoring="r2"
+            ,cv=self.rkf
+            ,groups=groups
+            ,return_estimator=True
             ,n_jobs=-1)
 
         score_threshold = np.nanpercentile(
