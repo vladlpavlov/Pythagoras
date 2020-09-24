@@ -85,7 +85,7 @@ class PRegressor(PEstimator):
 
         X, y = super().start_fitting(X, y, write_to_log=False)
         X_val, y_val = super().start_fitting(X_val, y_val, write_to_log=False)
-        assert X.columns == X_val.columns
+        assert list(X.columns) == list(X_val.columns)
         assert y.name == y_val.name
         self.target_name_ = y.name
         self.min_med_max_ = (min(y), percentile50(y), max(y))
