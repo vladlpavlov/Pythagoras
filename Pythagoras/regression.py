@@ -59,10 +59,37 @@ class PRegressor(PEstimator):
                       , y: Any
                       , write_to_log: bool = True
                       ) -> Tuple[pd.DataFrame, pd.Series]:
-        X, y = super().start_fitting(X, y)
+        X, y = super().start_fitting(X, y, write_to_log)
         self.target_name_ = y.name
         self.min_med_max_ = (min(y), percentile50(y), max(y))
         return X, y
+
+    def start_val_fitting(self
+                        , X: Any
+                        , y: Any
+                        , X_val: Any
+                        , y_val: Any
+                        , write_to_log: bool = True
+                        ) -> Tuple[pd.DataFrame, pd.Series
+                            , pd.DataFrame, pd.Series]:
+        if write_to_log:
+            log_message = f"==> Starting val_fittig {type(self).__name__} "
+            log_message += f"using a {type(X).__name__} named < "
+            log_message += NeatStr.object_names(X, div_ch=" / ")
+            log_message += f" > with the shape {X.shape}, "
+            log_message += f"and a {type(y).__name__} named < "
+            log_message += NeatStr.object_names(y, div_ch=" / ") + " >. "
+            log_message += "Validation dataset contains "
+            log_message += f"{len(X_val)} lines."
+            self.info(log_message)
+
+        X, y = super().start_fitting(X, y, write_to_log=False)
+        X_val, y_val = super().start_fitting(X_val, y_val, write_to_log=False)
+        assert X.columns == X_val.columns
+        assert y.name == y_val.name
+        self.target_name_ = y.name
+        self.min_med_max_ = (min(y), percentile50(y), max(y))
+        return X, y, X_val, y_val
 
     def predict(self, X:pd.DataFrame) -> pd.Series:
         raise NotImplementedError
