@@ -834,10 +834,11 @@ class FileBasedCache(LoggableObject):
     def get_generated_data(
             self
             , data_generator: Callable[..., Any]
+            , stopwatch:BasicStopwatch
             , *arguments
             , **kw_arguments
             ) -> Any:
-        stopwatch = BasicStopwatch(start=True)
+        # stopwatch = BasicStopwatch(start=True)
         func_digest_builder = type(
             self.fingerprint_repr_builder)(hex_digest_length=5)
         func_digest_str = func_digest_builder(
@@ -994,7 +995,7 @@ class FileBasedCache(LoggableObject):
                 , read_from_cache: Optional[bool] = None
                 , write_to_cache: Optional[bool] = None
                 , **kwargs) -> Any:
-
+            time_tracker = BasicStopwatch(start=True)
             uncacheables = self.attrs_include_uncacheable(*args,**kwargs)
             if uncacheables:
                 read_from_cache = False
@@ -1020,7 +1021,7 @@ class FileBasedCache(LoggableObject):
                 with TempAttributeAssignmentIfNotNone(
                         self, "write_to_cache", write_to_cache):
                     result = self.get_generated_data(
-                        a_function, *args, **sorted_kwargs)
+                        a_function, time_tracker, *args, **sorted_kwargs)
 
             return result
 
