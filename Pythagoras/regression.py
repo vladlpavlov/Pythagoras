@@ -1,6 +1,9 @@
+from random import shuffle
+
 import pandas as pd
 from sklearn.linear_model import Ridge, LinearRegression
-from sklearn.model_selection import cross_validate
+from sklearn.metrics import get_scorer
+from sklearn.model_selection import cross_validate, ParameterGrid
 
 from Pythagoras.util import *
 from Pythagoras.logging import *
@@ -107,7 +110,7 @@ class PRegressor(PEstimator):
             self.info(log_message)
 
         assert self.is_fitted_
-        X = self._preprocess_X(X)
+        X = self._preprocess_X(X, sort_index=False)
         self.prediction_index_ = deepcopy(X.index)
 
         if self.input_columns_ is NotProvided:
@@ -604,9 +607,9 @@ class BaggingStabilizer(PRegressor):
             , stabilizer_group_name=stabilizer_group_name
             , stabilizer_percentile = stabilizer_percentile
             , stabilizer_add_full_model = stabilizer_add_full_model
-            , random_state = random_state
-            , read_from_cache = False
-            , write_to_cache = False)
+            , random_state = random_state)
+            # , read_from_cache = False
+            # , write_to_cache = False)
 
     def set_params(self
             ,base_model=None
@@ -626,8 +629,8 @@ class BaggingStabilizer(PRegressor):
         self.stabilizer_group_name = stabilizer_group_name
         self.stabilizer_percentile = stabilizer_percentile
         self.stabilizer_add_full_model = stabilizer_add_full_model
-        self.read_from_cache = read_from_cache
-        self.write_to_cache = write_to_cache
+        # self.read_from_cache = read_from_cache
+        # self.write_to_cache = write_to_cache
         self.is_fitted_flag_ = False
         self.models = None
         self.model_scores_ = None
@@ -639,13 +642,13 @@ class BaggingStabilizer(PRegressor):
 
     def get_params(self, deep: bool = False) -> Dict[str, Any]:
         params = dict(base_model = self.base_model
-            , n_splits = self.stabilizer_n_splits
-            , n_repeats = self.stabilizer_n_repeats
+            , stabilizer_n_splits = self.stabilizer_n_splits
+            , stabilizer_n_repeats = self.stabilizer_n_repeats
             , stabilizer_group_name = self.stabilizer_group_name
-            , percentile = self.stabilizer_percentile
+            , stabilizer_percentile = self.stabilizer_percentile
             , stabilizer_add_full_model = self.stabilizer_add_full_model
-            , write_to_cache = self.write_to_cache
-            , read_from_cache = self.read_from_cache
+            # , write_to_cache = self.write_to_cache
+            # , read_from_cache = self.read_from_cache
             , random_state = self.random_state)
         return params
 

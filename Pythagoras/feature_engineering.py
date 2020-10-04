@@ -53,7 +53,7 @@ class PEstimator(LoggableObject):
         return self
 
 
-    def _preprocess_X(self, X:pd.DataFrame) -> pd.DataFrame:
+    def _preprocess_X(self, X:pd.DataFrame, sort_index=True) -> pd.DataFrame:
 
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(data=X, copy=True)
@@ -73,7 +73,8 @@ class PEstimator(LoggableObject):
         elif not self.input_can_have_nans:
             assert X.isna().sum().sum() == 0, "NaN-s are not allowed."
 
-        X.sort_index(inplace=True)
+        if sort_index:
+            X.sort_index(inplace=True)
 
         return X
 
