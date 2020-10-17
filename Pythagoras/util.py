@@ -8,8 +8,11 @@ import inspect
 import numbers, time
 from typing import Any, ClassVar, Union
 from copy import deepcopy
+import pandas as pd
 
 from scipy import stats
+from sklearn.datasets import load_boston, fetch_california_housing
+
 
 class TempAttributeAssignmentIfNotNone:
     """Context manager that temporarily changes a value of an object attribute
@@ -297,3 +300,29 @@ def passthrough(x):
 def power_m1_1p(x):
     return 1/(x+1)
 
+class DemoDB:
+    """ An OOP warapper for popular datasets"""
+    def __init__(self, db: str):
+        if db == "Boston":
+            load_function = load_boston
+            target_name = "MEDV"
+        elif db == "California":
+            load_function = fetch_california_housing
+            target_name = "MedHouseVal"
+        else:
+            assert False
+
+        dt = load_function()
+        self.X = pd.DataFrame(data=dt.data, columns=dt.feature_names)
+        self.y = pd.Series(data=dt.target, name=target_name)
+        self.description = dt.DESCR
+
+    def __str__(self):
+        return self.description
+
+    def __repr__(self):
+        return self.description
+
+
+Boston = DemoDB("Boston")
+California = DemoDB("California")
