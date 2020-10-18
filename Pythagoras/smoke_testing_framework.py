@@ -37,7 +37,9 @@ class DemoDB:
 Boston = DemoDB("Boston")
 California = DemoDB("California")
 
+
 class RegressionSmokeTesting(LoggableObject):
+    """ Basic smoke-test runner for regressors"""
     def __init__(self, regressor_to_test, cv = 7, scoring = "r2"):
         super().__init__()
         self.update_parent_logger()
@@ -51,7 +53,7 @@ class RegressionSmokeTesting(LoggableObject):
         log_message = "==>> Starting executing a smoke-test for a regressor "
         log_message += f"{self.regressor_to_test.__class__.__name__} with "
         log_message += f"cv={self.cv} and socring={self.scoring}. Sample "
-        log_message += f"dataset is named {NeatStr.object_names(dataset)}"
+        log_message += f"dataset is named {NeatStr.object_names(dataset)} "
         log_message += f"and its X's shape is {dataset.X.shape}."
         self.info(log_message)
 
@@ -61,7 +63,8 @@ class RegressionSmokeTesting(LoggableObject):
             , dataset.y
             , cv=self.cv
             , scoring=self.scoring)
-        log_message = "<<== Min, median and max values for CV-score are: "
+        log_message = "<<== Smoke-test has finished. Min, median and max "
+        log_message += f"values for CV-score are: "
         log_message += f"{min(cv_scores)}, "
         log_message += f"{median(cv_scores)}, "
         log_message += f"{max(cv_scores)}."
