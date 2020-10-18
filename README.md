@@ -7,10 +7,10 @@
 
 ### Main Use Cases
 
-1. Create ***well-performing baseline regression models*** that require no manual EDA, data cleaning, or feature engineering
-2. ***Improve accuracy*** of your predictions by employing new efficient regression algorithm
-3. ***Speed up*** your Data Science code by adding persistent file-based caching 
-4. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
+1. ***Speed up*** your Data Science code by adding persistent file-based caching 
+2. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
+3. Create ***well-performing baseline regression models*** that require no manual EDA, data cleaning, or feature engineering (coming soon)
+4. ***Improve accuracy*** of your predictions by employing new efficient meta-algorithms (coming soon)
 
 ### How To Get It?
 
@@ -24,17 +24,16 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Major Pythagoras Components
 
+* **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes.
+
+* **LoggableObject**: Simple base class that provides your objects with easy-to-use story-telling tools.
+
 * **MagicGarden**: Automated regression baseline creator. It builds well-performing regression models that 
-require no manual work from data scientists: no EDA, no data cleaning and no feature engineering. 
+require no manual work from data scientists: no EDA, no data cleaning and no feature engineering (coming soon). 
 
-* **SimpleGarden**: Efficient regression meta-algorithm:
-boosted feature selection factory creates an assembly of parsimonious regressors
+* **SimpleGarden**: Efficient regression meta-algorithm: boosted feature selection factory creates an assembly of parsimonious regressors (coming soon).
 
-* **FeatureShower**: Automatic data cleaner and feature generator 
-
-* **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes
-
-* **LoggableObject**: Simple base class that provides your objects with easy-to-use story-telling tools
+* **FeatureShower**: Automatic data cleaner and feature generator (coming soon).
 
 ### Tutorials
 
@@ -45,10 +44,12 @@ How to make Pythagoras PickleCache work with custom classes
  
 ### Core Design Principles 
 
-1. Full explainability on all levels
-2. Pandas-based data representation 
-3. Compatibility with SKLearn
-4. OOP and static typing
+1. Pandas as main data vessel
+2. Storytelling via logging
+3. Feedback-supported training
+4. Leakproof ensembling: predictors are transformers
+5. Experimental meta-estimators
+6. Compatibility with SKLearn (when practical)
 
 ### Dependencies
 
