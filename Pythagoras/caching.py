@@ -14,8 +14,9 @@ import numpy as np
 import pandas as pd
 import types
 from functools import wraps
-from Pythagoras import NeatStr, LoggableObject, BasicStopwatch
-from Pythagoras import TempAttributeAssignmentIfNotNone
+from Pythagoras.util import *
+from Pythagoras.logging import *
+
 
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation

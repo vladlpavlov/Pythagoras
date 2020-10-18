@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from ..feature_engineering import NaN_Inducer, TargetMultiEncoder, NumericImputer, Deduper, NumericFuncTransformer
+from ..feature_engineering import NaN_Inducer, NumericImputer, Deduper, NumericFuncTransformer
+# from ..feature_engineering import TargetMultiEncoder
 from sklearn.datasets import load_boston
 
 data = load_boston()
@@ -76,58 +77,58 @@ class TestNaNInducer:
         ]
         assert min(confidence_interval_95) <= pop_mean <= max(confidence_interval_95)
 
-
-class TestTargetMultiEncoder:
-
-    def test_target_multi_encoder(self):
-
-        # generate test df
-        def generate_df(x):
-            test_data = {'X': [], 'y': []}
-            for i in range(1, x + 1):
-                test_data['X'] += [i] * i
-            test_data['y'] = [i for i in range(len(test_data['X']))]
-            result_df = pd.DataFrame(test_data)
-            return result_df
-
-        max_x_input = 12
-        min_cat_size = 7
-        max_uniques_per_cat = 80
-
-        for max_x in range(1, max_x_input):
-            test_df = generate_df(max_x)
-            print(test_df)
-
-            multi_encoder = TargetMultiEncoder(
-                min_cat_size=min_cat_size,
-                max_uniques_per_cat=max_uniques_per_cat,
-                tme_aggr_funcs=(
-                    np.mean,
-                    np.min,
-                    np.max
-                )
-            )
-            feat = multi_encoder.fit_transform(
-                X=test_df.drop(columns=['y']),
-                y=test_df['y']
-            )
-
-            # For preview
-            # test_df['X_hat'] = test_df['X'].apply(lambda x: x if x >= min_cat_size else 0)
-            # test_df = test_df.merge(feat, left_index=True, right_index=True)
-            # print(test_df.head(10))
-            # print(test_df.shape)
-            # print(test_df['y'])
-            # print(test_df['y'].mean())
-
-            # Testing
-            if max_x < min_cat_size or max_x > max_uniques_per_cat:
-                assert feat.empty
-            else:
-                assert feat.shape[1] == 3
-                assert test_df[test_df['X_hat'] == 0]['targ_enc_mean(X)'].mean() == test_df['y'].mean()
-                assert (test_df[test_df['X_hat'] == 0]['targ_enc_amin(X)'] == test_df['y'].min()).all()
-                assert (test_df[test_df['X_hat'] == 0]['targ_enc_amax(X)'] == test_df['y'].max()).all()
+#
+# class TestTargetMultiEncoder:
+#
+#     def test_target_multi_encoder(self):
+#
+#         # generate test df
+#         def generate_df(x):
+#             test_data = {'X': [], 'y': []}
+#             for i in range(1, x + 1):
+#                 test_data['X'] += [i] * i
+#             test_data['y'] = [i for i in range(len(test_data['X']))]
+#             result_df = pd.DataFrame(test_data)
+#             return result_df
+#
+#         max_x_input = 12
+#         min_cat_size = 7
+#         max_uniques_per_cat = 80
+#
+#         for max_x in range(1, max_x_input):
+#             test_df = generate_df(max_x)
+#             print(test_df)
+#
+#             multi_encoder = TargetMultiEncoder(
+#                 min_cat_size=min_cat_size,
+#                 max_uniques_per_cat=max_uniques_per_cat,
+#                 tme_aggr_funcs=(
+#                     np.mean,
+#                     np.min,
+#                     np.max
+#                 )
+#             )
+#             feat = multi_encoder.fit_transform(
+#                 X=test_df.drop(columns=['y']),
+#                 y=test_df['y']
+#             )
+#
+#             # For preview
+#             # test_df['X_hat'] = test_df['X'].apply(lambda x: x if x >= min_cat_size else 0)
+#             # test_df = test_df.merge(feat, left_index=True, right_index=True)
+#             # print(test_df.head(10))
+#             # print(test_df.shape)
+#             # print(test_df['y'])
+#             # print(test_df['y'].mean())
+#
+#             # Testing
+#             if max_x < min_cat_size or max_x > max_uniques_per_cat:
+#                 assert feat.empty
+#             else:
+#                 assert feat.shape[1] == 3
+#                 assert test_df[test_df['X_hat'] == 0]['targ_enc_mean(X)'].mean() == test_df['y'].mean()
+#                 assert (test_df[test_df['X_hat'] == 0]['targ_enc_amin(X)'] == test_df['y'].min()).all()
+#                 assert (test_df[test_df['X_hat'] == 0]['targ_enc_amax(X)'] == test_df['y'].max()).all()
 
 
 class TestNumericImputer:

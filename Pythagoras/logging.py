@@ -5,7 +5,7 @@ import inspect
 import logging
 import os
 from typing import Optional, Any
-from Pythagoras import NeatStr
+from Pythagoras.util import *
 
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
@@ -38,6 +38,7 @@ class LoggableObject:
              , reveal_calling_method: bool = False
              , new_logging_formatter: logging.Formatter = None
              ) -> None:
+        super().__init__()
         assert len(parent_logger_name), "parent_logger_name can not be empty"
         self.parent_logger_name = parent_logger_name
         self.reveal_identity = reveal_loggers_identity
