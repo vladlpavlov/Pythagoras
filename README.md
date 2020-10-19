@@ -3,14 +3,11 @@
 </div>
 
 # Pythagoras
-## Advanced Python tools for Data Scientists
+## Advanced Meta Algorithms for Data Scientists
 
-### Main Use Cases
+### What Is It?
 
-1. ***Speed up*** your Data Science code by adding persistent file-based caching 
-2. Make your scripts and classes ***easy to debug and reuse*** by equipping them with story-telling capabilities
-3. Create ***well-performing baseline regression models*** that require no manual EDA, data cleaning, or feature engineering (coming soon)
-4. ***Improve accuracy*** of your predictions by employing new efficient meta-algorithms (coming soon)
+An experimental SKLearn extension for meta-algorithms researchers
 
 ### How To Get It?
 
@@ -22,18 +19,29 @@ Binary installers for the latest released version are available at the Python pa
 
         pip install Pythagoras
 
-### Major Pythagoras Components
+### Core Design Principles 
+
+1. Liberal experimentation
+2. Feedback-supported training: **.val_fit()** instead of .fit() 
+3. Ubiquitous ensembling
+4. Predictors are transformers: **.map()** instead of .predict() and/or .transform() 
+5. Compatibility with SKLearn when practical
+6. Pandas as the main data vessel
+7. Storytelling via logging
+8. Acceleration via persistent caching
+
+### Major Components
 
 * **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes.
 
 * **LoggableObject**: Simple base class that provides your objects with easy-to-use story-telling tools.
 
+* **FeatureShower**: Automatic data cleaner and feature generator (*coming soon*).
+
+* **SimpleGarden**: Efficient regression meta-algorithm: boosted feature selection factory creates an assembly of parsimonious estimators (*coming soon*).
+
 * **MagicGarden**: Automated regression baseline creator. It builds well-performing regression models that 
-require no manual work from data scientists: no EDA, no data cleaning and no feature engineering (coming soon). 
-
-* **SimpleGarden**: Efficient regression meta-algorithm: boosted feature selection factory creates an assembly of parsimonious regressors (coming soon).
-
-* **FeatureShower**: Automatic data cleaner and feature generator (coming soon).
+require no manual work from data scientists: no EDA, no data cleaning and no feature engineering (*coming soon*). 
 
 ### Tutorials
 
@@ -41,15 +49,7 @@ require no manual work from data scientists: no EDA, no data cleaning and no fea
 How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
 2. [Advanced Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_advanced_tutorial.ipynb): 
 How to make Pythagoras PickleCache work with custom classes 
- 
-### Core Design Principles 
 
-1. Pandas as main data vessel
-2. Storytelling via logging
-3. Feedback-supported training
-4. Leakproof ensembling: predictors are transformers
-5. Experimental meta-estimators
-6. Compatibility with SKLearn (when practical)
 
 ### Dependencies
 
