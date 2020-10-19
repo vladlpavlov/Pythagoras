@@ -22,9 +22,9 @@ Binary installers for the latest released version are available at the Python pa
 ### Core Design Principles 
 
 1. Liberal experimentation
-2. Feedback-supported training: **.val_fit()** instead of .fit() 
+2. Feedback-supported training: ***.val_fit()*** instead of .fit() 
 3. Ubiquitous ensembling
-4. Predictors are transformers: **.map()** instead of .predict() and/or .transform() 
+4. Predictors are transformers: ***.map()*** instead of .predict() and/or .transform() 
 5. Compatibility with SKLearn when practical
 6. Pandas as the main data vessel
 7. Storytelling via logging
@@ -32,9 +32,13 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Major Components
 
-* **PickleCache**: Pandas-compatible persistent caching, effortlessly extendable to work with new custom classes.
+* **Learner**: Abstract base class, capable to be taught. Implements .val_fit() method.
 
-* **LoggableObject**: Simple base class that provides your objects with easy-to-use story-telling tools.
+* **Mapper**: Abstract base class, capable to predict/transform. Implements .map() method.
+
+* **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
+
+* **LoggableObject**: Simple base class that provides easy-to-use story-telling tools.
 
 * **FeatureShower**: Automatic data cleaner and feature generator (*coming soon*).
 

@@ -190,7 +190,7 @@ class Deduper(PFeatureMaker):
     random_state : int, RandomState instance, default=None
 	    The seed of the pseudo random number generator.
 	    Random number generator is not directly used by the Deduper;
-	    however, the parameter is present for compatibility with PEstimator
+	    however, the parameter is present for compatibility with Learner
 	    class. When RandomState is set to None,
 	    it disables file caching functionality
 	    (see documentation for PickleCache for details).

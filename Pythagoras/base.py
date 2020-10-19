@@ -30,8 +30,8 @@ NotProvided = NotProvidedType()
 class PEstimator(LoggableObject, BaseEstimator):
     pass
 
-class PEstimator(LoggableObject,BaseEstimator):
-    """ Abstract base class for estimators (with val_fit() and fit() methods).
+class Learner(LoggableObject, BaseEstimator):
+    """ Abstract base class for estimators, implement .val_fit() method.
 
         Warning: This class should not be used directly. Use derived classes
         instead.
@@ -153,7 +153,7 @@ class PEstimator(LoggableObject,BaseEstimator):
         return NotProvided
 
 
-Estimator = Union[BaseEstimator, PEstimator]
+Estimator = Union[BaseEstimator, Learner]
 
 def update_param_if_supported(
         estimator: Estimator
@@ -167,7 +167,7 @@ def update_param_if_supported(
     return type(estimator)(**current_params)
 
 
-class PRegressor(PEstimator):
+class PRegressor(Learner):
     """ Abstract base class for all Pythagoras regressors.
 
     Warning: This class should not be used directly. Use derived classes
@@ -272,7 +272,7 @@ class PRegressor(PEstimator):
         return y
 
 
-class PFeatureMaker(PEstimator):
+class PFeatureMaker(Learner):
 
     def __init__(self
                  , *
