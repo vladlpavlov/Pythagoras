@@ -21,10 +21,10 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Core Design Principles 
 
-1. Liberal experimentation
+1. Rapid experimentation
 2. Feedback-supported training: ***.val_fit()*** instead of .fit() 
 3. Ubiquitous ensembling
-4. Predictors are transformers: ***.map()*** instead of .predict() and/or .transform() 
+4. Predictors are transformers: ***.map()*** instead of .predict() and .transform() 
 5. Compatibility with SKLearn when practical
 6. Pandas as the main data vessel
 7. Storytelling via logging
