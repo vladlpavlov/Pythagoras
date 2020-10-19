@@ -7,7 +7,7 @@
 
 ### What Is It?
 
-An experimental SKLearn extension for meta-algorithms researchers
+An experimental SKLearn extension for researching meta-algorithms 
 
 ### How To Get It?
 
