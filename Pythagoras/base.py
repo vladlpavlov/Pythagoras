@@ -13,7 +13,10 @@ from Pythagoras.caching import *
 
 
 class NotProvidedType:
+    """ Singleton for 'NotProvided' constant """
+
     not_provided_single_instance = None
+
     def __new__(cls):
         if cls.not_provided_single_instance is None:
             cls.not_provided_single_instance = super().__new__(cls)
@@ -28,7 +31,7 @@ class PEstimator(LoggableObject, BaseEstimator):
     pass
 
 class PEstimator(LoggableObject,BaseEstimator):
-    """ Abstract base class for all estimators (classes with fit() method).
+    """ Abstract base class for estimators (with val_fit() and fit() methods).
 
         Warning: This class should not be used directly. Use derived classes
         instead.
