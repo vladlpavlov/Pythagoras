@@ -3,7 +3,7 @@
 </div>
 
 # Pythagoras
-## Advanced Meta Algorithms for Data Scientists
+## Advanced Meta-Algorithms for Data Scientists
 
 ### What Is It?
 
@@ -32,9 +32,9 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Major Components
 
-* **Learner**: Abstract base class, capable to be taught. Implements .val_fit() method.
+* **Learner**: An abstract base class, capable to be taught. Implements .val_fit() method.
 
-* **CrossValMapper**: Abstract base class, capable to predict/transform. Implements .map() method.
+* **CrossValMapper**: A meta-learner, capable to predict/transform. Implements .map() method.
 
 * **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
 
