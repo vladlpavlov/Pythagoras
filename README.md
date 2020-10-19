@@ -34,7 +34,7 @@ Binary installers for the latest released version are available at the Python pa
 
 * **Learner**: Abstract base class, capable to be taught. Implements .val_fit() method.
 
-* **Mapper**: Abstract base class, capable to predict/transform. Implements .map() method.
+* **CrossValMapper**: Abstract base class, capable to predict/transform. Implements .map() method.
 
 * **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
 
