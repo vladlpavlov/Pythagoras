@@ -22,27 +22,36 @@ Binary installers for the latest released version are available at the Python pa
 ### Core Design Principles 
 
 1. Rapid experimentation
-2. Feedback-supported training: ***.val_fit()*** instead of .fit() 
+
+2. Overfitting detection: ***.val_fit()*** instead of .fit() 
 3. Ubiquitous ensembling
 4. Predictors are transformers: ***.map()*** instead of .predict() and .transform() 
+
 5. Compatibility with SKLearn when practical
 6. Pandas as the main data vessel
-7. Storytelling via logging
-8. Acceleration via persistent caching
+7. Consistent use of OOP
+
+8. Storytelling via logging
+9. Acceleration via persistent caching
 
 ### Major Components
 
-* **Learner**: An abstract base class, capable to be taught. Implements .val_fit() method.
+* **Learner**: An abstract base class, capable to be taught. 
+Implements .val_fit() method that enables overfitting detection.
 
-* **CrossValMapper**: A meta-learner, capable to predict/transform. Implements .map() method.
+* **Mapper**: A universal predictor/transformer, implements .map() method.
+
+* **KFoldMapper**: An ensembling meta-learner. Implements .map() method, 
+ can provide guarantee against data leakage.
 
 * **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
 
-* **LoggableObject**: Simple base class that provides easy-to-use story-telling tools.
+* **LoggableObject**: Base class that provides logging-enabled granular story-telling tools.
 
 * **FeatureShower**: Automatic data cleaner and feature generator (*coming soon*).
 
-* **SimpleGarden**: Efficient regression meta-algorithm: boosted feature selection factory creates an assembly of parsimonious estimators (*coming soon*).
+* **SimpleGarden**: Efficient regression meta-algorithm: boosted feature selection factory creates 
+an assembly of parsimonious estimators (*coming soon*).
 
 * **MagicGarden**: Automated regression baseline creator. It builds well-performing regression models that 
 require no manual work from data scientists: no EDA, no data cleaning and no feature engineering (*coming soon*). 
