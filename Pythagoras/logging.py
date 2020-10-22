@@ -15,66 +15,73 @@ class LoggableObject:
 class LoggableObject:
     """ Base class for types that are able to log events/messages.
 
-    A wrapper for standard Python logging functionality,
-    extended with an ability to automatically
-    append logger's name with information
-    about an object that generated a message,
-    the object's method from which the message was created,
-    and its process ID.
+    A wrapper for standard Python logging functionality
+    that offers object-level logging granularity.
     """
 
-    parent_logger_name: str
+    root_logger_name: str
     reveal_identity: bool
     reveal_calling_method: bool
-    selflog_prefix: str = "__selflog__: "
+    selflog_prefix: str = "SELF_LOG: "
     logging_level: Optional[int] = None
 
     def __init__(self
              , *
-             , parent_logger_name: str = "Pythagoras"
-             , reveal_loggers_identity: bool = True
-             , new_logging_handler: logging.Handler = None
-             , new_logging_level: Optional[int] = None
+             , root_logger_name: str = "Pythagoras"
+             , reveal_logger_identity: bool = True
              , reveal_calling_method: bool = False
-             , new_logging_formatter: logging.Formatter = None
+             , logging_level: int = logging.WARNING
+             , logging_handler: logging.Handler = None
+             , logging_formatter: logging.Formatter =  None
              ) -> None:
         super().__init__()
-        assert len(parent_logger_name), "parent_logger_name can not be empty"
-        self.parent_logger_name = parent_logger_name
-        self.reveal_identity = reveal_loggers_identity
-        self.reveal_calling_method = reveal_calling_method
-        self.update_parent_logger(
-            new_logging_level, new_logging_handler, new_logging_formatter)
+        assert len(root_logger_name), "root_logger_name can not be empty"
 
-    def logger(self, suffix = ""):
-        logger_name = self.parent_logger_name
-        if self.reveal_identity:
-            logger_name += "." + type(self).__qualname__
-            self_names = NeatStr.object_names(self)
-            if len(self_names):
-                logger_name += "." + self_names
-        logger_name += suffix
-        return logging.getLogger(logger_name)
+        if logging_handler is None:
+            logging_handler = logging.StreamHandler()
 
-    def __str__(self) -> str:
-        description = f"Parent logger name is '{self.parent_logger_name}'; "
-        if self.reveal_identity:
-            description += "object REVEALS self-identity while logging. "
-        else:
-            description += (
-                "object DOES NOT reveal self-identity while logging. ")
-        return description
-
-    def update_parent_logger(self
-            , new_logging_level: int = logging.DEBUG
-            , new_logging_handler: logging.Handler = logging.StreamHandler()
-            , new_logging_formatter: logging.Formatter = logging.Formatter(
+        if  logging_formatter is None:
+            logging_formatter = logging.Formatter(
                 '%(asctime)s %(name)s %(levelname)s: %(message)s',
                 datefmt="%I:%M:%S")
+
+        self.root_logger_name = root_logger_name
+        self.reveal_identity = reveal_logger_identity
+        self.reveal_calling_method = reveal_calling_method
+        self.logging_level = logging_level
+        self.update_logger(
+            logging_level, logging_handler, logging_formatter)
+
+    def logger(self
+               , suffix:str = ""
+               , extend_logger_name:bool = True):
+        logger_name = self.root_logger_name
+        if self.reveal_identity:
+            logger_name += "." + type(self).__qualname__
+            logger_name += "." + str(id(self))
+            if extend_logger_name:
+                self_names = NeatStr.object_names(self)
+                if len(self_names):
+                    logger_name += "." + self_names
+        if len(suffix):
+            logger_name += "." + suffix
+        resulting_logger = logging.getLogger(logger_name)
+        return resulting_logger
+
+    def __str__(self) -> str:
+        description = f"{self.logger()}"
+        description = description[1:-1]
+        return description
+
+    def update_logger(self
+            , new_logging_level: int
+            , new_logging_handler: logging.Handler
+            , new_logging_formatter: logging.Formatter
             ) -> LoggableObject:
-        parent_logger = logging.getLogger(self.parent_logger_name)
+        current_logger = self.logger(extend_logger_name = False)
+
         if new_logging_level is not None:
-            parent_logger.setLevel(new_logging_level)
+            current_logger.setLevel(new_logging_level)
 
         if new_logging_handler is not None:
             if new_logging_level is not None:
@@ -82,13 +89,13 @@ class LoggableObject:
             if new_logging_formatter is not None:
                 new_logging_handler.setFormatter(new_logging_formatter)
 
-            for h in parent_logger.handlers:
+            for h in current_logger.handlers:
                 if str(h) == str(new_logging_handler):
-                    parent_logger.removeHandler(h)
-                    parent_logger.addHandler(new_logging_handler)
+                    current_logger.removeHandler(h)
+                    current_logger.addHandler(new_logging_handler)
                     break
             else:
-                parent_logger.addHandler(new_logging_handler)
+                current_logger.addHandler(new_logging_handler)
 
         return self
 
@@ -161,5 +168,5 @@ class LoggableObject:
                 except:
                     suffix = ""
         if self.reveal_identity:
-            suffix += f" [pid:{os.getpid()}]"
+            suffix += f"..[pid:{os.getpid()}]"
         self.logger(suffix).log(level, msg_to_log, *args, **kwargs)

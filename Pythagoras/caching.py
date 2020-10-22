@@ -673,11 +673,14 @@ class FileBasedCache(LoggableObject):
                             + " do not get saved. ")
 
         if self.uncacheable_attrs is not None:
-            description += f"The following key-value pairs will disable "
-            description += f"function caching if they are present among "
+            description += f"The following KEY-VALUE pairs will determine "
+            description += f"caching behaviour if they are present among "
             description += f"function parameters or attributes of the "
             description += f"parameters on any nested level: "
-            description += f"{self.uncacheable_attrs}. "
+            description += f"{self.uncacheable_attrs}; "
+            description += f"a presence of an attribute or a parameter "
+            description += f"with the KEY name will disable caching, "
+            description += f"unless the parameter/attribute is set to VALUE. "
 
         description = description + super().__str__()
 
