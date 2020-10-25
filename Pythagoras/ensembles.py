@@ -67,9 +67,9 @@ class KFoldEnsemble(Mapper):
         elif self._n_mappers <0:
             self._n_mappers += self.get_n_splits()
         assert 0 <= self._n_mappers <= self.get_n_splits(), (
-            f"{self.n_mappers_to_use=}"
-            f", {self._n_mappers=}"
-            f", {self.get_n_splits()=}")
+            f"n_mappers_to_use={self.n_mappers_to_use}"
+            f", _n_mappers={self._n_mappers}"
+            f", get_n_splits()={self.get_n_splits()}")
 
         if self.full_model_weight is None:
             self.full_model_weight = 0
