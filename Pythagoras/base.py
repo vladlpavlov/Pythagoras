@@ -203,6 +203,14 @@ class Learner(BaseEstimator,LoggableObject):
 
         return X, Y, X_val, Y_val
 
+    def _finish_fitting(self,write_to_log = True):
+        if write_to_log:
+            log_message = f"<== Fitting process has been finished."
+            self.debug(log_message)
+
+        return self
+
+
     def is_fitted(self) -> bool:
         return hasattr(self, "n_features_in_")
 

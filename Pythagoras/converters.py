@@ -63,6 +63,7 @@ class SKLearnRegressor(Mapper):
     def fit(self,X:pd.DataFrame,Y:pd.DataFrame,**kwargs):
         (X,Y) = self._start_fitting(X, Y)
         self.base_regressor.fit(X,Y,**kwargs)
+        self._finish_fitting()
         return self
 
     def map(self,X:pd.DataFrame) -> pd.DataFrame:

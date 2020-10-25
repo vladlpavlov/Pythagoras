@@ -109,6 +109,10 @@ class KFoldEnsemble(Mapper):
             , key = lambda m:m.cv_score_
             , reverse=True)
 
+        self._finish_fitting()
+
+        return self
+
     def _map_training_X(self, X:pd.DataFrame, **kwargs) -> pd.DataFrame:
         log_message = f"Executing KFold mapping process for {len(X)} samples"
         log_message += f" that were previously present in the train set."
