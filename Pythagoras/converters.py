@@ -2,6 +2,7 @@ import pandas as pd
 from copy import deepcopy
 from typing import Optional, Set, List, Dict
 
+from sklearn.base import is_regressor
 from sklearn.linear_model import LinearRegression
 
 from Pythagoras.util import *
@@ -58,7 +59,9 @@ class SKLearnRegressor(Mapper):
 
     def _preprocess_params(self):
         super()._preprocess_params()
+        assert is_regressor(self.base_regressor)
         self.base_regressor = clone(self.base_regressor)
+
 
     def fit(self,X:pd.DataFrame,Y:pd.DataFrame,**kwargs):
         (X,Y) = self._start_fitting(X, Y)
@@ -78,6 +81,9 @@ class SKLearnRegressor(Mapper):
         scorer = self.get_scorer()
         result = scorer(self.base_regressor,X,Y,kwargs)
         return result
+
+    def non_deterministic(self) -> bool:
+        return self.base_regressor._get_tags()["non_deterministic"]
 
     def _get_tags(self):
         return self.base_regressor._get_tags()

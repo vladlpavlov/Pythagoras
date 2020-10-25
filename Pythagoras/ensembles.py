@@ -47,6 +47,12 @@ class MetaMapper(Mapper):
 
             super()._preprocess_params()
 
+        def input_X_can_have_nans(self) -> bool:
+            return base_mapper.input_X_can_have_nans()
+
+        def input_Y_can_have_nans(self) -> bool:
+            return base_mapper.input_Y_can_have_nans()
+
 
 class KFoldEnsemble(MetaMapper):
     """ Generic KFold Ensembler
