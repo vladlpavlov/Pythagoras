@@ -49,8 +49,9 @@ class AdaptiveKFold:
 
         if self._nested_splitter is None:
             repr_str = f"Nested splitter is not initialized, "
-            repr_str += f"{self.n_splits=}, {self.shuffle=}, "
-            repr_str += f"{self.max_bins=}, {self.random_state=}"
+            repr_str += f"n_splits={self.n_splits}, shuffle={self.shuffle}, "
+            repr_str += f"max_bins={self.max_bins}, "
+            repr_str += f"random_state={self.random_state}"
         else:
             repr_str = repr(self._nested_splitter)
 
