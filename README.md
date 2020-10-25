@@ -29,7 +29,7 @@ Binary installers for the latest released version are available at the Python pa
 3. Data leakage prevention 
 
 * Practical software engineering
-1. Compatibility with SKLearn
+1. Compatibility with SKLearn when reasonable
 2. Pandas as the main data vessel
 3. Storytelling via logging
 4. Acceleration via persistent caching

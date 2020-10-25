@@ -210,7 +210,6 @@ class Learner(BaseEstimator,LoggableObject):
 
         return self
 
-
     def is_fitted(self) -> bool:
         return hasattr(self, "n_features_in_")
 
@@ -227,6 +226,13 @@ class Learner(BaseEstimator,LoggableObject):
 
     def input_Y_can_have_nans(self) -> bool:
         return NotKnown
+
+    def detects_overfitting(self) -> bool:
+        return NotKnown
+
+    def non_deterministic(self) -> bool:
+        return NotKnown
+    
 
 
 class Mapper(Learner):
