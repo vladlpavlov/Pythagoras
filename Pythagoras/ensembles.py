@@ -15,8 +15,40 @@ from Pythagoras.logging import *
 from Pythagoras.caching import *
 from Pythagoras.base import *
 
+class MetaMapper(Mapper):
+    def __init__(self
+                 , *
+                 , base_mapper:Mapper
+                 , splitting = 5
+                 , scoring = "r2"
+                 , random_state = None
+                 , root_logger_name: str = "Pythagoras"
+                 , logging_level = logging.WARNING):
+        super().__init__(
+            random_state = random_state
+            , splitting = splitting
+            , scoring = scoring
+            , root_logger_name = root_logger_name
+            , logging_level= logging_level )
+        self.base_mapper = base_mapper
 
-class KFoldEnsemble(Mapper):
+        def _preprocess_params(self):
+
+            assert isinstance(self.base_mapper, Mapper)
+
+            if hasattr(self.base_mapper, "_estimator_type"):
+                self._estimator_type = self.base_mapper._estimator_type
+
+            if self.splitting is None:
+                self.splitting = self.base_mapper.splitting
+
+            if self.scoring is None:
+                self.scoring = self.base_mapper.scoring
+
+            super()._preprocess_params()
+
+
+class KFoldEnsemble(MetaMapper):
     """ Generic KFold Ensembler
     """
 
@@ -32,29 +64,17 @@ class KFoldEnsemble(Mapper):
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = logging.WARNING):
         super().__init__(
-            random_state = random_state
+            base_mapper = base_mapper
+            , random_state = random_state
             , splitting = splitting
             , scoring = scoring
             , root_logger_name = root_logger_name
             , logging_level= logging_level )
-        self.base_mapper = base_mapper
         self.fit_strategy = fit_strategy
         self.n_mappers_to_use = n_mappers_to_use
         self.full_model_weight = full_model_weight
 
     def _preprocess_params(self):
-
-        assert isinstance(self.base_mapper, Mapper)
-
-        if hasattr(self.base_mapper,"_estimator_type"):
-            self._estimator_type = self.base_mapper._estimator_type
-
-        if self.splitting is None:
-            self.splitting = self.base_mapper.splitting
-
-        if self.scoring is None:
-            self.scoring = self.base_mapper.scoring
-
         super()._preprocess_params()
 
         if self.fit_strategy is None:
