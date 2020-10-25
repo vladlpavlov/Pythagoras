@@ -15,17 +15,17 @@ from Pythagoras.caching import *
 from Pythagoras.splitters import *
 
 
-class NotProvidedType:
-    """ Singleton for 'NotProvided' constant """
+class NotKnownType:
+    """ Singleton for 'NotKnown' constant """
 
     not_provided_single_instance = None
 
     def __new__(cls):
-        if cls.not_provided_single_instance is None:
-            cls.not_provided_single_instance = super().__new__(cls)
+        if cls.not_known_single_instance is None:
+            cls.not_known_single_instance = super().__new__(cls)
         return cls.not_provided_single_instance
 
-NotProvided = NotProvidedType()
+NotKnown = NotKnownType()
 
 
 def update_param_if_supported(
@@ -96,7 +96,7 @@ class Learner(BaseEstimator,LoggableObject):
 
         X.columns = list(X.columns)
 
-        if self.input_X_can_have_nans() is NotProvided:
+        if self.input_X_can_have_nans() is NotKnown:
             pass
         elif not self.input_X_can_have_nans():
             assert X.isna().sum().sum() == 0, "NaN-s are not allowed in X."
@@ -121,7 +121,7 @@ class Learner(BaseEstimator,LoggableObject):
 
         Y.columns = list(Y.columns)
 
-        if self.input_Y_can_have_nans() is NotProvided:
+        if self.input_Y_can_have_nans() is NotKnown:
             pass
         elif not self.input_Y_can_have_nans():
             assert Y.isna().sum().sum() == 0, "NaN-s are not allowed in Y."
@@ -223,10 +223,10 @@ class Learner(BaseEstimator,LoggableObject):
         return self.Y_column_names_
 
     def input_X_can_have_nans(self) -> bool:
-        return NotProvided
+        return NotKnown
 
     def input_Y_can_have_nans(self) -> bool:
-        return NotProvided
+        return NotKnown
 
 
 class Mapper(Learner):
@@ -293,7 +293,7 @@ class Mapper(Learner):
         X = self._preprocess_X(X, sort_index=False)
         self.pre_mapping_X_idx_ = deepcopy(X.index)
 
-        if self.input_X_columns() is NotProvided:
+        if self.input_X_columns() is NotKnown:
             pass
         else:
             assert set(self.input_X_columns()) <= set(X)
@@ -319,12 +319,12 @@ class Mapper(Learner):
         assert len(Z) == len(self.pre_mapping_X_idx_)
         assert set(Z.index) == set(self.pre_mapping_X_idx_)
 
-        if self.output_Z_can_have_nans() is NotProvided:
+        if self.output_Z_can_have_nans() is NotKnown:
             pass
         elif not self.output_Z_can_have_nans():
             assert n_nans == 0
 
-        if self.output_Z_columns() is not NotProvided:
+        if self.output_Z_columns() is not NotKnown:
             assert set(Z.columns) == set(self.output_Z_columns())
 
         Z = Z.reindex(index=self.pre_mapping_X_idx_) # TODO: Check whether it works as intended
@@ -352,13 +352,13 @@ class Mapper(Learner):
         return self._splitter.get_n_splits()
 
     def output_Z_columns(self) -> List[str]:
-        return NotProvided
+        return NotKnown
 
     def output_Z_can_have_nans(self) -> bool:
-        return NotProvided
+        return NotKnown
 
     def output_Z_is_numeric_only(self) -> bool:
-        return NotProvided
+        return NotKnown
 
     def is_leakproof(self) -> bool:
         return False
