@@ -1,0 +1,198 @@
+import pandas as pd
+from copy import deepcopy
+from typing import Optional, Set, List, Dict
+
+from numpy import mean, median
+from sklearn import clone
+from sklearn.base import BaseEstimator
+from sklearn.metrics import get_scorer
+from sklearn.metrics._scorer import _BaseScorer
+from sklearn.model_selection import cross_val_score, RepeatedKFold, KFold, \
+    StratifiedKFold, BaseCrossValidator
+
+from Pythagoras.util import *
+from Pythagoras.logging import *
+from Pythagoras.caching import *
+from Pythagoras.base import *
+
+
+class KFoldEnsemble(Mapper):
+    """ Generic KFold Ensembler
+    """
+
+    def __init__(self
+                 , *
+                 , base_mapper:Mapper
+                 , fit_strategy = "fit"
+                 , splitting = 5
+                 , scoring = "r2"
+                 , n_mappers_to_use:Optional[int] = None
+                 , full_model_weight:Optional[int] = None
+                 , random_state = None
+                 , root_logger_name: str = "Pythagoras"
+                 , logging_level = logging.WARNING):
+        super().__init__(
+            random_state = random_state
+            , splitting = splitting
+            , scoring = scoring
+            , root_logger_name = root_logger_name
+            , logging_level= logging_level )
+        self.base_mapper = base_mapper
+        self.fit_strategy = fit_strategy
+        self.n_mappers_to_use = n_mappers_to_use
+        self.full_model_weight = full_model_weight
+
+    def _preprocess_params(self):
+
+        assert isinstance(self.base_mapper, Mapper)
+
+        if hasattr(self.base_mapper,"_estimator_type"):
+            self._estimator_type = self.base_mapper._estimator_type
+
+        if self.splitting is None:
+            self.splitting = self.base_mapper.splitting
+
+        if self.scoring is None:
+            self.scoring = self.base_mapper.scoring
+
+        super()._preprocess_params()
+
+        if self.fit_strategy is None:
+            self.fit_strategy = "fit"
+        assert self.fit_strategy in {"fit","val_fit"}
+
+        self._n_mappers = self.n_mappers_to_use
+        if self._n_mappers is None:
+            self._n_mappers = self.get_n_splits()
+        elif self._n_mappers <0:
+            self._n_mappers += self.get_n_splits()
+        assert 0 <= self._n_mappers <= self.get_n_splits(), (
+            f"{self.n_mappers_to_use=}"
+            f", {self._n_mappers=}"
+            f", {self.get_n_splits()=}")
+
+        if self.full_model_weight is None:
+            self.full_model_weight = 0
+        assert self.full_model_weight >= 0
+
+    def is_leakproof(self) -> bool:
+        self._preprocess_params()
+        if self.fit_strategy == "fit":
+            return True
+        else:
+            return False
+
+    def fit(self,X,Y,**kwargs):
+
+        (X,Y) = self._start_fitting(X, Y)
+        self.fold_mappers_ = []
+
+        kf = self.get_splitter()
+
+        for train_idx, val_idx in kf.split(X,Y):
+            X_train = X.iloc[train_idx]
+            Y_train = Y.iloc[train_idx]
+            X_val = X.iloc[val_idx]
+            Y_val = Y.iloc[val_idx]
+
+            new_mapper = self._build_new_mapper(
+                X_train, Y_train, X_val, Y_val,**kwargs)
+
+            self.fold_mappers_ += [new_mapper]
+
+        if self.full_model_weight != 0:
+            self.full_mapper = clone(self.base_mapper)
+            self.full_mapper.fit(X,Y, **kwargs)
+
+        self.fold_mappers_ = sorted(
+            self.fold_mappers_
+            , key = lambda m:m.cv_score_
+            , reverse=True)
+
+    def _map_training_X(self, X:pd.DataFrame, **kwargs) -> pd.DataFrame:
+        log_message = f"Executing KFold mapping process for {len(X)} samples"
+        log_message += f" that were previously present in the train set."
+        self.debug(log_message)
+
+        fold_results = []
+        for fm in self.fold_mappers_:
+            new_result = fm.map(X[X.index.isin(fm.val_fit_idset_)],**kwargs)
+            fold_results += [new_result]
+        Z = pd.concat(fold_results, axis="index")
+        assert set(Z.index) == set(X.index)
+        return Z
+
+    def _map_testing_X(self, X:pd.DataFrame,**kwargs) -> pd.DataFrame:
+        assert self._n_mappers or self.full_model_weight
+
+        log_message = "Executing direct mapping process for "
+        log_message +=f"{len(X)} samples that were not seen before."
+        self.debug(log_message)
+
+        fold_results = []
+
+        for fm in self.fold_mappers_[:self._n_mappers]:
+            fold_results += [fm.map(X,**kwargs)]
+
+        if len(fold_results):
+            Z = sum(fold_results) # TODO: check
+            if self.full_model_weight !=0:
+                Z += self.full_mapper.map(X,**kwargs)*self.full_model_weight
+            Z /= len(fold_results) + self.full_model_weight
+        else:
+            Z = self.full_mapper.map(X,**kwargs)
+
+        assert set(Z.index) == set(X.index)
+
+        return Z
+
+    def map(self, X: pd.DataFrame,**kwargs) -> pd.DataFrame:
+        assert self.base_mapper.output_Z_is_numeric_only()
+        X = self._start_mapping(X)
+        X_training_idx = X.index.isin(self.full_fit_idset_)
+        X_train = X[X_training_idx]
+        X_test = X[~(X_training_idx)]
+        all_Z = []
+        if len(X_train):
+            Z_train = self._map_training_X(X_train,**kwargs)
+            all_Z += [Z_train]
+        if len(X_test):
+            Z_test = self._map_testing_X(X_test,**kwargs)
+            all_Z += [Z_test]
+        Z = pd.concat(all_Z, axis="index")
+        Z = self._finish_mapping(Z)
+        return Z
+
+    def _build_new_mapper(self, X, Y, X_val, Y_val, **kwargs):
+        new_mapper = clone(self.base_mapper)
+        if self.fit_strategy == "fit":
+            new_mapper.fit(X,Y,**kwargs)
+            new_mapper.val_fit_idset_ = set(X_val.index)
+        elif self.fit_strategy == "val_fit":
+            new_mapper.fit_val(X, Y, X_val, Y_val,**kwargs)
+        new_mapper.cv_score_ = self.get_scorer()(new_mapper,X_val,Y_val)
+        return new_mapper
+
+
+class LeakProofMapper(KFoldEnsemble):
+    """ LeakProof Mapper
+    """
+
+    def __init__(self
+                 , *
+                 , base_mapper: Mapper
+                 , splitting=None
+                 , scoring=None
+                 , random_state=None
+                 , root_logger_name: str = "Pythagoras"
+                 , logging_level=logging.WARNING):
+        super().__init__(
+            fit_strategy = "fit"
+            , n_mappers_to_use = 0
+            , full_model_weight = 1
+            , base_mapper = base_mapper
+            , splitting = splitting
+            , scoring = scoring
+            , random_state=random_state
+            , root_logger_name=root_logger_name
+            , logging_level=logging_level)

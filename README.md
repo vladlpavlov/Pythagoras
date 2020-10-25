@@ -21,28 +21,30 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Core Design Principles 
 
-1. Rapid experimentation
+* Rapid experimentation
 
-2. Overfitting detection: ***.val_fit()*** instead of .fit() 
-3. Ubiquitous ensembling
-4. Predictors are transformers: ***.map()*** instead of .predict() and .transform() 
+* Ubiquitous use of
+1. Overfitting detection 
+2. Ensembling  
+3. Data leakage prevention 
 
-5. Compatibility with SKLearn when practical
-6. Pandas as the main data vessel
-7. Consistent use of OOP
-
-8. Storytelling via logging
-9. Acceleration via persistent caching
+* Practical software engineering
+1. Compatibility with SKLearn
+2. Pandas as the main data vessel
+3. Storytelling via logging
+4. Acceleration via persistent caching
+5. Consistent use of OOP
 
 ### Major Components
 
 * **Learner**: An abstract base class, capable to be taught. 
 Implements .val_fit() method that enables overfitting detection.
 
-* **Mapper**: A universal predictor/transformer, implements .map() method.
+* **Mapper**: A universal predictor/transformer, implements .map() method 
+as an alternative to .predict() and transform() methods.
 
-* **KFoldMapper**: An ensembling meta-learner. Implements .map() method, 
- can provide guarantee against data leakage.
+* **LeakProofMapper**: An ensembling meta-learner. Implements .map() method 
+ and provides guarantee against data leakage.
 
 * **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
 

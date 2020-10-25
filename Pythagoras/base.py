@@ -5,11 +5,14 @@ from typing import Optional, Set, List, Dict
 from numpy import mean, median
 from sklearn import clone
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import cross_val_score, RepeatedKFold
+from sklearn.metrics import get_scorer
+from sklearn.metrics._scorer import _BaseScorer
+from sklearn.model_selection import BaseCrossValidator
 
 from Pythagoras.util import *
 from Pythagoras.logging import *
 from Pythagoras.caching import *
+from Pythagoras.splitters import *
 
 
 class NotProvidedType:
@@ -25,27 +28,60 @@ class NotProvidedType:
 NotProvided = NotProvidedType()
 
 
+def update_param_if_supported(
+        estimator: BaseEstimator
+        ,param_name:str
+        ,param_value:Any
+        ) -> BaseEstimator:
+    current_params = estimator.get_params()
+    if param_name in current_params:
+        new_params = {**current_params, param_name:param_value}
+        return type(estimator)(**new_params)
+    return type(estimator)(**current_params)
+
+
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
-class PEstimator(LoggableObject, BaseEstimator):
+class Learner(LoggableObject, BaseEstimator):
     pass
 
-class Learner(LoggableObject, BaseEstimator):
-    """ Abstract base class for estimators, implement .val_fit() method.
 
-        Warning: This class should not be used directly. Use derived classes
-        instead.
-        """
+class Learner(BaseEstimator,LoggableObject):
+    """ Abstract base class for estimators, w/ .val_fit() & .fit() methods.
+
+    Warning: This class should not be used directly. Use derived classes
+    instead.
+    """
 
     def __init__(self
                  , *
-                 , parent_logger_name: str = "Pythagoras"
-                 , new_logging_level = None):
-        super().__init__(parent_logger_name = parent_logger_name )
-        self.update_parent_logger(new_logging_level = new_logging_level)
+                 , random_state = None
+                 , root_logger_name: str = None
+                 , logging_level: Union[str,int] = "WARNING"):
+        super().__init__(
+            root_logger_name = root_logger_name
+            ,logging_level=logging_level )
+        self.random_state = random_state
 
+    def _preprocess_params(self):
+        if self.root_logger_name is None:
+            self.root_logger_name = "Pythagoras"
+        assert isinstance(self.root_logger_name,str)
 
-    def _preprocess_X(self, X:pd.DataFrame, sort_index=True) -> pd.DataFrame:
+        if self.logging_level is None:
+            self.logging_level = logging.WARNING
+        assert isinstance(self.logging_level, (int,str))
+
+    def __str__(self):
+        if self.is_fitted():
+            description = "Fitted"
+        else:
+            description = "Not fitted"
+        description += f" {self.__class__.__name__} with the following parameters: "
+        description += str(self.get_params())
+        return description
+
+    def _preprocess_X(self, X, sort_index:bool=True) -> pd.DataFrame:
 
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(data=X, copy=True)
@@ -56,283 +92,266 @@ class Learner(LoggableObject, BaseEstimator):
 
         assert len(X), "X can not be empty."
         assert len(X.columns) == len(set(X.columns)), (
-            "Input columns must have unique names.")
+            "Columns in X must have unique names.")
 
         X.columns = list(X.columns)
 
-        if self.input_can_have_nans() is NotProvided:
+        if self.input_X_can_have_nans() is NotProvided:
             pass
-        elif not self.input_can_have_nans():
-            assert X.isna().sum().sum() == 0, "NaN-s are not allowed."
+        elif not self.input_X_can_have_nans():
+            assert X.isna().sum().sum() == 0, "NaN-s are not allowed in X."
 
         if sort_index:
             X.sort_index(inplace=True)
 
         return X
 
-    def _preprocess_y(self, y:pd.Series, sort_index=True) -> pd.Series:
-        # TODO: add support for multi-target outputs (y as a DataFrame)
-        if isinstance(y, pd.Series):
-            y = deepcopy(y)
+    def _preprocess_Y(self, Y, sort_index:bool=True) -> pd.DataFrame:
+
+        if not isinstance(Y, pd.DataFrame):
+            Y = pd.DataFrame(data=Y, copy=True)
         else:
-            y = pd.Series(y, copy=True)
+            Y = deepcopy(Y)
 
-        if y.name is None:
-            y.name = "y_target"
+        Y.columns = [str(c) for c in Y.columns]
 
-        assert y.isna().sum() == 0
+        assert len(Y), "When Y is present, its len() can't be zero."
+        assert len(Y.columns) == len(set(Y.columns)), (
+            "Columns in Y must have unique names.")
+
+        Y.columns = list(Y.columns)
+
+        if self.input_Y_can_have_nans() is NotProvided:
+            pass
+        elif not self.input_Y_can_have_nans():
+            assert Y.isna().sum().sum() == 0, "NaN-s are not allowed in Y."
+
         if sort_index:
-            y.sort_index(inplace=True)
+            Y.sort_index(inplace=True)
 
-        return y
+        return Y
 
+    def _start_fitting(self
+                       , X:Any
+                       , Y:Any
+                       , write_to_log:bool=True
+                       , save_column_names:bool=True
+                       ) -> Tuple[pd.DataFrame,pd.DataFrame]:
 
-    def start_fitting(self
-            ,X:Any
-            ,y:Any
-            ,write_to_log:bool=True
-            ,save_target_name:bool=True
-            ) -> Tuple[pd.DataFrame,pd.Series]:
+        self._preprocess_params()
+
         if write_to_log:
-            log_message = f"==> Starting fittig {type(self).__name__} "
-            log_message += f"using a {type(X).__name__} named < "
+            log_message = f"==> Starting fitting {type(self).__name__} "
+            log_message += f"using X = {type(X).__name__} named < "
             log_message += NeatStr.object_names(X, div_ch=" / ")
-            log_message += f" > with the shape {X.shape}, "
-            log_message += f"and a {type(y).__name__} named < "
-            log_message += NeatStr.object_names(y, div_ch=" / ") + " >."
+            log_message += f" > with the shape {X.shape}"
+            if Y is not None:
+                log_message += f", and Y = {type(Y).__name__} named < "
+                log_message += NeatStr.object_names(Y, div_ch=" / ") + " >"
+                log_message += f" > with the shape {Y.shape} "
+            log_message += "."
             self.info(log_message)
 
         X = self._preprocess_X(X)
+        if save_column_names:
+            self.X_column_names_ = list(X.columns)
+        self.n_features_in_ = len(X.columns)
 
-        if y is not None:
-            y = self._preprocess_y(y)
-            assert len(X) == len(y), "X and y must have equal length."
-            assert set(X.index) == set(y.index)
-            if save_target_name:
-                self.target_name_ = y.name
+        if Y is not None:
+            Y = self._preprocess_Y(Y)
+            assert len(X) == len(Y), "X and Y must have equal length."
+            assert set(Y.index) == set(Y.index), (
+                "X and Y must have equal indexes." )
+            if save_column_names:
+                self.Y_column_names_ = list(Y.columns)
 
-        return (X,y)
+        self.train_fit_idset_=set(X.index)
+        self.full_fit_idset_ = self.train_fit_idset_
 
-    def start_val_fitting(self
-                        , X: Any
-                        , y: Any
-                        , X_val: Any
-                        , y_val: Any
-                        , write_to_log: bool = True
-                        ) -> Tuple[pd.DataFrame, pd.Series
-                            , pd.DataFrame, pd.Series]:
+        return (X,Y)
+
+    def _start_val_fitting(self
+                           , X: Any
+                           , Y: Any
+                           , X_val: Any
+                           , Y_val: Any
+                           , write_to_log: bool = True
+                           ) -> Tuple[pd.DataFrame, pd.DataFrame
+                            , pd.DataFrame, pd.DataFrame]:
         if write_to_log:
             log_message = f"==> Starting val_fittig {type(self).__name__} "
-            log_message += f"using a {type(X).__name__} named < "
+            log_message += f"using X = {type(X).__name__} named < "
             log_message += NeatStr.object_names(X, div_ch=" / ")
-            log_message += f" > with the shape {X.shape}, "
-            log_message += f"and a {type(y).__name__} named < "
-            log_message += NeatStr.object_names(y, div_ch=" / ") + " >. "
-            log_message += "Validation dataset contains "
+            log_message += f" > with the shape {X.shape}"
+            if Y is not None:
+                log_message += f", and Y = {type(Y).__name__} named < "
+                log_message += NeatStr.object_names(Y, div_ch=" / ") + " >"
+                log_message += f" > with the shape {Y.shape} "
+            log_message += ". Validation dataset contains "
             log_message += f"{len(X_val)} lines."
             self.info(log_message)
 
-        X, y = super().start_fitting(X, y, write_to_log=False)
-        X_val, y_val = super().start_fitting(X_val, y_val, write_to_log=False)
-        assert list(X.columns) == list(X_val.columns)
-        assert y.name == y_val.name
-        self.target_name_ = y.name
-        self.min_med_max_ = (min(y), percentile50(y), max(y))
-        return X, y, X_val, y_val
+        X, Y = self._start_fitting(X, Y, write_to_log=False)
+        X_val, Y_val = self._start_fitting(X_val, Y_val, write_to_log=False)
+        assert sorted(list(X.columns)) == sorted(list(X_val.columns))
+        if Y is not None:
+            assert sorted(list(Y.columns)) == sorted(list(Y_val.columns))
 
-    def is_fitted(self) -> bool: ### ???????
-        raise NotImplementedError
+        self.train_fit_idset_ = set(X.index)
+        self.val_fit_idset_ = set(X_val.index)
+        self.full_fit_idset_ = self.val_fit_idset_ | self.train_fit_idset_
 
-    def input_columns(self) -> List[str]:
+        return X, Y, X_val, Y_val
+
+    def is_fitted(self) -> bool:
+        return hasattr(self, "n_features_in_")
+
+    def input_X_columns(self) -> List[str]:
+        assert self.is_fitted()
+        return self.X_column_names_
+
+    def input_Y_columns(self) -> List[str]:
+        assert self.is_fitted()
+        return self.Y_column_names_
+
+    def input_X_can_have_nans(self) -> bool:
         return NotProvided
 
-    def input_can_have_nans(self) -> bool:
-        return NotProvided
-
-    def output_can_have_nans(self) -> bool:
+    def input_Y_can_have_nans(self) -> bool:
         return NotProvided
 
 
-Estimator = Union[BaseEstimator, Learner]
-
-def update_param_if_supported(
-        estimator: Estimator
-        ,param_name:str
-        ,param_value:Any
-        ) -> Estimator:
-    current_params = estimator.get_params()
-    if param_name in current_params:
-        new_params = {**current_params, param_name:param_value}
-        return type(estimator)(**new_params)
-    return type(estimator)(**current_params)
-
-
-class PRegressor(Learner):
-    """ Abstract base class for all Pythagoras regressors.
+class Mapper(Learner):
+    """ Abstract base class for predictors / transformers, implements .map() .
 
     Warning: This class should not be used directly. Use derived classes
     instead.
     """
 
-    target_name_: Optional[str] # TODO: add suport for multi-target regressors
-    prediction_index_:Optional[pd.Series]
-    min_med_max_:Tuple[float,float,float]
-
     def __init__(self
                  , *
-                 , parent_logger_name: str = "Pythagoras"
-                 , new_logging_level = None):
-        super().__init__(parent_logger_name = "Pythagoras"
-                 , new_logging_level = new_logging_level)
+                 , scoring = None
+                 , splitting = None
+                 , random_state = None
+                 , root_logger_name: str = None
+                 , logging_level = None
+                 ) -> None:
+        super().__init__(
+            random_state = random_state
+            ,root_logger_name = root_logger_name
+            ,logging_level= logging_level )
+        self.scoring = scoring
+        self.splitting = splitting
+        self._splitter = None
 
-    def start_fitting(self
-                      , X: Any
-                      , y: Any
-                      , write_to_log: bool = True
-                      , save_target_name: bool = True
-                      ) -> Tuple[pd.DataFrame, pd.Series]:
+    def _preprocess_splitting_param(self):
+        if self._splitter is None:
+            self._splitter = self.splitting
+            if self._splitter is None:
+                self._splitter = AdaptiveKFold()
+            elif isinstance(self._splitter, int):
+                self._splitter = AdaptiveKFold(n_splits=self._splitter)
+            else:
+                assert isinstance(self._splitter, BaseCrossValidator)
 
-        X, y = super().start_fitting(X, y, write_to_log,save_target_name)
+    def _preprocess_scoring_param(self):
+        scorer = self.scoring
+        if scorer is None:
+            scorer = "r2"  # TODO: add support for various scorers
+        scorer = get_scorer(scorer)
+        self._scorer = scorer
 
-        self.min_med_max_ = (min(y), percentile50(y), max(y))
+    def _preprocess_params(self):
+        super()._preprocess_params()
+        self._preprocess_scoring_param()
+        self._preprocess_splitting_param()
 
-        return X, y
-
-    def start_val_fitting(self
-                          , X: Any
-                          , y: Any
-                          , X_val: Any
-                          , y_val: Any
-                          , write_to_log: bool = True
-                          ) -> Tuple[pd.DataFrame, pd.Series
-                                , pd.DataFrame, pd.Series]:
-
-        X, y, X_val, y_val = super().start_val_fitting(
-            X, y, X_val, y_val,write_to_log=write_to_log)
-
-        self.min_med_max_ = (min(y), percentile50(y), max(y))
-
-        return X, y, X_val, y_val
-
-    def predict(self, X:pd.DataFrame) -> pd.Series:
+    def map(self,X:pd.DataFrame) -> pd.DataFrame:
         raise NotImplementedError
 
-    def start_predicting(self
-                         , X: pd.DataFrame
-                         , write_to_log: bool = True
-                         ) -> pd.DataFrame:
+    def _start_mapping(self
+                       , X: pd.DataFrame
+                       , write_to_log: bool = True
+                       ) -> pd.DataFrame:
 
         if write_to_log:
-            log_message = f"==> Starting generating predictions "
-            log_message += f"using a {type(X).__name__} named < "
+            log_message = f"==> Starting mapping process "
+            log_message += f"using X = {type(X).__name__} named < "
             log_message += NeatStr.object_names(X, div_ch=" / ")
             log_message += f" > with the shape {X.shape}."
             self.info(log_message)
 
         assert self.is_fitted()
         X = self._preprocess_X(X, sort_index=False)
-        self.prediction_index_ = deepcopy(X.index)
+        self.pre_mapping_X_idx_ = deepcopy(X.index)
 
-        if self.input_columns() is NotProvided:
+        if self.input_X_columns() is NotProvided:
             pass
         else:
-            assert set(self.input_columns()) <= set(X)
-            X = deepcopy(X[self.input_columns()])
+            assert set(self.input_X_columns()) <= set(X)
+            X = deepcopy(X[self.input_X_columns()])
 
         return X
 
-    def finish_predicting(self
-                          , y: pd.Series
-                          , write_to_log: bool = True
-                          ) -> pd.Series:
+    def _finish_mapping(self
+                        , Z: pd.DataFrame
+                        , write_to_log: bool = True
+                        ) -> pd.DataFrame:
 
-        n_val = len(y)
-        p_min_med_max = (min(y), percentile50(y), max(y))
-        n_nans = y.isna().sum()
+        n_nans = Z.isna().sum().sum()
 
         if write_to_log:
-            log_message = f"<== Predictions for {y.name} have been created. "
-            log_message += f"The result contains {n_val} values "
-            log_message += f"with {n_nans} NaN-s, with the following "
-            log_message += f"min, median, max: {p_min_med_max}; "
-            log_message += f"while the taining data had {self.min_med_max_}."
+            log_message = f"<== Mapping has been created with the shape "
+            log_message += f"{Z.shape}."
+            if n_nans:
+                log_message += f" It contains {n_nans} NaN-s."
             self.info(log_message)
 
-        assert len(y)
-        assert len(y) == len(self.prediction_index_)
+        assert len(Z)
+        assert len(Z) == len(self.pre_mapping_X_idx_)
+        assert set(Z.index) == set(self.pre_mapping_X_idx_)
 
-        if self.output_can_have_nans() is NotProvided:
+        if self.output_Z_can_have_nans() is NotProvided:
             pass
-        elif not self.output_can_have_nans():
+        elif not self.output_Z_can_have_nans():
             assert n_nans == 0
 
-        y.name = self.target_name_
-        y=y.reindex(index=self.prediction_index_) # TODO: Check whether it works as intended
-        #y.index = self.prediction_index_
-        return y
+        if self.output_Z_columns() is not NotProvided:
+            assert set(Z.columns) == set(self.output_Z_columns())
 
+        Z = Z.reindex(index=self.pre_mapping_X_idx_) # TODO: Check whether it works as intended
 
-class PFeatureMaker(Learner):
+        return Z
 
-    def __init__(self
-                 , *
-                 , parent_logger_name: str = "Pythagoras"
-                 , new_logging_level = None):
-        super().__init__(parent_logger_name=parent_logger_name
-                         ,new_logging_level=new_logging_level)
+    def predict(self,X:pd.DataFrame)->pd.DataFrame:
+        return self.map(X)
 
-    def output_columns(self) -> List[str]:
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        return self.map(X)
+
+    def get_scorer(self) -> _BaseScorer:
+        self._preprocess_scoring_param()
+        scorer = self._scorer
+        return scorer
+
+    def get_splitter(self) -> BaseCrossValidator:
+        self._preprocess_splitting_param()
+        splitter = self._splitter
+        return splitter
+
+    def get_n_splits(self) -> int:
+        self._preprocess_splitting_param()
+        return self._splitter.get_n_splits()
+
+    def output_Z_columns(self) -> List[str]:
         return NotProvided
 
-    def start_transforming(self
-                           , X: pd.DataFrame
-                           , write_to_log: bool = True
-                           ) -> pd.DataFrame:
-        if write_to_log:
-            log_message = f"==> Starting generating features "
-            log_message += f"using a {type(X).__name__} named < "
-            log_message += NeatStr.object_names(X, div_ch=" / ")
-            log_message += f" > with the shape {X.shape}."
-            self.info(log_message)
+    def output_Z_can_have_nans(self) -> bool:
+        return NotProvided
 
-        assert self.is_fitted()
-        X = self._preprocess_X(X)
+    def output_Z_is_numeric_only(self) -> bool:
+        return NotProvided
 
-        if self.input_columns() is NotProvided:
-            pass
-        else:
-            assert set(self.input_columns()) <= set(X)
-            X = deepcopy(X[self.input_columns()])
+    def is_leakproof(self) -> bool:
+        return False
 
-        return X
-
-    def finish_transforming(self
-                            , X: pd.DataFrame
-                            , write_to_log: bool = True
-                            ) -> pd.DataFrame:
-        if write_to_log:
-            log_message = f"<== {len(X.columns)} features "
-            log_message += "have been generated/returned."
-            self.info(log_message)
-
-        assert len(X)
-        assert len(set(X.columns)) == len(X.columns)
-
-        if self.output_columns() is NotProvided:
-            pass
-        else:
-            assert set(X.columns) == set(self.output_columns())
-
-        if self.output_can_have_nans() is NotProvided:
-            pass
-        elif not self.output_can_have_nans():
-            n_NaNs = X.isna().sum().sum()
-            assert n_NaNs==0, f"{n_NaNs} NaN-s found, while expecting 0"
-
-        return X
-
-    def fit_transform(self
-            ,X:pd.DataFrame
-            ,y:Optional[pd.Series]=None
-            ) -> pd.DataFrame:
-        raise NotImplementedError
