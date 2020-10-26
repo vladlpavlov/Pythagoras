@@ -91,6 +91,11 @@ class KFoldEnsemble(MetaMapper):
             self.fit_strategy = "fit"
         assert self.fit_strategy in {"fit","val_fit"}
 
+        if (not self.base_mapper.can_detect_overfitting()
+            and self.fit_strategy == "val_fit"):
+            log_message = "Inefficient combination of paramiters."
+            self.warning(log_message)
+
         self._n_mappers = self.n_mappers_to_use
         if self._n_mappers is None:
             self._n_mappers = self.get_n_splits()
@@ -111,6 +116,9 @@ class KFoldEnsemble(MetaMapper):
             return True
         else:
             return False
+
+    def can_detect_overfitting(self) -> bool:
+        return False
 
     def fit(self,X,Y,**kwargs):
 

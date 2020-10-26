@@ -65,6 +65,21 @@ class Learner(BaseEstimator,LoggableObject):
         self.random_state = random_state
         self.max_samples = max_samples
 
+
+    def fit(self
+            ,X:pd.DataFrame
+            ,Y:pd.DataFrame
+            ,**kwargs):
+        raise NotImplementedError
+
+    def val_fit(self
+                ,X:pd.DataFrame
+                ,Y:pd.DataFrame
+                ,X_val:pd.DataFrame
+                ,Y_val:pd.DataFrame
+                ,**kwargs):
+        raise NotImplementedError
+
     def _preprocess_params(self):
         if self.root_logger_name is None:
             self.root_logger_name = "Pythagoras"
@@ -259,17 +274,6 @@ class Learner(BaseEstimator,LoggableObject):
     def input_Y_can_have_nans(self) -> bool:
         return NotKnown
 
-    def detects_overfitting(self) -> bool:
-        return NotKnown
-
-    def non_deterministic(self) -> bool:
-        if isinstance(self.max_samples, float) and self.max_samples == 1.0:
-            return False
-        elif self.max_samples is None:
-            return False
-        else:
-            return True
-
 
 class Mapper(Learner):
     """ Abstract base class for predictors / transformers, implements .map() .
@@ -289,7 +293,7 @@ class Mapper(Learner):
                  ) -> None:
         super().__init__(
             max_samples = max_samples
-            , random_state = random_state
+            ,random_state = random_state
             ,root_logger_name = root_logger_name
             ,logging_level= logging_level )
         self.scoring = scoring
@@ -407,3 +411,70 @@ class Mapper(Learner):
     def is_leakproof(self) -> bool:
         return False
 
+    def can_detect_overfitting(self) -> bool:
+        return NotKnown
+
+    def val_fit(self
+                , X:pd.DataFrame
+                , Y:pd.DataFrame
+                , X_val:pd.DataFrame
+                , Y_val:pd.DataFrame
+                , **kwargs):
+
+        assert isinstance(self.can_detect_overfitting(), bool) , (
+            "Mapper's child class must implement either "
+            ".fit("") or .val_fit() method, and its "
+            ".can_detect_overfitting() method"
+            " must return strictly True or False "
+            "(as opposite to NotKnown)")
+
+        if self.can_detect_overfitting():
+            raise NotImplementedError(
+                "When a Mapper's child IS capable to detect overfitting "
+                " during training, it must implement its own version of "
+                ".val_fit() method (as opposite to "
+                "using default implementation)" )
+
+        log_message = f"{self.__class__.__name__} "
+        log_message += f"is not equipped with outfitting detection; "
+        log_message += f"{len(X_val)} sampples in validation dataset "
+        log_message += f"will be ignored, "
+        log_message += f"classic .fit() method will be used "
+        log_message += f"instead of .val_fit() ."
+        self.warning(log_message)
+        self.fit(X,Y, **kwargs)
+        return self
+
+
+    def fit(self
+            ,X:pd.DataFrame
+            ,Y:pd.DataFrame
+            ,**kwargs):
+
+        assert isinstance(self.can_detect_overfitting(), bool), (
+            "Mapper's child class must implement either "
+            ".fit("") or .val_fit() method, and its "
+            ".can_detect_overfitting() method"
+            " must return strictly True or False "
+            "(as opposite to NotKnown)")
+
+        if not self.can_detect_overfitting():
+            raise NotImplementedError(
+                "When a Mapper's child is NOT capable to detect overfitting "
+                " during training, it must implement its own version of "
+                ".fit() method (as opposite to "
+                "using default implementation)")
+
+        kf = self.get_splitter()
+        (train_idx,val_idx) = kf.split(X, Y)
+        X_train = X.iloc[train_idx]
+        Y_train = Y.iloc[train_idx]
+        X_val = X.iloc[val_idx]
+        Y_val = Y.iloc[val_idx]
+        self.val_fit(
+            X=X_train
+            ,Y=Y_train
+            ,X_val=X_val
+            ,Y_val=Y_val
+            ,**kwargs)
+        return self
