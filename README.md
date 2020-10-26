@@ -46,9 +46,9 @@ as an alternative to .predict() and transform() methods.
 * **LeakProofMapper**: An ensembling meta-learner. Implements .map() method 
  and provides guarantee against data leakage.
 
-* **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
-
 * **LoggableObject**: Base class that provides logging-enabled granular story-telling tools.
+
+* **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
 
 * **FeatureShower**: Automatic data cleaner and feature generator (*coming soon*).
 
