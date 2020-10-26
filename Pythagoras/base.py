@@ -169,11 +169,14 @@ class Learner(BaseEstimator,LoggableObject):
         log_message = f"Number of samples has been decreased to {n_samples}."
         self.debug(log_message)
 
-        X = X.sample(n=n_samples, random_state=self.random_state)
-        if Y is not None:
-            Y = Y.loc[X.index]
+        splitter = AdaptiveShuffleSplit(
+            train_size=n_samples, random_state=self.random_state)
+        for (samples_idx,_) in splitter.split(X, Y):
+            X_samples = X.iloc[samples_idx]
+            Y_samples = Y.iloc[samples_idx]
+            break
 
-        return (X,Y)
+        return (X_samples,Y_samples)
 
 
     def _start_fitting(self
@@ -431,7 +434,7 @@ class Mapper(Learner):
         if self.can_detect_overfitting():
             raise NotImplementedError(
                 "When a Mapper's child IS capable to detect overfitting "
-                " during training, it must implement its own version of "
+                "during training, it must implement its own version of "
                 ".val_fit() method (as opposite to "
                 "using default implementation)" )
 
@@ -454,23 +457,25 @@ class Mapper(Learner):
         assert isinstance(self.can_detect_overfitting(), bool), (
             "Mapper's child class must implement either "
             ".fit("") or .val_fit() method, and its "
-            ".can_detect_overfitting() method"
-            " must return strictly True or False "
+            ".can_detect_overfitting() method "
+            "must return strictly True or False "
             "(as opposite to NotKnown)")
 
         if not self.can_detect_overfitting():
             raise NotImplementedError(
                 "When a Mapper's child is NOT capable to detect overfitting "
-                " during training, it must implement its own version of "
+                "during training, it must implement its own version of "
                 ".fit() method (as opposite to "
                 "using default implementation)")
 
-        kf = self.get_splitter()
-        (train_idx,val_idx) = kf.split(X, Y)
-        X_train = X.iloc[train_idx]
-        Y_train = Y.iloc[train_idx]
-        X_val = X.iloc[val_idx]
-        Y_val = Y.iloc[val_idx]
+        splitter = self.get_splitter()
+        for (train_idx,val_idx) in splitter.split(X, Y):
+            X_train = X.iloc[train_idx]
+            Y_train = Y.iloc[train_idx]
+            X_val = X.iloc[val_idx]
+            Y_val = Y.iloc[val_idx]
+            break
+
         self.val_fit(
             X=X_train
             ,Y=Y_train
