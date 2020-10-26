@@ -56,12 +56,14 @@ class Learner(BaseEstimator,LoggableObject):
     def __init__(self
                  , *
                  , random_state = None
+                 , max_samples:Union[int,float,type(None)] = None
                  , root_logger_name: str = None
                  , logging_level: Union[str,int] = "WARNING"):
         super().__init__(
             root_logger_name = root_logger_name
             ,logging_level=logging_level )
         self.random_state = random_state
+        self.max_samples = max_samples
 
     def _preprocess_params(self):
         if self.root_logger_name is None:
@@ -71,6 +73,13 @@ class Learner(BaseEstimator,LoggableObject):
         if self.logging_level is None:
             self.logging_level = logging.WARNING
         assert isinstance(self.logging_level, (int,str))
+
+        if isinstance(self.max_samples, float):
+            assert 0.0 < self.max_samples <= 1.0
+        elif isinstance(self.max_samples, int):
+            assert 1 <= self.max_samples
+        else:
+            assert self.max_samples is None
 
     def __str__(self):
         if self.is_fitted():
@@ -131,6 +140,27 @@ class Learner(BaseEstimator,LoggableObject):
 
         return Y
 
+
+    def _get_samples(self,X:pd.DataFrame, Y:Optional[pd.DataFrame]):
+        if self.max_samples is None:
+            return (X,Y)
+        elif isinstance(self.max_samples, float):
+            if self.max_samples == 1.0: return (X,Y)
+            n_samples = max( 1 , int(len(X)*self.max_samples) )
+        else:
+            if (self.max_samples >= len(X)): return (X,Y)
+            n_samples = min( self.max_samples , len(X) )
+
+        log_message = f"Number of samples has been decreased to {n_samples}."
+        self.debug(log_message)
+
+        X = X.sample(n=n_samples, random_state=self.random_state)
+        if Y is not None:
+            Y = Y.loc[X.index]
+
+        return (X,Y)
+
+
     def _start_fitting(self
                        , X:Any
                        , Y:Any
@@ -164,6 +194,8 @@ class Learner(BaseEstimator,LoggableObject):
                 "X and Y must have equal indexes." )
             if save_column_names:
                 self.Y_column_names_ = list(Y.columns)
+
+        (X,Y) = self._get_samples(X,Y)
 
         self.train_fit_idset_=set(X.index)
         self.full_fit_idset_ = self.train_fit_idset_
@@ -205,7 +237,7 @@ class Learner(BaseEstimator,LoggableObject):
 
     def _finish_fitting(self,write_to_log = True):
         if write_to_log:
-            log_message = f"<== Fitting process has been finished."
+            log_message = f"<== Fitting process has finished."
             self.debug(log_message)
 
         return self
@@ -231,8 +263,12 @@ class Learner(BaseEstimator,LoggableObject):
         return NotKnown
 
     def non_deterministic(self) -> bool:
-        return NotKnown
-    
+        if isinstance(self.max_samples, float) and self.max_samples == 1.0:
+            return False
+        elif self.max_samples is None:
+            return False
+        else:
+            return True
 
 
 class Mapper(Learner):
@@ -243,15 +279,17 @@ class Mapper(Learner):
     """
 
     def __init__(self
-                 , *
-                 , scoring = None
-                 , splitting = None
-                 , random_state = None
-                 , root_logger_name: str = None
-                 , logging_level = None
+                , *
+                , scoring = None
+                , splitting = None
+                , max_samples: Union[int, float, type(None)] = None
+                , random_state = None
+                , root_logger_name: str = None
+                , logging_level = None
                  ) -> None:
         super().__init__(
-            random_state = random_state
+            max_samples = max_samples
+            , random_state = random_state
             ,root_logger_name = root_logger_name
             ,logging_level= logging_level )
         self.scoring = scoring

@@ -43,6 +43,7 @@ class SKLearnRegressor(Mapper):
                  , base_regressor = LinearRegression()
                  , scoring = "r2"
                  , splitting = 5
+                 , max_samples: Union[int, float, type(None)] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = logging.WARNING) -> None:
@@ -52,6 +53,7 @@ class SKLearnRegressor(Mapper):
         super().__init__(
             scoring=scoring
             , splitting = splitting
+            , max_samples = max_samples
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)

@@ -21,11 +21,13 @@ class MetaMapper(Mapper):
                  , base_mapper:Mapper
                  , splitting = 5
                  , scoring = "r2"
+                 , max_samples: Union[int, float, type(None)] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = logging.WARNING):
         super().__init__(
-            random_state = random_state
+            max_samples = max_samples
+            , random_state = random_state
             , splitting = splitting
             , scoring = scoring
             , root_logger_name = root_logger_name
@@ -66,11 +68,13 @@ class KFoldEnsemble(MetaMapper):
                  , scoring = "r2"
                  , n_mappers_to_use:Optional[int] = None
                  , full_model_weight:Optional[int] = None
+                 , max_samples: Union[int, float, type(None)] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = logging.WARNING):
         super().__init__(
             base_mapper = base_mapper
+            , max_samples = max_samples
             , random_state = random_state
             , splitting = splitting
             , scoring = scoring
@@ -213,6 +217,7 @@ class LeakProofMapper(KFoldEnsemble):
                  , base_mapper: Mapper
                  , splitting=None
                  , scoring=None
+                 , max_samples: Union[int, float, type(None)] = None
                  , random_state=None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level=logging.WARNING):
@@ -223,6 +228,7 @@ class LeakProofMapper(KFoldEnsemble):
             , base_mapper = base_mapper
             , splitting = splitting
             , scoring = scoring
+            , max_samples = max_samples
             , random_state=random_state
             , root_logger_name=root_logger_name
             , logging_level=logging_level)
