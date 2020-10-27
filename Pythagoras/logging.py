@@ -164,9 +164,9 @@ class LoggableObject:
             if hasattr(self,calling_method_name):
                 try:
                     if frame2[0].f_locals["self"] is self:
-                        suffix = "." + calling_method_name + "()"
+                        suffix = calling_method_name + "()"
                 except:
                     suffix = ""
         if self.reveal_identity:
-            suffix += f"..[pid:{os.getpid()}]"
+            suffix += f"  [pid:{os.getpid()}] "
         self.logger(suffix).log(level, msg_to_log, *args, **kwargs)
