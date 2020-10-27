@@ -53,7 +53,7 @@ class AdaptiveKFold(AdaptiveSplitter):
             , max_bins=max_bins)
         self.shuffle = shuffle
 
-    def split(self, X, y=None, *, groups=None):
+    def split(self, X, y=None, groups=None):
         if self._nested_splitter is None:
             self._nested_splitter = KFold(
                 n_splits=self.n_splits
@@ -87,7 +87,7 @@ class AdaptiveShuffleSplit(AdaptiveSplitter):
         self.train_size = train_size
         self.test_size = test_size
 
-    def split(self, X, y=None, *, groups=None):
+    def split(self, X, y=None, groups=None):
         if self._nested_splitter is None:
             self._nested_splitter = ShuffleSplit(
                 n_splits=self.n_splits
