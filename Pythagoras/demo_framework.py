@@ -12,7 +12,7 @@ from Pythagoras.base import *
 from Pythagoras.global_objects import *
 
 class MapperParamGridAnalyser(LoggableObject):
-    """Grid search analyser for P.Mappers and SKLearn Estimators"""
+    """Grid search analyser for P.Mappers"""
     def __init__(self
                  , mapper_to_test
                  , param_grid = None
@@ -87,7 +87,6 @@ class MapperParamGridAnalyser(LoggableObject):
         summary_df["max_score"] = data_df[
             split_column_names].max(axis="columns")
 
-
         return summary_df
 
 
@@ -128,6 +127,11 @@ class MapperParamGridAnalyser(LoggableObject):
         log_message = f"<== dataset={dataset.name}, id_str={id_str}: "
         log_message += self.compose_summary_message(splits_df)
         self.info(log_message)
+
+        num_nans = splits_df.isna().sum().sum() + params_df.isna().sum().sum()
+        if num_nans:
+            error_message = f"NaNs were detected in GridSearchCV results."
+            self.error(error_message)
 
         return deepcopy(splits_df), deepcopy(params_df)
 
@@ -188,6 +192,11 @@ class MapperParamGridAnalyser(LoggableObject):
             log_message = f"<== All datasets {datasets_names}: "
             log_message += self.compose_summary_message(result_df)
             self.info(log_message)
+
+        num_nans = result_df.isna().sum().sum()
+        if num_nans:
+            error_message = f"Final analysis report contains {num_nans} NaN-s"
+            self.error(error_message)
 
         return result_df
 
