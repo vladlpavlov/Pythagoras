@@ -60,6 +60,16 @@ class SKLearnRegressor(Mapper):
             , logging_level=logging_level)
         self.base_regressor = base_regressor
 
+        if not isinstance(base_regressor, BaseEstimator):
+            log_message = f"base_regressor has type={type(base_regressor)}, "
+            log_message += f"which is not inherited from BaseEstimator."
+            self.warning(log_message)
+
+        if isinstance(base_regressor, Mapper):
+            log_message = f"base_regressor has type={type(base_regressor)}, "
+            log_message += f"which is already inherited from Mapper."
+            self.warning(log_message)
+
     def _preprocess_params(self):
         super()._preprocess_params()
         assert is_regressor(self.base_regressor)
