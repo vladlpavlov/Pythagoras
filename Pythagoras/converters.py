@@ -36,7 +36,7 @@ class DemoDB:
         return self.description
 
 
-class SKLearnRegressor(Mapper):
+class MapperFromSKLRegressor(Mapper):
     """A wrapper for SKLearn regressors
     """
 
@@ -95,13 +95,19 @@ class SKLearnRegressor(Mapper):
         result = scorer(self.base_regressor,X,Y,kwargs)
         return result
 
-    def non_deterministic(self) -> bool:
-        return self.base_regressor._get_tags()["non_deterministic"]
-
     def _get_tags(self):
         return self.base_regressor._get_tags()
 
 
-
+def get_mapper(estimator:BaseEstimator) -> Mapper:
+    if isinstance(estimator, Mapper):
+        return estimator
+    elif is_regressor(estimator):
+        return MapperFromSKLRegressor(base_regressor = estimator)
+    else:
+        error_message = f"An Estimator has type {type(estimator)}, "
+        error_message += f"which curently can't be automatically "
+        error_message += f"to a Mapper."
+        raise NotImplementedError("")
 
 
