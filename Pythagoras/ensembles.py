@@ -65,8 +65,8 @@ class KFoldEnsemble(MetaMapper):
                  , base_mapper:Mapper
                  , fit_strategy = "fit"
                  , splitting = 5
-                 , scoring = "r2"
-                 , n_mappers_to_use:Optional[int] = None
+                 , scoring = None
+                 , n_mappers_to_use:Union[int,float, type(None)] = None
                  , full_model_weight:Optional[int] = None
                  , max_samples: Union[int, float, type(None)] = None
                  , random_state = None
@@ -93,13 +93,18 @@ class KFoldEnsemble(MetaMapper):
 
         if (not self.base_mapper.can_detect_overfitting()
             and self.fit_strategy == "val_fit"):
-            log_message = "Inefficient combination of paramiters."
+            log_message = "Inefficient combination of parameters."
             self.warning(log_message)
 
+        assert isinstance(self.n_mappers_to_use, [int, float, type(None)])
         self._n_mappers = self.n_mappers_to_use
         if self._n_mappers is None:
             self._n_mappers = self.get_n_splits()
-        elif self._n_mappers <0:
+        elif isinstance(self._n_mappers, float):
+            self._n_mappers = int(self.get_n_splits()*self._n_mappers)
+            self._n_mappers = min(self.get_n_splits(), self._n_mappers)
+            self._n_mappers = max(0, self._n_mappers)
+        elif self._n_mappers <0 and isinstance(self._n_mappers, int):
             self._n_mappers += self.get_n_splits()
         assert 0 <= self._n_mappers <= self.get_n_splits(), (
             f"n_mappers_to_use={self.n_mappers_to_use}"
