@@ -96,7 +96,7 @@ class KFoldEnsemble(MetaMapper):
             log_message = "Inefficient combination of parameters."
             self.warning(log_message)
 
-        assert isinstance(self.n_mappers_to_use, [int, float, type(None)])
+        assert isinstance(self.n_mappers_to_use, (int, float, type(None)))
         self._n_mappers = self.n_mappers_to_use
         if self._n_mappers is None:
             self._n_mappers = self.get_n_splits()
