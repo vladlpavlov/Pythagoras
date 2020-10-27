@@ -12,11 +12,12 @@ from Pythagoras.caching import *
 
 class DemoDB:
     """ An OOP wrapper for popular SKLearn datasets"""
-    def __init__(self, db: str):
-        if db == "Boston":
+    def __init__(self, db_name: str):
+        self.name = db_name
+        if db_name == "Boston":
             load_function = load_boston
             target_name = "MEDV"
-        elif db == "California":
+        elif db_name == "California":
             load_function = fetch_california_housing
             target_name = "MedHouseVal"
         else:

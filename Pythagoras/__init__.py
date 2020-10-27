@@ -6,7 +6,7 @@ from Pythagoras.ensembles import *
 from Pythagoras.splitters import *
 
 from Pythagoras.converters import *
-from Pythagoras.testing_framework import *
+from Pythagoras.demo_framework import *
 
 from Pythagoras.feature_engineering import *
 from Pythagoras.regression import *
