@@ -75,8 +75,8 @@ class LoggableObject:
 
     def update_logger(self
             , new_logging_level: int
-            , new_logging_handler: logging.Handler
-            , new_logging_formatter: logging.Formatter
+            , new_logging_handler: logging.Handler = None
+            , new_logging_formatter: logging.Formatter = None
             ) -> LoggableObject:
         current_logger = self.logger(extend_logger_name = False)
 

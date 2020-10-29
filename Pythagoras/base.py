@@ -28,23 +28,194 @@ class NotKnownType:
 NotKnown = NotKnownType()
 
 
-def update_param_if_supported(
-        estimator: BaseEstimator
-        ,param_name:str
-        ,param_value:Any
-        ) -> BaseEstimator:
-    current_params = estimator.get_params()
-    if param_name in current_params:
-        new_params = {**current_params, param_name:param_value}
-        return type(estimator)(**new_params)
-    return type(estimator)(**current_params)
-
-
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
 class Learner(LoggableObject, BaseEstimator):
     pass
 
+
+class ColumnFilter:
+    def __init__(self, names:Optional[List[str]]=None) -> None:
+        super().__init__()
+        self.names = names
+
+    def filter(self, df:Optional[pd.DataFrame]) -> Optional[pd.DataFrame]:
+        """ Default pass-through implementation"""
+        if df is None:
+            return None
+        elif self.names is None:
+            return df
+        else:
+            columns = list(df.columns)
+            assert set(self.names) <= set(columns)
+            return df[self.names]
+
+class IndexFilter:
+    def __init__(self, max_samples=None, random_state=None) -> None:
+        super().__init__()
+        assert isinstance(max_samples, (int, float, type(None)))
+        if isinstance(max_samples, float):
+            assert 0.0 < max_samples <= 1.0
+        elif isinstance(max_samples, int):
+            assert 1 <= max_samples
+        self.max_samples = max_samples
+        self.random_state = random_state
+
+    def filter(self,X:pd.DataFrame, Y:Optional[pd.DataFrame]=None
+               ) -> Tuple[pd.DataFrame, Optional[pd.DataFrame]]:
+        if self.max_samples is None:
+            return (X,Y)
+        elif isinstance(self.max_samples, float):
+            if self.max_samples == 1.0: return (X,Y)
+            n_samples = max( 1 , int(len(X)*self.max_samples) )
+        else:
+            if (self.max_samples >= len(X)): return (X,Y)
+            n_samples = min( self.max_samples , len(X) )
+
+        X_samples = X
+        Y_samples = Y
+
+        splitter = AdaptiveShuffleSplit(
+            train_size=n_samples, random_state=self.random_state)
+        for (samples_idx,_) in splitter.split(X, Y):
+            X_samples = X.iloc[samples_idx]
+            Y_samples = None if (Y is None) else Y.iloc[samples_idx]
+            break
+
+        return (X_samples, Y_samples)
+
+
+class LearnersContext:
+    root_logger_name:Optional[str]
+    logging_level:Union[int,str,type(None)]
+
+    random_state: Any
+
+    index_filer:IndexFilter
+    X_col_filter:ColumnFilter
+    Y_col_filter:ColumnFilter
+
+    scoring:Any
+
+    cv_splitting:Any
+
+    def __init__(self
+            ,*
+            ,random_state = None
+            ,root_logger_name = None
+            ,logging_level = None
+            ,index_filter:Union[
+                BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
+            ,X_col_filter:Optional[ColumnFilter] = None
+            ,Y_col_filter:Optional[ColumnFilter] = None
+            ,scoring:Union[str,Callable[..., float], None] = None
+            ,cv_splitting:Union[
+                BaseCrossValidator, AdaptiveSplitter, int, None] = None
+            ) -> None:
+        self.random_state = None
+        self.random_state = self.get_random_state(random_state)
+
+        self.root_logger_name = "Pythagoras"
+        self.root_logger_name = self.get_root_logger_name(root_logger_name)
+
+        self.logging_level = logging.WARNING
+        self.logging_level = self.get_logging_level(logging_level)
+
+        self.index_filter = IndexFilter()
+        self.index_filter = self.get_index_filter(index_filter)
+
+        self.X_col_filter = ColumnFilter()
+        self.X_col_filter = self.get_X_col_filter(X_col_filter)
+
+        self.Y_col_filter = ColumnFilter()
+        self.Y_col_filter = self.get_Y_col_filter(Y_col_filter)
+
+        self.scoring = get_scorer("r2")
+        self.scoring = self.get_scoring(scoring)
+
+        self.cv_splitting = AdaptiveKFold(n_splits=5)
+        self.cv_splitting = self.get_cv_splitting(cv_splitting)
+
+
+    def get_random_state(self, input_value):
+        if input_value is None:
+            return self.random_state
+        else:
+            return input_value
+
+
+    def get_root_logger_name(self
+            , input_value:Optional[str]
+            ) -> Optional[str]:
+        if input_value is None:
+            return self.root_logger_name
+        else:
+            assert isinstance(input_value, str)
+            return input_value
+
+
+    def get_logging_level(self, input_value):
+        if input_value is None:
+            return self.logging_level
+        else:
+            assert isinstance(input_value, (str, int))
+            return input_value
+
+
+    def get_index_filter(self
+            ,input_value:Union[IndexFilter,int,float,type(None)]
+            ) -> IndexFilter:
+        if input_value is None:
+            return self.index_filter
+        elif isinstance(input_value, IndexFilter):
+            return input_value
+        else:
+            return IndexFilter(max_samples = input_value
+                ,random_state= self.random_state)
+
+
+    def get_X_col_filter(self
+                , a_filter:Union[ColumnFilter, List[str], None]
+                ) -> Optional[ColumnFilter]:
+        if a_filter is None:
+            return self.X_col_filter
+        elif isinstance(a_filter, ColumnFilter):
+            return a_filter
+        else:
+            return ColumnFilter(a_filter)
+
+
+    def get_Y_col_filter(self
+                , a_filter:Union[ColumnFilter, List[str], None]
+                ) -> Optional[ColumnFilter]:
+        if a_filter is None:
+            return self.Y_col_filter
+        elif isinstance(a_filter, ColumnFilter):
+            return a_filter
+        else:
+            return ColumnFilter(a_filter)
+
+
+    def get_scoring(self
+            ,input_scoring:Union[str,Callable[..., float], None]
+            )-> Callable[...,float]:
+        if input_scoring is None:
+            return self.scoring
+        else:
+            scorer = get_scorer(input_scoring)
+            return scorer
+
+
+    def get_cv_splitting(self
+            ,input_cv:Union[int, BaseCrossValidator, AdaptiveSplitter, None]
+            ) -> Union[BaseCrossValidator, AdaptiveSplitter]:
+        if input_cv is None:
+            return self.cv_splitting
+        elif isinstance(input_cv, int):
+            return AdaptiveKFold(n_splits=input_cv)
+        else:
+            assert isinstance(input_cv, (BaseCrossValidator, AdaptiveSplitter))
+            return input_cv
 
 class Learner(BaseEstimator,LoggableObject):
     """ Abstract base class for estimators, w/ .val_fit() & .fit() methods.
@@ -55,16 +226,31 @@ class Learner(BaseEstimator,LoggableObject):
 
     def __init__(self
                  , *
+                 , defaults:LearnersContext = None
                  , random_state = None
-                 , max_samples:Union[int,float,type(None)] = None
+                 , index_filter:Union[int,float,None] = None
+                 , X_col_filter:Optional[ColumnFilter] = None
+                 , Y_col_filter: Optional[ColumnFilter] = None
                  , root_logger_name: str = None
                  , logging_level: Union[str,int] = "WARNING"):
+
+        if defaults is None:
+            defaults = LearnersContext()
+        else:
+            assert isinstance(defaults, LearnersContext)
+        self.defaults = defaults
+
+        root_logger_name = defaults.get_root_logger_name(root_logger_name)
+        logging_level = defaults.get_logging_level(logging_level)
+
         super().__init__(
             root_logger_name = root_logger_name
-            ,logging_level=logging_level )
-        self.random_state = random_state
-        self.max_samples = max_samples
+            ,logging_level=logging_level)
 
+        self.random_state = defaults.get_random_state(random_state)
+        self.index_filter = defaults.get_index_filter(index_filter)
+        self.X_col_filter = defaults.get_X_col_filter(X_col_filter)
+        self.Y_col_filter = defaults.get_Y_col_filter(Y_col_filter)
 
     def fit(self
             ,X:pd.DataFrame
@@ -81,20 +267,23 @@ class Learner(BaseEstimator,LoggableObject):
         raise NotImplementedError
 
     def _preprocess_params(self):
-        if self.root_logger_name is None:
-            self.root_logger_name = "Pythagoras"
-        assert isinstance(self.root_logger_name,str)
 
-        if self.logging_level is None:
-            self.logging_level = logging.WARNING
-        assert isinstance(self.logging_level, (int,str))
+        if self.defaults is None:
+            self.defaults = LearnersContext()
 
-        if isinstance(self.max_samples, float):
-            assert 0.0 < self.max_samples <= 1.0
-        elif isinstance(self.max_samples, int):
-            assert 1 <= self.max_samples
-        else:
-            assert self.max_samples is None
+        self.root_logger_name = self.defaults.get_root_logger_name(
+            self.root_logger_name)
+
+        self.logging_level = self.defaults.get_logging_level(
+            self.logging_level)
+
+        self.update_logger(new_logging_level = self.logging_level)
+
+        self.index_filter = self.defaults.get_index_filter(self.index_filter)
+        self.X_col_filter = self.defaults.get_X_col_filter(self.X_col_filter)
+        self.Y_col_filter = self.defaults.get_Y_col_filter(self.Y_col_filter)
+        self.random_state = self.defaults.get_random_state(self.random_state)
+
 
     def __str__(self):
         if self.is_fitted():
@@ -157,24 +346,9 @@ class Learner(BaseEstimator,LoggableObject):
 
 
     def _get_samples(self,X:pd.DataFrame, Y:Optional[pd.DataFrame]):
-        if self.max_samples is None:
-            return (X,Y)
-        elif isinstance(self.max_samples, float):
-            if self.max_samples == 1.0: return (X,Y)
-            n_samples = max( 1 , int(len(X)*self.max_samples) )
-        else:
-            if (self.max_samples >= len(X)): return (X,Y)
-            n_samples = min( self.max_samples , len(X) )
-
-        log_message = f"Number of samples has been decreased to {n_samples}."
-        self.debug(log_message)
-
-        splitter = AdaptiveShuffleSplit(
-            train_size=n_samples, random_state=self.random_state)
-        for (samples_idx,_) in splitter.split(X, Y):
-            X_samples = X.iloc[samples_idx]
-            Y_samples = Y.iloc[samples_idx]
-            break
+        (X_samples, Y_samples) = self.index_filter.filter(X,Y)
+        X_samples = self.X_col_filter.filter(X_samples)
+        Y_samples = self.Y_col_filter.filter(Y_samples)
 
         return (X_samples,Y_samples)
 
@@ -271,10 +445,10 @@ class Learner(BaseEstimator,LoggableObject):
         assert self.is_fitted()
         return self.Y_column_names_
 
-    def input_X_can_have_nans(self) -> bool:
+    def input_X_can_have_nans(self) -> Union[bool,NotKnownType]:
         return NotKnown
 
-    def input_Y_can_have_nans(self) -> bool:
+    def input_Y_can_have_nans(self) -> Union[bool,NotKnownType]:
         return NotKnown
 
 
@@ -287,38 +461,32 @@ class Mapper(Learner):
 
     def __init__(self
                 , *
-                , scoring = None
-                , splitting = None
-                , max_samples: Union[int, float, type(None)] = None
-                , random_state = None
+                , defaults:LearnersContext = None
+                , random_state=None
+                , index_filter: Union[int, float, None] = None
+                , X_col_filter: Optional[ColumnFilter] = None
+                , Y_col_filter: Optional[ColumnFilter] = None
+                , scoring:Union[str,Callable[..., float], None] = None
+                , cv_splitting = None
                 , root_logger_name: str = None
                 , logging_level = None
                  ) -> None:
         super().__init__(
-            max_samples = max_samples
+            defaults = defaults
             ,random_state = random_state
+            ,index_filter = index_filter
+            ,X_col_filter = X_col_filter
+            ,Y_col_filter = Y_col_filter
             ,root_logger_name = root_logger_name
-            ,logging_level= logging_level )
-        self.scoring = scoring
-        self.splitting = splitting
-        self._splitter = None
+            ,logging_level= logging_level)
+        self.scoring = self.defaults.get_scoring(scoring)
+        self.cv_splitting = self.defaults.get_cv_splitting(cv_splitting)
 
     def _preprocess_splitting_param(self):
-        if self._splitter is None:
-            self._splitter = self.splitting
-            if self._splitter is None:
-                self._splitter = AdaptiveKFold()
-            elif isinstance(self._splitter, int):
-                self._splitter = AdaptiveKFold(n_splits=self._splitter)
-            else:
-                assert isinstance(self._splitter, BaseCrossValidator)
+        self.cv_splitting = self.defaults.get_cv_splitting(self.cv_splitting)
 
     def _preprocess_scoring_param(self):
-        scorer = self.scoring
-        if scorer is None:
-            scorer = "r2"  # TODO: add support for various scorers
-        scorer = get_scorer(scorer)
-        self._scorer = scorer
+        self.scoring = self.defaults.get_scoring(self.scoring)
 
     def _preprocess_params(self):
         super()._preprocess_params()
@@ -390,17 +558,15 @@ class Mapper(Learner):
 
     def get_scorer(self) -> _BaseScorer:
         self._preprocess_scoring_param()
-        scorer = self._scorer
-        return scorer
+        return self.scoring
 
     def get_splitter(self) -> BaseCrossValidator:
         self._preprocess_splitting_param()
-        splitter = self._splitter
-        return splitter
+        return self.cv_splitting
 
     def get_n_splits(self) -> int:
         self._preprocess_splitting_param()
-        return self._splitter.get_n_splits()
+        return self.cv_splitting.get_n_splits()
 
     def output_Z_columns(self) -> List[str]:
         return NotKnown

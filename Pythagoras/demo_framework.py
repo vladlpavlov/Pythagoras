@@ -145,7 +145,7 @@ class MapperParamGridAnalyser(LoggableObject):
             self.info(log_message)
 
         for n in range(self.n_repeats):
-            id_str = "iter_"+str(n)
+            id_str = f"iter_{n+1}_of_{self.n_repeats}"
             (split_df, params_df) = self.run_single_testset(
                 dataset=dataset, id_str=id_str)
             split_df["params"] = split_df["params"].astype(str)
@@ -203,7 +203,7 @@ class MapperParamGridAnalyser(LoggableObject):
 def smoke_test_a_mapper(mapper_to_test):
     test_results = MapperParamGridAnalyser(
         mapper_to_test=mapper_to_test
-        , splitting=2
-        , n_repeats=1
+        , splitting=5
+        , n_repeats=5
         , datasets=[California]
         , logging_level="INFO")

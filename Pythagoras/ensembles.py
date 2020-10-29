@@ -18,36 +18,27 @@ from Pythagoras.base import *
 class MetaMapper(Mapper):
     def __init__(self
                  , *
+                 , defaults: LearnersContext = None
                  , base_mapper:Mapper
-                 , splitting = 5
+                 , cv_splitting = 5
                  , scoring = "r2"
-                 , max_samples: Union[int, float, type(None)] = None
+                 , index_filter: Union[int, float, type(None)] = None
+                 , X_col_filter: Optional[ColumnFilter] = None
+                 , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = logging.WARNING):
         super().__init__(
-            max_samples = max_samples
+            defaults = defaults
+            , index_filter = index_filter
+            , X_col_filter=X_col_filter
+            , Y_col_filter=Y_col_filter
             , random_state = random_state
-            , splitting = splitting
+            , cv_splitting = cv_splitting
             , scoring = scoring
             , root_logger_name = root_logger_name
             , logging_level= logging_level )
         self.base_mapper = base_mapper
-
-        def _preprocess_params(self):
-
-            assert isinstance(self.base_mapper, Mapper)
-
-            if hasattr(self.base_mapper, "_estimator_type"):
-                self._estimator_type = self.base_mapper._estimator_type
-
-            if self.splitting is None:
-                self.splitting = self.base_mapper.splitting
-
-            if self.scoring is None:
-                self.scoring = self.base_mapper.scoring
-
-            super()._preprocess_params()
 
         def input_X_can_have_nans(self) -> bool:
             return base_mapper.input_X_can_have_nans()
@@ -63,20 +54,27 @@ class KFoldEnsemble(MetaMapper):
     def __init__(self
                  , *
                  , base_mapper:Mapper
+                 , defaults: LearnersContext = None
                  , fit_strategy = "fit"
-                 , splitting = 5
+                 , cv_splitting = None
                  , scoring = None
                  , n_mappers_to_use:Union[int,float, type(None)] = None
                  , full_model_weight:Optional[int] = None
-                 , max_samples: Union[int, float, type(None)] = None
+                 , index_filter: Union[int, float, type(None)] = None
+                 , X_col_filter: Optional[ColumnFilter] = None
+                 , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state = None
-                 , root_logger_name: str = "Pythagoras"
-                 , logging_level = logging.WARNING):
+                 , root_logger_name: str = None
+                 , logging_level = None
+                 ) -> None:
         super().__init__(
             base_mapper = base_mapper
-            , max_samples = max_samples
+            , defaults = defaults
+            , index_filter = index_filter
+            , X_col_filter = X_col_filter
+            , Y_col_filter = Y_col_filter
             , random_state = random_state
-            , splitting = splitting
+            , cv_splitting = cv_splitting
             , scoring = scoring
             , root_logger_name = root_logger_name
             , logging_level= logging_level )

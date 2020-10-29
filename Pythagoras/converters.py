@@ -43,8 +43,8 @@ class MapperFromSKLRegressor(Mapper):
     def __init__(self
                  , base_regressor = LinearRegression()
                  , scoring = "r2"
-                 , splitting = 5
-                 , max_samples: Union[int, float, type(None)] = None
+                 , cv_splitting = 5
+                 , index_filter: Union[int, float, type(None)] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = logging.WARNING) -> None:
@@ -53,8 +53,8 @@ class MapperFromSKLRegressor(Mapper):
 
         super().__init__(
             scoring=scoring
-            , splitting = splitting
-            , max_samples = max_samples
+            , cv_splitting = cv_splitting
+            , index_filter = index_filter
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)

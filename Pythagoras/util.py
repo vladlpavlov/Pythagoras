@@ -11,7 +11,19 @@ from copy import deepcopy
 import pandas as pd
 
 from scipy import stats
+from sklearn.base import BaseEstimator
 from sklearn.datasets import load_boston, fetch_california_housing
+
+def update_param_if_supported(
+        estimator: BaseEstimator
+        ,param_name:str
+        ,param_value:Any
+        ) -> BaseEstimator:
+    current_params = estimator.get_params()
+    if param_name in current_params:
+        new_params = {**current_params, param_name:param_value}
+        return type(estimator)(**new_params)
+    return type(estimator)(**current_params)
 
 
 class TempAttributeAssignmentIfNotNone:
