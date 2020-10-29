@@ -18,7 +18,7 @@ from Pythagoras.base import *
 class MetaMapper(Mapper):
     def __init__(self
                  , *
-                 , defaults: LearnersContext = None
+                 , defaults: LearningContext = None
                  , base_mapper:Mapper
                  , cv_splitting = 5
                  , scoring = "r2"
@@ -54,7 +54,7 @@ class KFoldEnsemble(MetaMapper):
     def __init__(self
                  , *
                  , base_mapper:Mapper
-                 , defaults: LearnersContext = None
+                 , defaults: LearningContext = None
                  , fit_strategy = "fit"
                  , cv_splitting = None
                  , scoring = None

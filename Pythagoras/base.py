@@ -85,7 +85,7 @@ class IndexFilter:
         return (X_samples, Y_samples)
 
 
-class LearnersContext:
+class LearningContext:
     root_logger_name:Optional[str]
     logging_level:Union[int,str,type(None)]
 
@@ -226,7 +226,7 @@ class Learner(BaseEstimator,LoggableObject):
 
     def __init__(self
                  , *
-                 , defaults:LearnersContext = None
+                 , defaults:LearningContext = None
                  , random_state = None
                  , index_filter:Union[int,float,None] = None
                  , X_col_filter:Optional[ColumnFilter] = None
@@ -235,9 +235,9 @@ class Learner(BaseEstimator,LoggableObject):
                  , logging_level: Union[str,int] = "WARNING"):
 
         if defaults is None:
-            defaults = LearnersContext()
+            defaults = LearningContext()
         else:
-            assert isinstance(defaults, LearnersContext)
+            assert isinstance(defaults, LearningContext)
         self.defaults = defaults
 
         root_logger_name = defaults.get_root_logger_name(root_logger_name)
@@ -269,7 +269,7 @@ class Learner(BaseEstimator,LoggableObject):
     def _preprocess_params(self):
 
         if self.defaults is None:
-            self.defaults = LearnersContext()
+            self.defaults = LearningContext()
 
         self.root_logger_name = self.defaults.get_root_logger_name(
             self.root_logger_name)
@@ -461,7 +461,7 @@ class Mapper(Learner):
 
     def __init__(self
                 , *
-                , defaults:LearnersContext = None
+                , defaults:LearningContext = None
                 , random_state=None
                 , index_filter: Union[int, float, None] = None
                 , X_col_filter: Optional[ColumnFilter] = None

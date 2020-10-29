@@ -41,23 +41,31 @@ class MapperFromSKLRegressor(Mapper):
     """
 
     def __init__(self
-                 , base_regressor = LinearRegression()
-                 , scoring = "r2"
-                 , cv_splitting = 5
-                 , index_filter: Union[int, float, type(None)] = None
-                 , random_state = None
-                 , root_logger_name: str = "Pythagoras"
-                 , logging_level = logging.WARNING) -> None:
+            , base_regressor = LinearRegression()
+            , defaults:LearningContext = LearningContext()
+            , scoring = None
+            , cv_splitting = 5
+            , index_filter: Union[
+                BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
+            , X_col_filter: Optional[ColumnFilter] = None
+            , Y_col_filter: Optional[ColumnFilter] = None
+            , random_state = None
+            , root_logger_name: str = "Pythagoras"
+            , logging_level = logging.WARNING) -> None:
 
         _estimator_type = "regressor"
 
         super().__init__(
-            scoring=scoring
+            defaults = defaults
+            , scoring=scoring
             , cv_splitting = cv_splitting
             , index_filter = index_filter
+            , X_col_filter = X_col_filter
+            , Y_col_filter = Y_col_filter
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)
+
         self.base_regressor = base_regressor
 
         if not isinstance(base_regressor, BaseEstimator):
