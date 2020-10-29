@@ -210,21 +210,21 @@ class BasicStopwatch:
     def __str__(self) -> str:
         return NeatStr.time_diff(self.get_float_repr())
 
-
-class AssertableObject:
-    """An abstract base class for types that offer run-time sanity checks."""
-
-    EXTRA_SAFETY_FLAG:ClassVar[bool] = True
-
-    def __init__(self) -> None:
-        assert type(self) != AssertableObject, (
-            f"Class {type(self).__name__} can not be instantiated.")
-        self.assert_sanity()
-
-    # V-V-V-V-V-V-V-V-V-V-V---Virtual-Method---V-V-V-V-V-V-V-V-V-V-V-V-V-V-V
-    def assert_sanity(self) -> None:
-        """Check self for structural consistency; halt if there are errors"""
-        raise NotImplementedError
+#
+# class AssertableObject:
+#     """An abstract base class for types that offer run-time sanity checks."""
+#
+#     EXTRA_SAFETY_FLAG:ClassVar[bool] = True
+#
+#     def __init__(self) -> None:
+#         assert type(self) != AssertableObject, (
+#             f"Class {type(self).__name__} can not be instantiated.")
+#         self.assert_sanity()
+#
+#     # V-V-V-V-V-V-V-V-V-V-V---Virtual-Method---V-V-V-V-V-V-V-V-V-V-V-V-V-V-V
+#     def assert_sanity(self) -> None:
+#         """Check self for structural consistency; halt if there are errors"""
+#         raise NotImplementedError
 
 
 ##########################################

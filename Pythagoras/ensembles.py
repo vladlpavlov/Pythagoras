@@ -10,7 +10,8 @@ from sklearn.metrics._scorer import _BaseScorer
 from sklearn.model_selection import cross_val_score, RepeatedKFold, KFold, \
     StratifiedKFold, BaseCrossValidator
 
-from Pythagoras.util import *
+from Pythagoras.misc_utils import *
+from Pythagoras.not_known import *
 from Pythagoras.logging import *
 from Pythagoras.caching import *
 from Pythagoras.base import *

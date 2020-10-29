@@ -5,8 +5,9 @@ from typing import Optional, Set, List, Dict
 from sklearn.base import is_regressor
 from sklearn.linear_model import LinearRegression
 
-from Pythagoras.util import *
+from Pythagoras.misc_utils import *
 from Pythagoras.base import *
+from Pythagoras.not_known import *
 from Pythagoras.logging import *
 from Pythagoras.caching import *
 

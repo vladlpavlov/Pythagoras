@@ -5,7 +5,7 @@ import inspect
 import logging
 import os
 from typing import Optional, Any
-from Pythagoras.util import *
+from Pythagoras.misc_utils import *
 
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation

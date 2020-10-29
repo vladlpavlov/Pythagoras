@@ -7,7 +7,7 @@ from sklearn import clone
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_score, RepeatedKFold
 
-from Pythagoras.util import *
+from Pythagoras.misc_utils import *
 from Pythagoras.base import *
 from Pythagoras.logging import *
 from Pythagoras.caching import *

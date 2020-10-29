@@ -7,7 +7,8 @@ import numpy as np
 from sklearn import clone
 from sklearn.model_selection import KFold, StratifiedKFold, ShuffleSplit
 
-from Pythagoras.util import *
+from Pythagoras.misc_utils import *
+from Pythagoras.not_known import *
 from Pythagoras.logging import *
 from Pythagoras.caching import *
 

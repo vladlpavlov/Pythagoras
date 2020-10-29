@@ -7,7 +7,7 @@ from sklearn.model_selection import cross_val_score, GridSearchCV
 
 from Pythagoras.logging import *
 from Pythagoras.caching import *
-from Pythagoras.util import *
+from Pythagoras.misc_utils import *
 from Pythagoras.base import *
 from Pythagoras.global_objects import *
 

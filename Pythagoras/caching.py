@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import types
 from functools import wraps
-from Pythagoras.util import *
+from Pythagoras.misc_utils import *
 from Pythagoras.logging import *
 
 
