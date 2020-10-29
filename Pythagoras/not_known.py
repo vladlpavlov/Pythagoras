@@ -9,11 +9,6 @@ from sklearn.metrics import get_scorer
 from sklearn.metrics._scorer import _BaseScorer
 from sklearn.model_selection import BaseCrossValidator
 
-from Pythagoras.misc_utils import *
-from Pythagoras.logging import *
-from Pythagoras.caching import *
-from Pythagoras.splitters import *
-from Pythagoras.filters import *
 
 
 class NotKnownType:

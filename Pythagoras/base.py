@@ -44,8 +44,8 @@ class LearningContext:
             ,logging_level = None
             ,index_filter:Union[
                 BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-            ,X_col_filter:Optional[ColumnFilter] = None
-            ,Y_col_filter:Optional[ColumnFilter] = None
+            ,X_col_filter:Union[ColumnFilter, List[str], int, None] = None
+            ,Y_col_filter:Union[ColumnFilter, List[str], int, None] = None
             ,scoring:Union[str,Callable[..., float], None] = None
             ,cv_splitting:Union[
                 BaseCrossValidator, AdaptiveSplitter, int, None] = None
@@ -101,19 +101,19 @@ class LearningContext:
 
 
     def get_index_filter(self
-            ,input_value:Union[IndexFilter,int,float,type(None)]
+            ,input_filter:Union[IndexFilter,int,float,type(None)]
             ) -> IndexFilter:
-        if input_value is None:
+        if input_filter is None:
             return self.index_filter
-        elif isinstance(input_value, IndexFilter):
-            return input_value
+        elif isinstance(input_filter, IndexFilter):
+            return input_filter
         else:
-            return IndexFilter(max_samples = input_value
+            return IndexFilter(max_samples = input_filter
                 ,random_state= self.random_state)
 
 
     def get_X_col_filter(self
-                , a_filter:Union[ColumnFilter, List[str], None]
+                , a_filter:Union[ColumnFilter,List[str],int,None]
                 ) -> Optional[ColumnFilter]:
         if a_filter is None:
             return self.X_col_filter
@@ -124,7 +124,7 @@ class LearningContext:
 
 
     def get_Y_col_filter(self
-                , a_filter:Union[ColumnFilter, List[str], None]
+                , a_filter:Union[ColumnFilter,List[str],int,None]
                 ) -> Optional[ColumnFilter]:
         if a_filter is None:
             return self.Y_col_filter

@@ -8,6 +8,7 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import get_scorer
 from sklearn.metrics._scorer import _BaseScorer
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.utils._random import sample_without_replacement
 
 from Pythagoras.misc_utils import *
 from Pythagoras.not_known import *
@@ -16,21 +17,39 @@ from Pythagoras.caching import *
 from Pythagoras.splitters import *
 
 
+
 class ColumnFilter:
-    def __init__(self, names:Optional[List[str]]=None) -> None:
+    def __init__(self
+                 , columns:Union[List[str],int,None]=None
+                 , random_state = None) -> None:
         super().__init__()
-        self.names = names
+        self.columns = columns
+        self.random_state = random_state
 
     def filter(self, df:Optional[pd.DataFrame]) -> Optional[pd.DataFrame]:
         """ Default pass-through implementation"""
         if df is None:
             return None
-        elif self.names is None:
+        elif self.columns is None:
             return df
+        elif isinstance(self.columns, int):
+            assert self.columns >= 1
+            columns_to_use = list(df.columns)
+            if len(columns_to_use) <= self.columns:
+                return df
+            columns_to_use =[
+                columns_to_use[i] for i in sample_without_replacement(
+                    n_population = len(columns_to_use)
+                    , n_samples = self.columns
+                    ,random_state=self.random_state)]
+            return df[columns_to_use]
         else:
-            columns = list(df.columns)
-            assert set(self.names) <= set(columns)
-            return df[self.names]
+            assert isinstance(self.columns, list)
+            for c in self.columns:
+                assert isinstance(c, str)
+            assert set(self.columns) <= set(df.columns)
+            return df[self.columns]
+
 
 class IndexFilter:
     def __init__(self, max_samples=None, random_state=None) -> None:
