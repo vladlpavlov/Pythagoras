@@ -17,10 +17,10 @@ class MapperParamGridAnalyser(LoggableObject):
                  , mapper_to_test
                  , param_grid = None
                  , splitting = 5
-                 , n_repeats = 7
+                 , n_repeats:int = 7
                  , datasets = None
                  , scoring = None
-                 , logging_level = logging.DEBUG):
+                 , logging_level:Union[int, str,None] = logging.DEBUG):
         super().__init__(
             logging_level = logging_level
             ,reveal_calling_method=True
@@ -204,6 +204,6 @@ def smoke_test_a_mapper(mapper_to_test):
     test_results = MapperParamGridAnalyser(
         mapper_to_test=mapper_to_test
         , splitting=5
-        , n_repeats=5
+        , n_repeats=10
         , datasets=[California]
         , logging_level="INFO")
