@@ -2,8 +2,8 @@ import pandas as pd
 from copy import deepcopy
 from typing import Optional, Set, List, Dict
 
-from sklearn.base import is_regressor
-from sklearn.linear_model import LinearRegression
+from sklearn.base import is_regressor, is_classifier
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from Pythagoras.misc_utils import *
 from Pythagoras.base import *
@@ -37,7 +37,7 @@ class DemoDB:
         return self.description
 
 
-class MapperFromSKLRegressor(Mapper):
+class MapperFromSklRegressor(Mapper):
     """A wrapper for SKLearn regressors
     """
 
@@ -107,12 +107,106 @@ class MapperFromSKLRegressor(Mapper):
     def _get_tags(self):
         return self.base_regressor._get_tags()
 
+class MapperFromSklClassifier(Mapper):
+    """A wrapper for SKLearn classifier
+    """
+
+    def __init__(self
+            , base_classifier = LogisticRegression()
+            , defaults:LearningContext = LearningContext()
+            , scoring = None
+            , cv_splitting = 5
+            , index_filter: Union[
+                BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
+            , X_col_filter: Optional[ColumnFilter] = None
+            , Y_col_filter: Optional[ColumnFilter] = None
+            , random_state = None
+            , root_logger_name: str = "Pythagoras"
+            , logging_level = logging.WARNING) -> None:
+
+        _estimator_type = "classifier"
+
+        super().__init__(
+            defaults = defaults
+            , scoring=scoring
+            , cv_splitting = cv_splitting
+            , index_filter = index_filter
+            , X_col_filter = X_col_filter
+            , Y_col_filter = Y_col_filter
+            , random_state = random_state
+            , root_logger_name = root_logger_name
+            , logging_level=logging_level)
+
+        self.base_classifier = base_classifier
+
+        if not isinstance(base_classifier, BaseEstimator):
+            log_message = f"base_regressor has type={type(base_classifier)}, "
+            log_message += f"which is not inherited from BaseEstimator."
+            self.warning(log_message)
+
+        if isinstance(base_classifier, Mapper):
+            log_message = f"base_regressor has type={type(base_classifier)}, "
+            log_message += f"which is already inherited from Mapper."
+            self.warning(log_message)
+
+
+    def _preprocess_params(self):
+        super()._preprocess_params()
+        assert is_classifier(self.base_classifier)
+        self.base_classifier = clone(self.base_classifier)
+
+
+    def fit(self,X:pd.DataFrame,Y:pd.DataFrame,**kwargs):
+        (X,Y) = self._start_fitting(X, Y)
+        self.base_classifier.fit(X, Y, **kwargs)
+        self.classes_ = self.base_classifier.classes_
+        self._finish_fitting()
+        return self
+
+
+    def map(self,X:pd.DataFrame) -> pd.DataFrame:
+        Z = self.predict_proba(X)
+        return Z
+
+
+    def predict_proba(self,X:pd.DataFrame) -> pd.DataFrame:
+        assert hasattr(self.base_classifier,"predict_proba")
+        X = self._start_mapping(X)
+        Z = self.base_classifier.predict_proba(X)
+        Z = pd.DataFrame(
+            data=Z
+            , index=X.index
+            , columns=[f"P({c})" for c in self.base_classifier.classes_])
+        Z = self._finish_mapping(Z)
+        return Z
+
+
+    def predict(self,X:pd.DataFrame) ->pd.DataFrame:
+        X = self._start_mapping(X)
+        P = self.base_classifier.predict(X)
+        P = pd.DataFrame(data=P,index=X.index, columns=self.Y_column_names_)
+        P = self._finish_mapping(P)
+        return P
+
+
+    def score(self,X,Y,**kwargs) -> float:
+        assert self.is_fitted()
+        scorer = self.get_scorer()
+        result = scorer(self.base_classifier, X, Y, kwargs)
+        return result
+
+
+    def _get_tags(self):
+        return self.base_classifier._get_tags()
+
 
 def get_mapper(estimator:BaseEstimator) -> Mapper:
     if isinstance(estimator, Mapper):
         return estimator
     elif is_regressor(estimator):
-        return MapperFromSKLRegressor(base_regressor = estimator)
+        return MapperFromSklRegressor(base_regressor = estimator)
+    elif is_classifier(estimator):
+        return MapperFromSklClassifier(base_classifier = estimator)
     else:
         error_message = f"An Estimator has type {type(estimator)}, "
         error_message += f"which curently can't be automatically "
