@@ -99,7 +99,9 @@ class KFoldEnsemble(SimpleMetaMapper):
 
         if (not self.base_mapper.can_detect_overfitting()
             and self.fit_strategy == "val_fit"):
-            log_message = "Inefficient combination of parameters."
+            log_message = "Inefficient combination of parameters:"
+            log_message += "using 'val_fit' strategy with a Mapper "
+            log_message += "which can't detect overfitting."
             self.warning(log_message)
 
         assert isinstance(self.n_mappers_in_ensemble, (int, float, type(None)))
@@ -224,9 +226,9 @@ class KFoldEnsemble(SimpleMetaMapper):
         new_mapper = clone(self.base_mapper)
         if self.fit_strategy == "fit":
             new_mapper.fit(X,Y,**kwargs)
-            new_mapper.val_fit_idset_ = set(X_val.index)
         elif self.fit_strategy == "val_fit":
-            new_mapper.fit_val(X, Y, X_val, Y_val,**kwargs)
+            new_mapper.val_fit(X, Y, X_val, Y_val,**kwargs)
+        new_mapper.val_fit_idset_ = set(X_val.index)
         new_mapper.cv_score_ = self.get_scorer()(new_mapper,X_val,Y_val)
         return new_mapper
 
