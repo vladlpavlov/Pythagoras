@@ -49,9 +49,9 @@ class SimpleMetaMapper(Mapper):
     def input_Y_can_have_nans(self) -> bool:
         return self.base_mapper.input_Y_can_have_nans()
 
-    def typeid(self) -> str:
-        a_name = super().typeid()
-        a_name += f"< {get_typeid(self.base_mapper)} >"
+    def log_id(self) -> str:
+        a_name = super().log_id()
+        a_name += f"<{get_log_id(self.base_mapper)}>"
         return a_name
 
 

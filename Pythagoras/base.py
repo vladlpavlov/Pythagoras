@@ -206,7 +206,7 @@ class Learner(BaseEstimator,LoggableObject):
         self.X_col_filter = defaults.get_X_col_filter(X_col_filter)
         self.Y_col_filter = defaults.get_Y_col_filter(Y_col_filter)
 
-    def typeid(self) -> str:
+    def log_id(self) -> str:
         a_name = self.__class__.__name__
         return a_name
 
@@ -409,9 +409,9 @@ class Learner(BaseEstimator,LoggableObject):
     def input_Y_can_have_nans(self) -> Union[bool,NotKnownType]:
         return NotKnown
 
-def get_typeid(an_object) -> str:
+def get_log_id(an_object) -> str:
     try:
-        a_name =  an_object.typeid()
+        a_name =  an_object.log_id()
     except:
         a_name = an_object.__class__.__name__
     return a_name

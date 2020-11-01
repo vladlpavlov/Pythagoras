@@ -58,9 +58,9 @@ class MapperFromEstimator(Mapper):
             log_message += f"which is already inherited from Mapper."
             self.warning(log_message)
 
-    def typeid(self) -> str:
-        a_name = super().typeid()
-        a_name += f"< {get_typeid(self.base_estimator)} >"
+    def log_id(self) -> str:
+        a_name = super().log_id()
+        a_name += f"<{get_log_id(self.base_estimator)}>"
         return a_name
 
 
