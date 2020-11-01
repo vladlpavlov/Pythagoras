@@ -8,6 +8,7 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import get_scorer
 from sklearn.metrics._scorer import _BaseScorer
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.base import is_regressor, is_classifier
 
 from Pythagoras.misc_utils import *
 from Pythagoras.not_known import *
@@ -22,6 +23,21 @@ from Pythagoras.filters import *
 class Learner(LoggableObject, BaseEstimator):
     pass
 
+def dual_scorer(
+        regression_scoring:Union[str, Callable] = "r2"
+        , classification_scoring:Union[str, Callable] = "balanced_accuracy"):
+    regr_scorer = get_scorer(regression_scoring)
+    class_scorer = get_scorer(classification_scoring)
+
+    def new_scorer(estimator, X, Y):
+        if is_regressor(estimator):
+            return regr_scorer(estimator, X, Y)
+        elif is_classifier(estimator):
+            return class_scorer(estimator, X, Y)
+        else:
+            raise ValueError("Not supported type of Estimator")
+
+    return new_scorer
 
 class LearningContext:
     root_logger_name:Optional[str]
@@ -68,7 +84,7 @@ class LearningContext:
         self.Y_col_filter = ColumnFilter()
         self.Y_col_filter = self.get_Y_col_filter(Y_col_filter)
 
-        self.scoring = get_scorer("r2")
+        self.scoring = dual_scorer()
         self.scoring = self.get_scoring(scoring)
 
         self.cv_splitting = AdaptiveKFold(n_splits=5)
@@ -189,6 +205,10 @@ class Learner(BaseEstimator,LoggableObject):
         self.index_filter = defaults.get_index_filter(index_filter)
         self.X_col_filter = defaults.get_X_col_filter(X_col_filter)
         self.Y_col_filter = defaults.get_Y_col_filter(Y_col_filter)
+
+    def typeid(self) -> str:
+        a_name = self.__class__.__name__
+        return a_name
 
     def fit(self
             ,X:pd.DataFrame
@@ -389,6 +409,12 @@ class Learner(BaseEstimator,LoggableObject):
     def input_Y_can_have_nans(self) -> Union[bool,NotKnownType]:
         return NotKnown
 
+def get_typeid(an_object) -> str:
+    try:
+        a_name =  an_object.typeid()
+    except:
+        a_name = an_object.__class__.__name__
+    return a_name
 
 class Mapper(Learner):
     """ Abstract base class for predictors / transformers, implements .map() .
@@ -488,8 +514,29 @@ class Mapper(Learner):
 
         return Z
 
+
     def predict(self,X:pd.DataFrame)->pd.DataFrame:
-        return self.map(X)
+        if is_regressor(self):
+            predictions =  self.map(X)
+        elif is_classifier(self):
+            probabilities = self.map(X)
+            predictions = probabilities.to_numpy().argmax(axis=1)
+        else:
+            error_msg = "Predictions can only be generated "
+            error_msg += "by regressors or classifiers."
+            raise Exception(error_msg)
+
+        return predictions
+
+    def predict_proba(self,X:pd.DataFrame)->pd.DataFrame:
+        if is_classifier(self):
+            probabilities = self.map(X)
+        else:
+            error_msg = "Probabilities can only be generated "
+            error_msg += "by classifiers."
+            raise Exception(error_msg)
+
+        return probabilities
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         return self.map(X)

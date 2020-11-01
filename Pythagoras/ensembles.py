@@ -43,11 +43,16 @@ class SimpleMetaMapper(Mapper):
         if hasattr(self.base_mapper, "_estimator_type"):
             self._estimator_type = self.base_mapper._estimator_type
 
-        def input_X_can_have_nans(self) -> bool:
-            return base_mapper.input_X_can_have_nans()
+    def input_X_can_have_nans(self) -> bool:
+        return self.base_mapper.input_X_can_have_nans()
 
-        def input_Y_can_have_nans(self) -> bool:
-            return base_mapper.input_Y_can_have_nans()
+    def input_Y_can_have_nans(self) -> bool:
+        return self.base_mapper.input_Y_can_have_nans()
+
+    def typeid(self) -> str:
+        a_name = super().typeid()
+        a_name += f"< {get_typeid(self.base_mapper)} >"
+        return a_name
 
 
 class KFoldEnsemble(SimpleMetaMapper):
