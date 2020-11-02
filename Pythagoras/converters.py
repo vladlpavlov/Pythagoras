@@ -525,7 +525,7 @@ def get_mapper(estimator:BaseEstimator, leakproof = False) -> Mapper:
         error_message += f"converted into a Mapper."
         raise NotImplementedError(error_message)
 
-    if leakproof == True:
+    if leakproof == True and not mapper.is_leakproof():
         mapper = LeakProofMapper(base_mapper = mapper)
     else:
         assert leakproof == False
