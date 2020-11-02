@@ -81,7 +81,7 @@ class AdaptiveKFold(AdaptiveSplitter):
                         , random_state=self.random_state)
 
             log_message = f"Created a nested {str(self._nested_splitter)}, "
-            log_message += f"y.ndim={y.ndim}, y.shape={y.shape}, values={values}, counts={counts}."
+            log_message += f"y.shape={y.shape}, values={values}, counts={counts}."
             self.debug(log_message)
 
         return self._nested_splitter.split(X,y,groups)
@@ -126,7 +126,7 @@ class AdaptiveShuffleSplit(AdaptiveSplitter):
                         , random_state=self.random_state)
 
             log_message = f"Created a nested {str(self._nested_splitter)}, "
-            log_message += f"y.ndim={y.ndim}, y.shape={y.shape}, values={values}, counts={counts}."
+            log_message += f"y.shape={y.shape}, values={values}, counts={counts}."
             self.debug(log_message)
 
         return  self._nested_splitter.split(X,y,groups)
