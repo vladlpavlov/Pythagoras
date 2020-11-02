@@ -5,20 +5,23 @@ from typing import Optional, Set, List, Dict
 from numpy import mean, median
 import numpy as np
 from sklearn import clone
-from sklearn.model_selection import KFold, StratifiedKFold, ShuffleSplit
+from sklearn.model_selection import KFold, StratifiedKFold, ShuffleSplit, StratifiedShuffleSplit
 
 from Pythagoras.misc_utils import *
 from Pythagoras.not_known import *
-from Pythagoras.logging import *
+from Pythagoras.loggers import *
 from Pythagoras.caching import *
 
-class AdaptiveSplitter:
+class AdaptiveSplitter(LoggableObject):
     def __init__(self
                  , *
                  , n_splits = 10
                  , random_state=None
                  , max_bins = 20
+                 , root_logger_name:str = "Pythagoras"
+                 , logging_level = "DEBUG"
                  )-> None:
+        super().__init__(root_logger_name=root_logger_name, logging_level=logging_level)
         self.random_state = random_state
         self.n_splits = n_splits
         self._nested_splitter = None
@@ -47,11 +50,16 @@ class AdaptiveKFold(AdaptiveSplitter):
                  , n_splits=5
                  , shuffle=True
                  , random_state=None
-                 , max_bins = 20) -> None:
+                 , max_bins = 20
+                 , root_logger_name:str = "Pythagoras"
+                 , logging_level = "DEBUG"
+                 ) -> None:
         super().__init__(
             n_splits=n_splits
             , random_state=random_state
-            , max_bins=max_bins)
+            , max_bins=max_bins
+            , root_logger_name = root_logger_name
+            , logging_level = logging_level)
         self.shuffle = shuffle
 
     def split(self, X, y=None, groups=None):
@@ -61,14 +69,20 @@ class AdaptiveKFold(AdaptiveSplitter):
                 , shuffle=self.shuffle
                 , random_state=self.random_state)
 
-            # if isinstance(y,np.ndarray) and y.ndim == 1: #TODO: check
-            #     (_,counts) = np.unique(y,return_counts = True)
-            #     if len(counts) <= self.max_bins and min(counts) <= self.n_splits:
-            #         self._nested_splitter = StratifiedKFold(
-            #             n_splits=self.n_splits
-            #             , shuffle=self.shuffle
-            #             , random_state=self.random_state)
-            #         # TODO: Check if y needs to be converted
+            values = []
+            counts = []
+
+            if y.ndim==1 or (y.ndim==2 and y.shape[1]==1):
+                (values,counts) = np.unique(y,return_counts = True)
+                if len(counts) <= self.max_bins and min(counts) >= self.n_splits:
+                    self._nested_splitter = StratifiedKFold(
+                        n_splits=self.n_splits
+                        , shuffle=self.shuffle
+                        , random_state=self.random_state)
+
+            log_message = f"Created a nested {str(self._nested_splitter)}, "
+            log_message += f"y.ndim={y.ndim}, y.shape={y.shape}, values={values}, counts={counts}."
+            self.debug(log_message)
 
         return self._nested_splitter.split(X,y,groups)
 
@@ -80,11 +94,16 @@ class AdaptiveShuffleSplit(AdaptiveSplitter):
                  , train_size = None
                  , test_size = None
                  , random_state=None
-                 , max_bins = 20) -> None:
+                 , max_bins = 20
+                 , root_logger_name: str = "Pythagoras"
+                 , logging_level="DEBUG"
+                 ) -> None:
         super().__init__(
             n_splits=n_splits
             , random_state=random_state
-            , max_bins=max_bins)
+            , max_bins=max_bins
+            , root_logger_name=root_logger_name
+            , logging_level=logging_level)
         self.train_size = train_size
         self.test_size = test_size
 
@@ -95,5 +114,19 @@ class AdaptiveShuffleSplit(AdaptiveSplitter):
                 , train_size=self.train_size
                 , test_size =self.test_size
                 , random_state=self.random_state)
+
+            values = []
+            counts = []
+
+            if y.ndim == 1 or (y.ndim == 2 and y.shape[1] == 1):
+                (values, counts) = np.unique(y, return_counts=True)
+                if len(counts) <= self.max_bins and min(counts) >= self.n_splits:
+                    self._nested_splitter = StratifiedShuffleSplit(
+                        n_splits=self.n_splits
+                        , random_state=self.random_state)
+
+            log_message = f"Created a nested {str(self._nested_splitter)}, "
+            log_message += f"y.ndim={y.ndim}, y.shape={y.shape}, values={values}, counts={counts}."
+            self.debug(log_message)
 
         return  self._nested_splitter.split(X,y,groups)
