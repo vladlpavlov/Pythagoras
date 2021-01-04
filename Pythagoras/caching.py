@@ -15,7 +15,7 @@ import pandas as pd
 import types
 from functools import wraps
 from Pythagoras.misc_utils import *
-from Pythagoras.logging import *
+from Pythagoras.loggers import *
 
 
 # Workaround to ensure compatibility with Python <= 3.6
@@ -520,7 +520,7 @@ class PickleFileWarden(CacheFileWarden):
             "data": data
             , "cost_in_seconds": cost_in_seconds
             , "source": source}
-        pd.to_pickle(package_to_write, file_name)
+        pd.to_pickle(package_to_write, file_name, protocol=4)
 
 
 class FileBasedCache(LoggableObject):
