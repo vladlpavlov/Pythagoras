@@ -1,6 +1,7 @@
 import pandas as pd
 from copy import deepcopy
 from typing import Optional, Set, List, Dict
+import logging as lg
 
 from catboost import CatBoostRegressor, CatBoostClassifier, CatBoost
 from lightgbm import LGBMRegressor, LGBMClassifier
@@ -11,10 +12,61 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from Pythagoras.misc_utils import *
 from Pythagoras.base import *
 from Pythagoras.not_known import *
-from Pythagoras.logging import *
+from Pythagoras.loggers import *
 from Pythagoras.caching import *
 from Pythagoras.ensembles import *
 
+
+class EstimatorFromMapper(SimpleMetaMapper):
+    def __init__(self
+            , *
+            , defaults: LearningContext = None
+            , base_mapper:Mapper
+            , cv_splitting = None
+            , scoring = None
+            , index_filter: Union[int, float, type(None)] = None
+            , X_col_filter: Optional[ColumnFilter] = None
+            , Y_col_filter: Optional[ColumnFilter] = None
+            , random_state = None
+            , root_logger_name: str = None
+            , logging_level = None
+            ) -> None:
+        super().__init__(
+            defaults=defaults
+            , index_filter=index_filter
+            , X_col_filter=X_col_filter
+            , Y_col_filter=Y_col_filter
+            , random_state=random_state
+            , cv_splitting=cv_splitting
+            , scoring=scoring
+            , root_logger_name=root_logger_name
+            , logging_level=logging_level
+            , base_mapper = base_mapper)
+
+    def predict(self,X:pd.DataFrame):
+        predictions_df = self.base_mapper.predict(X)
+        predictions_np = predictions_df.to_numpy()
+        return predictions_np
+
+    def predict_proba(self,X:pd.DataFrame):
+        probabilities_df = self.base_mapper.predict_proba(X)
+        probabilities_np = probabilities_df.to_numpy()
+        return probabilities_np
+
+
+def upgrade_scorer(skl_scorer:Callable):
+    def p_scorer(mapper:Mapper
+                   , X:pd.DataFrame
+                   , Y:pd.DataFrame):
+        if isinstance(mapper, Mapper):
+            estimator = EstimatorFromMapper(base_mapper=mapper)
+        else:
+            estimator = mapper
+            assert isinstance(estimator, BaseEstimator)
+
+        return skl_scorer(estimator,X, Y)
+
+    return p_scorer
 
 class MapperFromEstimator(Mapper):
     """A wrapper for SKLearn-compatible estimators
@@ -30,7 +82,7 @@ class MapperFromEstimator(Mapper):
             , Y_col_filter: Optional[ColumnFilter] = None
             , random_state = None
             , root_logger_name: str = "Pythagoras"
-            , logging_level = logging.WARNING) -> None:
+            , logging_level = lg.WARNING) -> None:
 
         super().__init__(
             defaults = defaults
@@ -116,7 +168,7 @@ class MapperFromRegressor(MapperFromEstimator):
                  , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
-                 , logging_level = logging.WARNING) -> None:
+                 , logging_level = lg.WARNING) -> None:
 
         super().__init__(
             base_estimator=base_estimator
@@ -158,7 +210,7 @@ class MapperFromSKLNRegressor(MapperFromRegressor):
                  , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
-                 , logging_level = logging.WARNING) -> None:
+                 , logging_level = lg.WARNING) -> None:
 
         if base_estimator is None:
             base_estimator = LinearRegression()
@@ -201,7 +253,7 @@ class MapperFromLGBMRegressor(MapperFromRegressor):
                  , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
-                 , logging_level = logging.WARNING) -> None:
+                 , logging_level = None) -> None:
 
 
         if base_estimator is None:
@@ -251,7 +303,7 @@ class MapperFromCATBOOSTRegressor(MapperFromRegressor):
                  , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state=None
                  , root_logger_name: str = "Pythagoras"
-                 , logging_level=logging.WARNING) -> None:
+                 , logging_level=lg.WARNING) -> None:
 
         if base_estimator is None:
             base_estimator = CatBoostRegressor(random_state=random_state)
@@ -307,7 +359,7 @@ class MapperFromClassifier(MapperFromEstimator):
                  , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
-                 , logging_level = logging.WARNING) -> None:
+                 , logging_level = None) -> None:
 
         super().__init__(
             base_estimator=base_estimator
@@ -341,7 +393,10 @@ class MapperFromClassifier(MapperFromEstimator):
             , index=X.index
             , columns=[f"P({c})" for c in self.base_estimator.classes_])
         Z = self._finish_mapping(Z)
-        return Z
+        # conversion to numpy is
+        # a dirty trick to make SKLearn _ProbaScorer work
+        # TODO: refactor
+        return Z #.to_numpy()
 
 
     def predict(self,X:pd.DataFrame) ->pd.DataFrame:
@@ -367,7 +422,7 @@ class MapperFromSKLNClassifier(MapperFromClassifier):
                  , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
-                 , logging_level = logging.WARNING) -> None:
+                 , logging_level = None) -> None:
 
         if base_estimator is None:
             base_estimator = LogisticRegression(random_state=random_state)
@@ -410,7 +465,7 @@ class MapperFromCATBOOSTClassifier(MapperFromClassifier):
                  , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
-                 , logging_level = logging.WARNING) -> None:
+                 , logging_level = None) -> None:
 
         if base_estimator is None:
             base_estimator = CatBoostClassifier(random_state=random_state)
@@ -468,7 +523,7 @@ class MapperFromLGBMClassifier(MapperFromClassifier):
                  , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
-                 , logging_level = logging.WARNING) -> None:
+                 , logging_level = None) -> None:
 
         if base_estimator is None:
             base_estimator = LGBMClassifier(random_state=random_state)
