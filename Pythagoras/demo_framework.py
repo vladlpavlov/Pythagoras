@@ -1,11 +1,12 @@
 import pandas as pd
+import logging as lg
 from copy import deepcopy
 from typing import Optional, Set, List, Dict
 
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score, GridSearchCV
 
-from Pythagoras.logging import *
+from Pythagoras.loggers import *
 from Pythagoras.caching import *
 from Pythagoras.misc_utils import *
 from Pythagoras.base import *
@@ -20,7 +21,7 @@ class MapperParamGridAnalyser(LoggableObject):
                  , n_repeats:int = 7
                  , datasets = None
                  , scoring = None
-                 , logging_level:Union[int, str,None] = logging.DEBUG):
+                 , logging_level:Union[int, str,None] = lg.DEBUG):
         super().__init__(
             logging_level = logging_level
             ,reveal_calling_method=True
