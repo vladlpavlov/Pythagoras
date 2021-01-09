@@ -25,6 +25,7 @@ class TestConverters:
             c=get_mapper(c, leakproof=True)
             c.fit(dataset.X, dataset.Y)
             z = c.map(dataset.X)
+            scorer = c.get_scorer()
             c.warning(f"Score for testing {get_log_id(c)} "
                 + f"on {dataset.name} "
-                +  f"is {c.get_scorer()(c,dataset.X, dataset.Y)}")
+                +  f"is {scorer(c,dataset.X, dataset.Y)}")
