@@ -9,5 +9,5 @@ from sklearn.model_selection import cross_val_score, RepeatedKFold
 
 from Pythagoras.misc_utils import *
 from Pythagoras.base import *
-from Pythagoras.logging import *
+from Pythagoras.loggers import *
 from Pythagoras.caching import *

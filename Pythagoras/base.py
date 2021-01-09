@@ -12,10 +12,11 @@ from sklearn.base import is_regressor, is_classifier
 
 from Pythagoras.misc_utils import *
 from Pythagoras.not_known import *
-from Pythagoras.logging import *
+from Pythagoras.loggers import *
 from Pythagoras.caching import *
 from Pythagoras.splitters import *
 from Pythagoras.filters import *
+# from Pythagoras.converters import *
 
 
 # Workaround to ensure compatibility with Python <= 3.6
@@ -72,7 +73,7 @@ class LearningContext:
         self.root_logger_name = "Pythagoras"
         self.root_logger_name = self.get_root_logger_name(root_logger_name)
 
-        self.logging_level = logging.WARNING
+        self.logging_level = lg.WARNING
         self.logging_level = self.get_logging_level(logging_level)
 
         self.index_filter = IndexFilter()
@@ -87,7 +88,11 @@ class LearningContext:
         self.scoring = dual_scorer()
         self.scoring = self.get_scoring(scoring)
 
-        self.cv_splitting = AdaptiveKFold(n_splits=5)
+        self.cv_splitting = AdaptiveKFold(
+            n_splits=5
+            , random_state = self.random_state
+            , root_logger_name = self.root_logger_name
+            , logging_level = self.logging_level)
         self.cv_splitting = self.get_cv_splitting(cv_splitting)
 
 
@@ -536,7 +541,11 @@ class Mapper(Learner):
             error_msg += "by classifiers."
             raise Exception(error_msg)
 
-        return probabilities
+        # conversion to numpy is
+        # a dirty trick to make SKLearn _ProbaScorer work
+        # TODO: refactor
+
+        return probabilities #.to_numpy()
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         return self.map(X)
@@ -596,7 +605,11 @@ class Mapper(Learner):
         log_message += f"classic .fit() method will be used "
         log_message += f"instead of .val_fit() ."
         self.warning(log_message)
+
+        self._start_val_fitting(X,Y,X_val,Y_val, write_to_log=False)
+
         self.fit(X,Y, **kwargs)
+
         return self
 
 

@@ -1,8 +1,8 @@
 # from __future__ import annotations
 # Above is temporarily commented to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
-import inspect
-import logging
+# import inspect
+import logging as lg
 import os
 from typing import Optional, Any
 from Pythagoras.misc_utils import *
@@ -30,18 +30,18 @@ class LoggableObject:
              , root_logger_name: str = "Pythagoras"
              , reveal_logger_identity: bool = True
              , reveal_calling_method: bool = False
-             , logging_level: int = logging.WARNING
-             , logging_handler: logging.Handler = None
-             , logging_formatter: logging.Formatter =  None
+             , logging_level: int = lg.WARNING
+             , logging_handler: lg.Handler = None
+             , logging_formatter: lg.Formatter =  None
              ) -> None:
         super().__init__()
         assert len(root_logger_name), "root_logger_name can not be empty"
 
         if logging_handler is None:
-            logging_handler = logging.StreamHandler()
+            logging_handler = lg.StreamHandler()
 
         if  logging_formatter is None:
-            logging_formatter = logging.Formatter(
+            logging_formatter = lg.Formatter(
                 '%(asctime)s %(name)s %(levelname)s: %(message)s',
                 datefmt="%I:%M:%S")
 
@@ -65,7 +65,7 @@ class LoggableObject:
                     logger_name += "." + self_names
         if len(suffix):
             logger_name += "." + suffix
-        resulting_logger = logging.getLogger(logger_name)
+        resulting_logger = lg.getLogger(logger_name)
         return resulting_logger
 
     def __str__(self) -> str:
@@ -75,8 +75,8 @@ class LoggableObject:
 
     def update_logger(self
             , new_logging_level: int
-            , new_logging_handler: logging.Handler = None
-            , new_logging_formatter: logging.Formatter = None
+            , new_logging_handler: lg.Handler = None
+            , new_logging_formatter: lg.Formatter = None
             ) -> LoggableObject:
         current_logger = self.logger(extend_logger_name = False)
 
@@ -101,27 +101,27 @@ class LoggableObject:
 
     def debug(self, msg: Optional[Any] = None, *args, **kwargs):
         """Log a DEBUG message msg via self.logger"""
-        self._log_impl(level=logging.DEBUG, msg=msg, *args, **kwargs)
+        self._log_impl(level=lg.DEBUG, msg=msg, *args, **kwargs)
 
     def info(self, msg: Optional[Any] = None, *args, **kwargs):
         """Log an INFO message msg via self.logger"""
-        self._log_impl(level=logging.INFO, msg=msg, *args, **kwargs)
+        self._log_impl(level=lg.INFO, msg=msg, *args, **kwargs)
 
     def warning(self, msg: Optional[Any] = None, *args, **kwargs):
         """Log a WARNING message msg via self.logger"""
-        self._log_impl(level=logging.WARNING, msg=msg, *args, **kwargs)
+        self._log_impl(level=lg.WARNING, msg=msg, *args, **kwargs)
 
     def error(self, msg: Optional[Any] = None, *args, **kwargs):
         """Log an ERROR message msg via self.logger"""
-        self._log_impl(level=logging.ERROR, msg=msg, *args, **kwargs)
+        self._log_impl(level=lg.ERROR, msg=msg, *args, **kwargs)
 
     def critical(self, msg: Optional[Any] = None, *args, **kwargs):
         """Log a CRITICAL message msg via self.logger"""
-        self._log_impl(level=logging.CRITICAL, msg=msg, *args, **kwargs)
+        self._log_impl(level=lg.CRITICAL, msg=msg, *args, **kwargs)
 
     def fatal(self, msg: Optional[Any] = None, *args, **kwargs):
         """Log a FATAL message msg via self.logger"""
-        self._log_impl(level=logging.FATAL, msg=msg, *args, **kwargs)
+        self._log_impl(level=lg.FATAL, msg=msg, *args, **kwargs)
 
     def log(self
             , level: Optional[int] = None

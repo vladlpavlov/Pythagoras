@@ -1,4 +1,5 @@
 import pandas as pd
+import logging as lg
 from copy import deepcopy
 from typing import Optional, Set, List, Dict
 
@@ -12,7 +13,7 @@ from sklearn.model_selection import cross_val_score, RepeatedKFold, KFold, \
 
 from Pythagoras.misc_utils import *
 from Pythagoras.not_known import *
-from Pythagoras.logging import *
+from Pythagoras.loggers import *
 from Pythagoras.caching import *
 from Pythagoras.base import *
 
@@ -21,14 +22,14 @@ class SimpleMetaMapper(Mapper):
                  , *
                  , defaults: LearningContext = None
                  , base_mapper:Mapper
-                 , cv_splitting = 5
-                 , scoring = "r2"
+                 , cv_splitting = None
+                 , scoring = None
                  , index_filter: Union[int, float, type(None)] = None
                  , X_col_filter: Optional[ColumnFilter] = None
                  , Y_col_filter: Optional[ColumnFilter] = None
                  , random_state = None
-                 , root_logger_name: str = "Pythagoras"
-                 , logging_level = logging.WARNING):
+                 , root_logger_name: str = None
+                 , logging_level = None) -> None:
         super().__init__(
             defaults = defaults
             , index_filter = index_filter
@@ -43,6 +44,9 @@ class SimpleMetaMapper(Mapper):
         if hasattr(self.base_mapper, "_estimator_type"):
             self._estimator_type = self.base_mapper._estimator_type
 
+    def _get_tags(self):
+        return self.base_mapper._get_tags()
+
     def input_X_can_have_nans(self) -> bool:
         return self.base_mapper.input_X_can_have_nans()
 
@@ -53,6 +57,10 @@ class SimpleMetaMapper(Mapper):
         a_name = super().log_id()
         a_name += f"<{get_log_id(self.base_mapper)}>"
         return a_name
+
+    def _preprocess_params(self):
+        super()._preprocess_params()
+        self.base_mapper = clone(self.base_mapper)
 
 
 class KFoldEnsemble(SimpleMetaMapper):
@@ -229,7 +237,9 @@ class KFoldEnsemble(SimpleMetaMapper):
         elif self.fit_strategy == "val_fit":
             new_mapper.val_fit(X, Y, X_val, Y_val,**kwargs)
         new_mapper.val_fit_idset_ = set(X_val.index)
-        new_mapper.cv_score_ = self.get_scorer()(new_mapper,X_val,Y_val)
+        self.warning(f"X_val.shape={X_val.shape}, Y_val.shape={Y_val.shape}")
+        scorer = self.get_scorer()
+        new_mapper.cv_score_ = scorer(new_mapper,X_val,Y_val)
         return new_mapper
 
 
@@ -247,7 +257,7 @@ class LeakProofMapper(KFoldEnsemble):
             , Y_col_filter: Union[ColumnFilter, List[str], int, None] = None
             , random_state=None
             , root_logger_name: str = "Pythagoras"
-            , logging_level=logging.WARNING
+            , logging_level=lg.WARNING
             ) -> None:
         super().__init__(
             fit_strategy = "fit"

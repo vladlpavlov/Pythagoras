@@ -12,7 +12,7 @@ from sklearn.utils._random import sample_without_replacement
 
 from Pythagoras.misc_utils import *
 from Pythagoras.not_known import *
-from Pythagoras.logging import *
+from Pythagoras.loggers import *
 from Pythagoras.caching import *
 from Pythagoras.splitters import *
 

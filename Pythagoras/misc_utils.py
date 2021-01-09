@@ -2,13 +2,15 @@
 # Above is temporarily commented to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
 
+import logging as lg
 import math
 import numpy as np
 import inspect
 import numbers, time
 from typing import Any, ClassVar, Union
 from copy import deepcopy
-import pandas as pd
+# import logging
+# import pandas as pd
 
 from scipy import stats
 from sklearn.base import BaseEstimator
