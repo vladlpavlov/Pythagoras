@@ -556,21 +556,32 @@ class MapperFromLGBMClassifier(MapperFromClassifier):
         return True
 
 
-def get_mapper(estimator:BaseEstimator, leakproof = False) -> Mapper:
+def get_mapper(estimator:Union[BaseEstimator,str], leakproof = False) -> Mapper:
+
+    if isinstance(estimator,str):
+        estimator = estimator.lower()
+
     if isinstance(estimator, Mapper):
         mapper = estimator
-
     elif isinstance(estimator, CatBoostRegressor):
         mapper = MapperFromCATBOOSTRegressor(base_estimator=estimator)
+    elif estimator == "catboostregressor":
+        mapper = MapperFromCATBOOSTRegressor()
     elif isinstance(estimator, LGBMRegressor):
         mapper =  MapperFromLGBMRegressor(base_estimator=estimator)
+    elif estimator == "lgbmregressor":
+        mapper = MapperFromLGBMRegressor()
     elif is_regressor(estimator):
         mapper =  MapperFromSKLNRegressor(base_estimator=estimator)
 
     elif isinstance(estimator, CatBoostClassifier):
         mapper =  MapperFromCATBOOSTClassifier(base_estimator=estimator)
+    elif estimator == "catboostclassifier":
+        mapper = MapperFromCATBOOSTClassifier()
     elif isinstance(estimator, LGBMClassifier):
         mapper =  MapperFromLGBMClassifier(base_estimator=estimator)
+    elif estimator == "lgbmclassifier":
+        mapper = LGBMClassifier()
     elif is_classifier(estimator):
         mapper =  MapperFromSKLNClassifier(base_estimator=estimator)
 
