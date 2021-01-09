@@ -1,3 +1,5 @@
+#!/bin/bash
+
 python3 -m pip install --upgrade setuptools wheel
 python3 -m pip install --upgrade twine
 
