@@ -41,7 +41,7 @@ Binary installers for the latest released version are available at the Python pa
 Implements .val_fit() method that enables overfitting detection.
 
 * **Mapper**: A universal predictor/transformer, implements .map() method 
-as an alternative to .predict() and transform() methods.
+as a generalization of .predict() and transform() methods.
 
 * **LeakProofMapper**: An ensembling meta-learner. Implements .map() method 
  and provides guarantee against data leakage.
