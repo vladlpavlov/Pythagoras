@@ -9,6 +9,8 @@ import inspect
 import numbers, time
 from typing import Any, ClassVar, Union
 from copy import deepcopy
+import psutil
+import gc
 # import logging
 # import pandas as pd
 
@@ -171,6 +173,16 @@ class NeatStr:
 
         return text_info
 
+def free_RAM(print_info:bool=True, collect_garbage:bool=True) -> int:
+    if collect_garbage:
+        gc.collect()
+
+    free_memory = psutil.virtual_memory().free
+
+    if print_info:
+        print(f"Free memory: {NeatStr.mem_size(free_memory)} ")
+
+    return free_memory
 
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation

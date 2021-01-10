@@ -73,7 +73,7 @@ How to make Pythagoras PickleCache work with custom classes
 * [numpy](https://numpy.org/)
 * [scipy](https://www.scipy.org/)
 * [xxhash](https://pypi.org/project/xxhash/)
-
+* [psutil](https://pypi.org/project/psutil/)
 
 ### Key Contacts
 
