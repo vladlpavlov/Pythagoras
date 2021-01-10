@@ -125,7 +125,7 @@ class MapperFromEstimator(Mapper):
     def score(self,X,Y,**kwargs) -> float:
         assert self.is_fitted()
         scorer = self.get_scorer()
-        result = scorer(self.base_estimator,X,Y,kwargs)
+        result = scorer(self.base_estimator,X,Y,**kwargs)
         return result
 
     def _get_tags(self):
