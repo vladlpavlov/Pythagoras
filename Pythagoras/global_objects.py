@@ -31,6 +31,6 @@ class DemoDB:
     def __repr__(self):
         return self.description
 
-Boston = DemoDB("Boston")
-California = DemoDB("California")
-Iris = DemoDB("Iris")
+# Boston = DemoDB("Boston")
+# California = DemoDB("California")
+# Iris = DemoDB("Iris")
