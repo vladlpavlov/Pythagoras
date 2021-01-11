@@ -51,8 +51,8 @@ class ColumnFilter:
             return df[self.columns]
 
 
-class IndexFilter:
-    def __init__(self, max_samples=None, random_state=None) -> None:
+class RowFilter:
+    def __init__(self, max_samples:Optional[Union[int, float]]=None, random_state=None) -> None:
         super().__init__()
         assert isinstance(max_samples, (int, float, type(None)))
         if isinstance(max_samples, float):

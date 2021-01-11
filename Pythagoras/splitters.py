@@ -71,17 +71,20 @@ class AdaptiveKFold(AdaptiveSplitter):
 
             values = []
             counts = []
+            strat_flag = False
 
             if y.ndim==1 or (y.ndim==2 and y.shape[1]==1):
                 (values,counts) = np.unique(y,return_counts = True)
                 if len(counts) <= self.max_bins and min(counts) >= self.n_splits:
+                    strat_flag = True
                     self._nested_splitter = StratifiedKFold(
                         n_splits=self.n_splits
                         , shuffle=self.shuffle
                         , random_state=self.random_state)
 
-            log_message = f"Created a nested {str(self._nested_splitter)}, "
-            log_message += f"y.shape={y.shape}, values={values}, counts={counts}."
+            log_message = f"Created a nested {str(self._nested_splitter)}. "
+            if strat_flag:
+                log_message += f"y.shape={y.shape}, values={values}, counts={counts}."
             self.debug(log_message)
 
         return self._nested_splitter.split(X,y,groups)
@@ -117,16 +120,19 @@ class AdaptiveShuffleSplit(AdaptiveSplitter):
 
             values = []
             counts = []
+            strat_flag = False
 
             if y.ndim == 1 or (y.ndim == 2 and y.shape[1] == 1):
                 (values, counts) = np.unique(y, return_counts=True)
                 if len(counts) <= self.max_bins and min(counts) >= self.n_splits:
+                    strat_flag = True
                     self._nested_splitter = StratifiedShuffleSplit(
                         n_splits=self.n_splits
                         , random_state=self.random_state)
 
-            log_message = f"Created a nested {str(self._nested_splitter)}, "
-            log_message += f"y.shape={y.shape}, values={values}, counts={counts}."
+            log_message = f"Created nested {str(self._nested_splitter)}. "
+            if strat_flag:
+                log_message += f"y.shape={y.shape}, values={values}, counts={counts}."
             self.debug(log_message)
 
         return  self._nested_splitter.split(X,y,groups)

@@ -19,25 +19,25 @@ from Pythagoras.ensembles import *
 
 class EstimatorFromMapper(SimpleMetaMapper):
     def __init__(self
-            , *
-            , defaults: LearningContext = None
-            , base_mapper:Mapper
-            , cv_splitting = None
-            , scoring = None
-            , index_filter: Union[int, float, type(None)] = None
-            , X_col_filter: Optional[ColumnFilter] = None
-            , Y_col_filter: Optional[ColumnFilter] = None
-            , random_state = None
-            , root_logger_name: str = None
-            , logging_level = None
-            ) -> None:
+                 , *
+                 , defaults: LearningContext = None
+                 , base_mapper:Mapper
+                 , splitting = None
+                 , scoring = None
+                 , row_fittime_filter: Union[int, float, type(None)] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
+                 , random_state = None
+                 , root_logger_name: str = None
+                 , logging_level = None
+                 ) -> None:
         super().__init__(
             defaults=defaults
-            , index_filter=index_filter
-            , X_col_filter=X_col_filter
-            , Y_col_filter=Y_col_filter
+            , row_fittime_filter=row_fittime_filter
+            , x_col_alltime_filter=x_col_alltime_filter
+            , y_col_alltime_filter=y_col_alltime_filter
             , random_state=random_state
-            , cv_splitting=cv_splitting
+            , splitting=splitting
             , scoring=scoring
             , root_logger_name=root_logger_name
             , logging_level=logging_level
@@ -73,24 +73,24 @@ class MapperFromEstimator(Mapper):
     """
 
     def __init__(self
-            , base_estimator:BaseEstimator = None
-            , defaults:LearningContext = None
-            , scoring = None
-            , cv_splitting = 5
-            , index_filter: Union[BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-            , X_col_filter: Optional[ColumnFilter] = None
-            , Y_col_filter: Optional[ColumnFilter] = None
-            , random_state = None
-            , root_logger_name: str = "Pythagoras"
-            , logging_level = lg.WARNING) -> None:
+                 , base_estimator:BaseEstimator = None
+                 , defaults:LearningContext = None
+                 , scoring = None
+                 , splitting = 5
+                 , row_fittime_filter: Union[BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
+                 , random_state = None
+                 , root_logger_name: str = "Pythagoras"
+                 , logging_level = lg.WARNING) -> None:
 
         super().__init__(
             defaults = defaults
             , scoring=scoring
-            , cv_splitting = cv_splitting
-            , index_filter = index_filter
-            , X_col_filter = X_col_filter
-            , Y_col_filter = Y_col_filter
+            , splitting= splitting
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)
@@ -161,11 +161,11 @@ class MapperFromRegressor(MapperFromEstimator):
                  , base_estimator:BaseEstimator = None
                  , defaults:LearningContext = None
                  , scoring = None
-                 , cv_splitting = 5
-                 , index_filter: Union[
+                 , splitting = 5
+                 , row_fittime_filter: Union[
                 BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-                 , X_col_filter: Optional[ColumnFilter] = None
-                 , Y_col_filter: Optional[ColumnFilter] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = lg.WARNING) -> None:
@@ -174,10 +174,10 @@ class MapperFromRegressor(MapperFromEstimator):
             base_estimator=base_estimator
             , defaults = defaults
             , scoring=scoring
-            , cv_splitting = cv_splitting
-            , index_filter = index_filter
-            , X_col_filter = X_col_filter
-            , Y_col_filter = Y_col_filter
+            , splitting= splitting
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)
@@ -203,11 +203,11 @@ class MapperFromSKLNRegressor(MapperFromRegressor):
                  , base_estimator:BaseEstimator = None
                  , defaults:LearningContext = None
                  , scoring = None
-                 , cv_splitting = 5
-                 , index_filter: Union[
+                 , splitting = 5
+                 , row_fittime_filter: Union[
                 BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-                 , X_col_filter: Optional[ColumnFilter] = None
-                 , Y_col_filter: Optional[ColumnFilter] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = lg.WARNING) -> None:
@@ -219,10 +219,10 @@ class MapperFromSKLNRegressor(MapperFromRegressor):
             defaults = defaults
             , base_estimator= base_estimator
             , scoring=scoring
-            , cv_splitting = cv_splitting
-            , index_filter = index_filter
-            , X_col_filter = X_col_filter
-            , Y_col_filter = Y_col_filter
+            , splitting= splitting
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)
@@ -246,11 +246,11 @@ class MapperFromLGBMRegressor(MapperFromRegressor):
                  , base_estimator:LGBMRegressor = None
                  , defaults:LearningContext = None
                  , scoring = None
-                 , cv_splitting = 5
-                 , index_filter: Union[
+                 , splitting = 5
+                 , row_fittime_filter: Union[
                 BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-                 , X_col_filter: Optional[ColumnFilter] = None
-                 , Y_col_filter: Optional[ColumnFilter] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = None) -> None:
@@ -263,10 +263,10 @@ class MapperFromLGBMRegressor(MapperFromRegressor):
             defaults = defaults
             , base_estimator= base_estimator
             , scoring=scoring
-            , cv_splitting = cv_splitting
-            , index_filter = index_filter
-            , X_col_filter = X_col_filter
-            , Y_col_filter = Y_col_filter
+            , splitting= splitting
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)
@@ -296,11 +296,11 @@ class MapperFromCATBOOSTRegressor(MapperFromRegressor):
                  , base_estimator:CatBoostRegressor=None
                  , defaults: LearningContext = None
                  , scoring=None
-                 , cv_splitting=5
-                 , index_filter: Union[
+                 , splitting=5
+                 , row_fittime_filter: Union[
                 BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-                 , X_col_filter: Optional[ColumnFilter] = None
-                 , Y_col_filter: Optional[ColumnFilter] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
                  , random_state=None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level=lg.WARNING) -> None:
@@ -312,10 +312,10 @@ class MapperFromCATBOOSTRegressor(MapperFromRegressor):
             defaults=defaults
             , base_estimator=base_estimator
             , scoring=scoring
-            , cv_splitting=cv_splitting
-            , index_filter=index_filter
-            , X_col_filter=X_col_filter
-            , Y_col_filter=Y_col_filter
+            , splitting=splitting
+            , row_fittime_filter=row_fittime_filter
+            , x_col_alltime_filter=x_col_alltime_filter
+            , y_col_alltime_filter=y_col_alltime_filter
             , random_state=random_state
             , root_logger_name=root_logger_name
             , logging_level=logging_level)
@@ -352,11 +352,11 @@ class MapperFromClassifier(MapperFromEstimator):
                  , base_estimator:BaseEstimator = None
                  , defaults:LearningContext = None
                  , scoring = None
-                 , cv_splitting = 5
-                 , index_filter: Union[
+                 , splitting = 5
+                 , row_fittime_filter: Union[
                 BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-                 , X_col_filter: Optional[ColumnFilter] = None
-                 , Y_col_filter: Optional[ColumnFilter] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = None) -> None:
@@ -365,10 +365,10 @@ class MapperFromClassifier(MapperFromEstimator):
             base_estimator=base_estimator
             , defaults = defaults
             , scoring=scoring
-            , cv_splitting = cv_splitting
-            , index_filter = index_filter
-            , X_col_filter = X_col_filter
-            , Y_col_filter = Y_col_filter
+            , splitting= splitting
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)
@@ -415,11 +415,11 @@ class MapperFromSKLNClassifier(MapperFromClassifier):
                  , base_estimator:BaseEstimator = None
                  , defaults:LearningContext = None
                  , scoring = None
-                 , cv_splitting = 5
-                 , index_filter: Union[
+                 , splitting = 5
+                 , row_fittime_filter: Union[
                 BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-                 , X_col_filter: Optional[ColumnFilter] = None
-                 , Y_col_filter: Optional[ColumnFilter] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = None) -> None:
@@ -431,10 +431,10 @@ class MapperFromSKLNClassifier(MapperFromClassifier):
             defaults = defaults
             , base_estimator= base_estimator
             , scoring=scoring
-            , cv_splitting = cv_splitting
-            , index_filter = index_filter
-            , X_col_filter = X_col_filter
-            , Y_col_filter = Y_col_filter
+            , splitting= splitting
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)
@@ -458,11 +458,11 @@ class MapperFromCATBOOSTClassifier(MapperFromClassifier):
                  , base_estimator:CatBoostClassifier = None
                  , defaults:LearningContext = None
                  , scoring = None
-                 , cv_splitting = 5
-                 , index_filter: Union[
+                 , splitting = 5
+                 , row_fittime_filter: Union[
                 BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-                 , X_col_filter: Optional[ColumnFilter] = None
-                 , Y_col_filter: Optional[ColumnFilter] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = None) -> None:
@@ -474,10 +474,10 @@ class MapperFromCATBOOSTClassifier(MapperFromClassifier):
             defaults = defaults
             , base_estimator= base_estimator
             , scoring=scoring
-            , cv_splitting = cv_splitting
-            , index_filter = index_filter
-            , X_col_filter = X_col_filter
-            , Y_col_filter = Y_col_filter
+            , splitting= splitting
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)
@@ -516,11 +516,11 @@ class MapperFromLGBMClassifier(MapperFromClassifier):
                  , base_estimator:LGBMClassifier = None
                  , defaults:LearningContext = None
                  , scoring = None
-                 , cv_splitting = 5
-                 , index_filter: Union[
+                 , splitting = 5
+                 , row_fittime_filter: Union[
                 BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-                 , X_col_filter: Optional[ColumnFilter] = None
-                 , Y_col_filter: Optional[ColumnFilter] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = "Pythagoras"
                  , logging_level = None) -> None:
@@ -532,10 +532,10 @@ class MapperFromLGBMClassifier(MapperFromClassifier):
             defaults = defaults
             , base_estimator= base_estimator
             , scoring=scoring
-            , cv_splitting = cv_splitting
-            , index_filter = index_filter
-            , X_col_filter = X_col_filter
-            , Y_col_filter = Y_col_filter
+            , splitting= splitting
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             , random_state = random_state
             , root_logger_name = root_logger_name
             , logging_level=logging_level)
@@ -556,34 +556,34 @@ class MapperFromLGBMClassifier(MapperFromClassifier):
         return True
 
 
-def get_mapper(estimator:Union[BaseEstimator,str], leakproof = False) -> Mapper:
+def get_mapper(estimator:Union[BaseEstimator,str], leakproof = False, **kwargs) -> Mapper:
 
     if isinstance(estimator,str):
         estimator = estimator.lower()
 
     if isinstance(estimator, Mapper):
-        mapper = estimator
+        mapper = estimator ## ?!?!?!?
     elif isinstance(estimator, CatBoostRegressor):
-        mapper = MapperFromCATBOOSTRegressor(base_estimator=estimator)
+        mapper = MapperFromCATBOOSTRegressor(base_estimator=estimator, **kwargs)
     elif estimator == "catboostregressor":
-        mapper = MapperFromCATBOOSTRegressor()
+        mapper = MapperFromCATBOOSTRegressor(**kwargs)
     elif isinstance(estimator, LGBMRegressor):
-        mapper =  MapperFromLGBMRegressor(base_estimator=estimator)
+        mapper =  MapperFromLGBMRegressor(base_estimator=estimator, **kwargs)
     elif estimator == "lgbmregressor":
-        mapper = MapperFromLGBMRegressor()
+        mapper = MapperFromLGBMRegressor(**kwargs)
     elif is_regressor(estimator):
-        mapper =  MapperFromSKLNRegressor(base_estimator=estimator)
+        mapper =  MapperFromSKLNRegressor(base_estimator=estimator, **kwargs)
 
     elif isinstance(estimator, CatBoostClassifier):
-        mapper =  MapperFromCATBOOSTClassifier(base_estimator=estimator)
+        mapper =  MapperFromCATBOOSTClassifier(base_estimator=estimator, **kwargs)
     elif estimator == "catboostclassifier":
-        mapper = MapperFromCATBOOSTClassifier()
+        mapper = MapperFromCATBOOSTClassifier(**kwargs)
     elif isinstance(estimator, LGBMClassifier):
-        mapper =  MapperFromLGBMClassifier(base_estimator=estimator)
+        mapper =  MapperFromLGBMClassifier(base_estimator=estimator, **kwargs)
     elif estimator == "lgbmclassifier":
-        mapper = LGBMClassifier()
+        mapper = LGBMClassifier(**kwargs)
     elif is_classifier(estimator):
-        mapper =  MapperFromSKLNClassifier(base_estimator=estimator)
+        mapper =  MapperFromSKLNClassifier(base_estimator=estimator, **kwargs)
 
     else:
         error_message = f"An Estimator has type {type(estimator)}, "

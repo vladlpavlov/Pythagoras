@@ -46,27 +46,29 @@ class LearningContext:
 
     random_state: Any
 
-    index_filer:IndexFilter
-    X_col_filter:ColumnFilter
-    Y_col_filter:ColumnFilter
+    index_filer:RowFilter
+    x_col_filter:ColumnFilter
+    y_col_filter:ColumnFilter
 
     scoring:Callable[..., float]
+    splitting:Union[BaseCrossValidator, AdaptiveSplitter]
 
-    cv_splitting:Union[BaseCrossValidator, AdaptiveSplitter]
+    id_in_index:bool
 
     def __init__(self
-            ,*
-            ,random_state = None
-            ,root_logger_name = None
-            ,logging_level = None
-            ,index_filter:Union[
+                 , *
+                 , random_state = None
+                 , root_logger_name = None
+                 , logging_level = None
+                 , row_fittime_filter:Union[
                 BaseCrossValidator, AdaptiveSplitter, int, float, None] = None
-            ,X_col_filter:Union[ColumnFilter, List[str], int, None] = None
-            ,Y_col_filter:Union[ColumnFilter, List[str], int, None] = None
-            ,scoring:Union[str,Callable[..., float], None] = None
-            ,cv_splitting:Union[
+                 , x_col_alltime_filter:Union[ColumnFilter, List[str], int, None] = None
+                 , y_col_allltime_filter:Union[ColumnFilter, List[str], int, None] = None
+                 , scoring:Union[str,Callable[..., float], None] = None
+                 , splitting:Union[
                 BaseCrossValidator, AdaptiveSplitter, int, None] = None
-            ) -> None:
+                 , id_in_index:bool = None
+                 ) -> None:
         self.random_state = None
         self.random_state = self.get_random_state(random_state)
 
@@ -76,24 +78,27 @@ class LearningContext:
         self.logging_level = lg.WARNING
         self.logging_level = self.get_logging_level(logging_level)
 
-        self.index_filter = IndexFilter()
-        self.index_filter = self.get_index_filter(index_filter)
+        self.row_filter = RowFilter()
+        self.row_filter = self.get_row_fittime_filter(row_fittime_filter)
 
-        self.X_col_filter = ColumnFilter()
-        self.X_col_filter = self.get_X_col_filter(X_col_filter)
+        self.x_col_alltime_filter = ColumnFilter()
+        self.x_col_alltime_filter = self.get_x_col_alltime_filter(x_col_alltime_filter)
 
-        self.Y_col_filter = ColumnFilter()
-        self.Y_col_filter = self.get_Y_col_filter(Y_col_filter)
+        self.y_col_alltime_filter = ColumnFilter()
+        self.y_col_alltime_filter = self.get_y_col_alltime_filter(x_col_alltime_filter)
 
         self.scoring = dual_scorer()
         self.scoring = self.get_scoring(scoring)
 
-        self.cv_splitting = AdaptiveKFold(
+        self.splitting = AdaptiveKFold(
             n_splits=5
             , random_state = self.random_state
             , root_logger_name = self.root_logger_name
             , logging_level = self.logging_level)
-        self.cv_splitting = self.get_cv_splitting(cv_splitting)
+        self.splitting = self.get_splitting(splitting)
+
+        self.id_in_index = False
+        self.id_in_index = self.get_id_in_index(id_in_index)
 
 
     def get_random_state(self, input_value):
@@ -121,34 +126,34 @@ class LearningContext:
             return input_value
 
 
-    def get_index_filter(self
-            ,input_filter:Union[IndexFilter,int,float,type(None)]
-            ) -> IndexFilter:
+    def get_row_fittime_filter(self
+            , input_filter:Union[RowFilter, int, float, type(None)]
+            ) -> RowFilter:
         if input_filter is None:
-            return self.index_filter
-        elif isinstance(input_filter, IndexFilter):
+            return self.row_filter
+        elif isinstance(input_filter, RowFilter):
             return input_filter
         else:
-            return IndexFilter(max_samples = input_filter
-                ,random_state= self.random_state)
+            return RowFilter(max_samples = input_filter
+                             , random_state= self.random_state)
 
 
-    def get_X_col_filter(self
-                , a_filter:Union[ColumnFilter,List[str],int,None]
-                ) -> Optional[ColumnFilter]:
+    def get_x_col_alltime_filter(self
+                                 , a_filter:Union[ColumnFilter,List[str],int,None]
+                                 ) -> Optional[ColumnFilter]:
         if a_filter is None:
-            return self.X_col_filter
+            return self.x_col_alltime_filter
         elif isinstance(a_filter, ColumnFilter):
             return a_filter
         else:
             return ColumnFilter(a_filter)
 
 
-    def get_Y_col_filter(self
-                , a_filter:Union[ColumnFilter,List[str],int,None]
-                ) -> Optional[ColumnFilter]:
+    def get_y_col_alltime_filter(self
+                                 , a_filter:Union[ColumnFilter,List[str],int,None]
+                                 ) -> Optional[ColumnFilter]:
         if a_filter is None:
-            return self.Y_col_filter
+            return self.y_col_alltime_filter
         elif isinstance(a_filter, ColumnFilter):
             return a_filter
         else:
@@ -165,16 +170,26 @@ class LearningContext:
             return scorer
 
 
-    def get_cv_splitting(self
-            ,input_cv:Union[int, BaseCrossValidator, AdaptiveSplitter, None]
+    def get_splitting(self
+            , input_splitting:Union[int, BaseCrossValidator, AdaptiveSplitter, None]
             ) -> Union[BaseCrossValidator, AdaptiveSplitter]:
-        if input_cv is None:
-            return self.cv_splitting
-        elif isinstance(input_cv, int):
-            return AdaptiveKFold(n_splits=input_cv)
+        if input_splitting is None:
+            return self.splitting
+        elif isinstance(input_splitting, int):
+            return AdaptiveKFold(n_splits=input_splitting)
         else:
-            assert isinstance(input_cv, (BaseCrossValidator, AdaptiveSplitter))
-            return input_cv
+            assert isinstance(input_splitting, (BaseCrossValidator, AdaptiveSplitter))
+            return input_splitting
+
+
+    def get_id_in_index(self
+            ,input_id_in_index:bool
+            )-> bool:
+        if input_id_in_index is None:
+            return self.id_in_index
+        else:
+            return input_id_in_index
+
 
 class Learner(BaseEstimator,LoggableObject):
     """ Abstract base class for estimators, w/ .val_fit() & .fit() methods.
@@ -187,9 +202,10 @@ class Learner(BaseEstimator,LoggableObject):
                  , *
                  , defaults:LearningContext = None
                  , random_state = None
-                 , index_filter:Union[int,float,None] = None
-                 , X_col_filter:Optional[ColumnFilter] = None
-                 , Y_col_filter: Optional[ColumnFilter] = None
+                 , row_fittime_filter:Union[int, float, None] = None
+                 , x_col_alltime_filter:Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
+                 , id_in_index:bool = None
                  , root_logger_name: str = None
                  , logging_level: Union[str,int] = "WARNING"):
 
@@ -207,9 +223,10 @@ class Learner(BaseEstimator,LoggableObject):
             ,logging_level=logging_level)
 
         self.random_state = defaults.get_random_state(random_state)
-        self.index_filter = defaults.get_index_filter(index_filter)
-        self.X_col_filter = defaults.get_X_col_filter(X_col_filter)
-        self.Y_col_filter = defaults.get_Y_col_filter(Y_col_filter)
+        self.row_fittime_filter = defaults.get_row_fittime_filter(row_fittime_filter)
+        self.x_col_alltime_filter = defaults.get_x_col_alltime_filter(x_col_alltime_filter)
+        self.y_col_alltime_filter = defaults.get_y_col_alltime_filter(y_col_alltime_filter)
+        self.id_in_index = defaults.get_id_in_index(id_in_index)
 
     def log_id(self) -> str:
         a_name = self.__class__.__name__
@@ -242,10 +259,11 @@ class Learner(BaseEstimator,LoggableObject):
 
         self.update_logger(new_logging_level = self.logging_level)
 
-        self.index_filter = self.defaults.get_index_filter(self.index_filter)
-        self.X_col_filter = self.defaults.get_X_col_filter(self.X_col_filter)
-        self.Y_col_filter = self.defaults.get_Y_col_filter(self.Y_col_filter)
+        self.row_fittime_filter = self.defaults.get_row_fittime_filter(self.row_fittime_filter)
+        self.x_col_alltime_filter = self.defaults.get_x_col_alltime_filter(self.x_col_alltime_filter)
+        self.y_col_alltime_filter = self.defaults.get_y_col_alltime_filter(self.y_col_alltime_filter)
         self.random_state = self.defaults.get_random_state(self.random_state)
+        self.id_in_index = self.defaults.get_id_in_index(self.id_in_index)
 
 
     def __str__(self):
@@ -308,13 +326,17 @@ class Learner(BaseEstimator,LoggableObject):
         return Y
 
 
-    def _get_samples(self,X:pd.DataFrame, Y:Optional[pd.DataFrame]):
-        (X_samples, Y_samples) = self.index_filter.filter(X,Y)
-        X_samples = self.X_col_filter.filter(X_samples)
-        Y_samples = self.Y_col_filter.filter(Y_samples)
+    def _fittime_filter(self, X:pd.DataFrame, Y:Optional[pd.DataFrame]):
+        (X_result, Y_result) = self.row_fittime_filter.filter(X, Y)
+        X_result = self.x_col_alltime_filter.filter(X_result)
+        if Y is not None:
+            Y_result = self.y_col_alltime_filter.filter(Y_result)
 
-        return (X_samples,Y_samples)
+        return (X_result,Y_result)
 
+    def _maptime_filter(self, X: pd.DataFrame):
+        X_result = self.x_col_alltime_filter.filter(X)
+        return X_result
 
     def _start_fitting(self
                        , X:Any
@@ -350,7 +372,7 @@ class Learner(BaseEstimator,LoggableObject):
             if save_column_names:
                 self.Y_column_names_ = list(Y.columns)
 
-        (X,Y) = self._get_samples(X,Y)
+        (X,Y) = self._fittime_filter(X, Y)
 
         self.train_fit_idset_=set(X.index)
         self.full_fit_idset_ = self.train_fit_idset_
@@ -383,6 +405,7 @@ class Learner(BaseEstimator,LoggableObject):
         assert sorted(list(X.columns)) == sorted(list(X_val.columns))
         if Y is not None:
             assert sorted(list(Y.columns)) == sorted(list(Y_val.columns))
+
 
         self.train_fit_idset_ = set(X.index)
         self.val_fit_idset_ = set(X_val.index)
@@ -429,30 +452,30 @@ class Mapper(Learner):
     """
 
     def __init__(self
-                , *
-                , defaults:LearningContext = None
-                , random_state=None
-                , index_filter: Union[int, float, None] = None
-                , X_col_filter: Optional[ColumnFilter] = None
-                , Y_col_filter: Optional[ColumnFilter] = None
-                , scoring:Union[str,Callable[..., float], None] = None
-                , cv_splitting = None
-                , root_logger_name: str = None
-                , logging_level = None
+                 , *
+                 , defaults:LearningContext = None
+                 , random_state=None
+                 , row_fittime_filter: Union[int, float, None] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
+                 , scoring:Union[str,Callable[..., float], None] = None
+                 , splitting = None
+                 , root_logger_name: str = None
+                 , logging_level = None
                  ) -> None:
         super().__init__(
             defaults = defaults
             ,random_state = random_state
-            ,index_filter = index_filter
-            ,X_col_filter = X_col_filter
-            ,Y_col_filter = Y_col_filter
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             ,root_logger_name = root_logger_name
             ,logging_level= logging_level)
         self.scoring = self.defaults.get_scoring(scoring)
-        self.cv_splitting = self.defaults.get_cv_splitting(cv_splitting)
+        self.splitting = self.defaults.get_splitting(splitting)
 
     def _preprocess_splitting_param(self):
-        self.cv_splitting = self.defaults.get_cv_splitting(self.cv_splitting)
+        self.splitting = self.defaults.get_splitting(self.splitting)
 
     def _preprocess_scoring_param(self):
         self.scoring = self.defaults.get_scoring(self.scoring)
@@ -479,13 +502,15 @@ class Mapper(Learner):
 
         assert self.is_fitted()
         X = self._preprocess_X(X, sort_index=False)
-        self.pre_mapping_X_idx_ = deepcopy(X.index)
+        self.pre_mapping_x_idx_ = deepcopy(X.index)
 
         if self.input_X_columns() is NotKnown:
             pass
         else:
             assert set(self.input_X_columns()) <= set(X)
             X = deepcopy(X[self.input_X_columns()])
+
+        X = self._maptime_filter(X)
 
         return X
 
@@ -504,8 +529,8 @@ class Mapper(Learner):
             self.info(log_message)
 
         assert len(Z)
-        assert len(Z) == len(self.pre_mapping_X_idx_)
-        assert set(Z.index) == set(self.pre_mapping_X_idx_)
+        assert len(Z) == len(self.pre_mapping_x_idx_)
+        assert set(Z.index) == set(self.pre_mapping_x_idx_)
 
         if self.output_Z_can_have_nans() is NotKnown:
             pass
@@ -515,7 +540,7 @@ class Mapper(Learner):
         if self.output_Z_columns() is not NotKnown:
             assert set(Z.columns) == set(self.output_Z_columns())
 
-        Z = Z.reindex(index=self.pre_mapping_X_idx_) # TODO: Check whether it works as intended
+        Z = Z.reindex(index=self.pre_mapping_x_idx_) # TODO: Check whether it works as intended
 
         return Z
 
@@ -556,11 +581,11 @@ class Mapper(Learner):
 
     def get_splitter(self) -> BaseCrossValidator:
         self._preprocess_splitting_param()
-        return self.cv_splitting
+        return self.splitting
 
     def get_n_splits(self) -> int:
         self._preprocess_splitting_param()
-        return self.cv_splitting.get_n_splits()
+        return self.splitting.get_n_splits()
 
     def output_Z_columns(self) -> List[str]:
         return NotKnown

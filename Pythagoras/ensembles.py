@@ -22,21 +22,21 @@ class SimpleMetaMapper(Mapper):
                  , *
                  , defaults: LearningContext = None
                  , base_mapper:Mapper
-                 , cv_splitting = None
+                 , splitting = None
                  , scoring = None
-                 , index_filter: Union[int, float, type(None)] = None
-                 , X_col_filter: Optional[ColumnFilter] = None
-                 , Y_col_filter: Optional[ColumnFilter] = None
+                 , row_fittime_filter: Union[int, float, type(None)] = None
+                 , x_col_alltime_filter: Optional[ColumnFilter] = None
+                 , y_col_alltime_filter: Optional[ColumnFilter] = None
                  , random_state = None
                  , root_logger_name: str = None
                  , logging_level = None) -> None:
         super().__init__(
             defaults = defaults
-            , index_filter = index_filter
-            , X_col_filter=X_col_filter
-            , Y_col_filter=Y_col_filter
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter=x_col_alltime_filter
+            , y_col_alltime_filter=y_col_alltime_filter
             , random_state = random_state
-            , cv_splitting = cv_splitting
+            , splitting= splitting
             , scoring = scoring
             , root_logger_name = root_logger_name
             , logging_level= logging_level )
@@ -72,13 +72,13 @@ class KFoldEnsemble(SimpleMetaMapper):
                  , base_mapper:Mapper
                  , defaults: LearningContext = None
                  , fit_strategy = "fit"
-                 , cv_splitting = None
+                 , splitting = None
                  , scoring = None
                  , n_mappers_in_ensemble:Union[int, float, type(None)] = 0.55
                  , full_model_weight:Optional[int] = 1
-                 , index_filter: Union[int,float,None] = None
-                 , X_col_filter: Union[ColumnFilter,List[str],int,None] = None
-                 , Y_col_filter: Union[ColumnFilter,List[str],int,None] = None
+                 , row_fittime_filter: Union[int, float, None] = None
+                 , x_col_alltime_filter: Union[ColumnFilter, List[str], int, None] = None
+                 , y_col_alltime_filter: Union[ColumnFilter, List[str], int, None] = None
                  , random_state = None
                  , root_logger_name: str = None
                  , logging_level = None
@@ -86,11 +86,11 @@ class KFoldEnsemble(SimpleMetaMapper):
         super().__init__(
             base_mapper = base_mapper
             , defaults = defaults
-            , index_filter = index_filter
-            , X_col_filter = X_col_filter
-            , Y_col_filter = Y_col_filter
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             , random_state = random_state
-            , cv_splitting = cv_splitting
+            , splitting= splitting
             , scoring = scoring
             , root_logger_name = root_logger_name
             , logging_level= logging_level )
@@ -248,27 +248,27 @@ class LeakProofMapper(KFoldEnsemble):
     """
 
     def __init__(self
-            , *
-            , base_mapper: Mapper
-            , cv_splitting=None
-            , scoring=None
-            , index_filter: Union[int, float, None] = None
-            , X_col_filter: Union[ColumnFilter, List[str], int, None] = None
-            , Y_col_filter: Union[ColumnFilter, List[str], int, None] = None
-            , random_state=None
-            , root_logger_name: str = "Pythagoras"
-            , logging_level=lg.WARNING
-            ) -> None:
+                 , *
+                 , base_mapper: Mapper
+                 , splitting=None
+                 , scoring=None
+                 , row_fittime_filter: Union[int, float, None] = None
+                 , x_col_alltime_filter: Union[ColumnFilter, List[str], int, None] = None
+                 , y_col_alltime_filter: Union[ColumnFilter, List[str], int, None] = None
+                 , random_state=None
+                 , root_logger_name: str = "Pythagoras"
+                 , logging_level=lg.WARNING
+                 ) -> None:
         super().__init__(
             fit_strategy = "fit"
             , n_mappers_in_ensemble= 0
             , full_model_weight = 1
             , base_mapper = base_mapper
-            , cv_splitting = cv_splitting
+            , splitting= splitting
             , scoring = scoring
-            , index_filter = index_filter
-            , X_col_filter = X_col_filter
-            , Y_col_filter = Y_col_filter
+            , row_fittime_filter= row_fittime_filter
+            , x_col_alltime_filter= x_col_alltime_filter
+            , y_col_alltime_filter= y_col_alltime_filter
             , random_state=random_state
             , root_logger_name=root_logger_name
             , logging_level=logging_level)
