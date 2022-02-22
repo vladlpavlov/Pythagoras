@@ -21,4 +21,4 @@ class NotKnownType:
             cls.not_known_single_instance = super().__new__(cls)
         return cls.not_known_single_instance
 
-NotKnown = NotKnownType()
+NotKnown = NotKnownType()  ## the only possible instance
