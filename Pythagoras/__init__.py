@@ -1,4 +1,5 @@
 import logging as lg
+from Pythagoras.p_hash_address import *
 from Pythagoras.misc_utils import *
 from Pythagoras.not_known import *
 from Pythagoras.loggers import *
