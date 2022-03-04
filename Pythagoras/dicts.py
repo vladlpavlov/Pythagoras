@@ -121,7 +121,7 @@ class SimpleDict(ABC):
 
 
 class FileDirDict(SimpleDict):
-    """ A persistant Dict that stores key-value pairs in local files.
+    """ A persistent Dict that stores key-value pairs in local files.
 
     A new file is created for each key-value pair.
     A key is either a filename (without an extension),
