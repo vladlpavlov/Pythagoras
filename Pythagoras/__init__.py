@@ -13,8 +13,6 @@ from Pythagoras.ensembles import *
 from Pythagoras.converters import *
 from Pythagoras.demo_framework import *
 
-from Pythagoras.feature_engineering import *
-
 from Pythagoras.global_objects import *
 
 
