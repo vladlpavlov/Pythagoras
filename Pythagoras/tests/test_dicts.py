@@ -19,8 +19,14 @@ def validate_dict_object(dict_to_test):
         model_dict[k] = i + 1
 
         k = (i + 1) * (str(i) + "zz",)
+        fake_k = (i + 1) * (str(i) + "aa",)
         dict_to_test[k] = "hihi"
         model_dict[k] = "hihi"
+
+        assert k in dict_to_test
+        assert fake_k not in dict_to_test
+        assert k+("1",) not in dict_to_test
+
 
         new_key = ("new_key", str(i))
         assert (dict_to_test.setdefault(new_key, 1) ==
