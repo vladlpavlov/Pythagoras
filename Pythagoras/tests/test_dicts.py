@@ -57,10 +57,7 @@ def validate_dict_object(dict_to_test):
 
     assert len(dict_to_test) == 0
 
-def test_dicts(tmpdir):
-    # tmpdir = os.path.abspath(tmpdir)
-    # parent = Path(tmpdir).parent
-    # print("parent=",parent.is_dir())
+def test_FileDirDict(tmpdir):
     p = FileDirDict(dir_name = tmpdir, file_type="pkl")
     validate_dict_object(p)
 
