@@ -26,7 +26,7 @@ class SimpleDict(ABC):
                                  + string.digits + "()_-.=")
 
     def _normalize_key(self, key):
-        """Check if a key meets requirements and return its standartized form.
+        """Check if a key meets requirements and return its standardized form.
 
         A key must be either a string or a sequence of non-empty strings.
         If it is a single string, it will be transformed into a tuple,
@@ -132,7 +132,7 @@ class FileDirDict(SimpleDict):
 
     A new file is created for each key-value pair.
     A key is either a filename (without an extension),
-    or a siquence of directory names that ends with a filename.
+    or a sequence of directory names that ends with a filename.
     A value can be any Python object, which is stored in a file.
 
     FileDirDict can store objects in binary files (as pickles)
