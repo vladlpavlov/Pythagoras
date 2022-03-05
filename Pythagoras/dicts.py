@@ -1,9 +1,16 @@
 import os
 import pandas as pd
-import jsonpickle
+
 import string
 from abc import *
 from typing import Set
+
+import jsonpickle
+import jsonpickle.ext.numpy as jsonpickle_numpy
+import jsonpickle.ext.pandas as jsonpickle_pandas
+jsonpickle_numpy.register_handlers()
+jsonpickle_pandas.register_handlers()
+
 #
 class SimpleDict(ABC):
     """Dict-like class that only accepts keys which are sequences of strings.
