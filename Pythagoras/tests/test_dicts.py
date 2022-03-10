@@ -1,10 +1,9 @@
 
 from pathlib import Path
 
-from Pythagoras import SimpleDict, FileDirDict
+from Pythagoras import FileDirDict, S3_Dict
 import pandas as pd
-import os
-
+from moto import mock_s3
 
 def validate_dict_object(dict_to_test):
     dict_to_test.clear()
@@ -73,3 +72,13 @@ def test_FileDirDict(tmpdir):
     j = FileDirDict(dir_name = tmpdir, file_type="json")
     validate_dict_object(j)
 
+@mock_s3
+def test_S3_Dict():
+    d = S3_Dict(bucket_name = "TEST")
+    validate_dict_object(d)
+
+    d_j = S3_Dict(bucket_name = "TEST", file_type="json")
+    validate_dict_object(d_j)
+
+    d_p = S3_Dict(bucket_name="TEST", file_type="pkl")
+    validate_dict_object(d_p)

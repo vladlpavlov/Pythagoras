@@ -4,6 +4,8 @@ import pandas as pd
 import string
 from abc import *
 from typing import Set
+import boto3
+
 
 import jsonpickle
 import jsonpickle.ext.numpy as jsonpickle_numpy
@@ -53,7 +55,7 @@ class SimpleDict(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __setitem__(self, key, vlaue):
+    def __setitem__(self, key, value):
         raise NotImplementedError
 
     @abstractmethod
@@ -112,7 +114,7 @@ class SimpleDict(ABC):
         try:
             if len(self) != len(other):
                 return False
-            for k in self.keys():
+            for k in other.keys():
                 if self[k] != other[k]:
                     return False
             return True
@@ -249,7 +251,7 @@ class FileDirDict(SimpleDict):
                 path = head
                 if len(head) == 0:
                     break
-            return result
+            return tuple(result)
 
         def step():
             for dir_name, _, files in walk_results:
@@ -270,3 +272,122 @@ class FileDirDict(SimpleDict):
         return step()
 
 
+class S3_Dict(SimpleDict):
+    """ A persistent Dict that stores key-value pairs as S3 obkects.
+
+        A new object is created for each key-value pair.
+        A key is either an objectname (a 'filename' without an extension),
+        or a sequence of folder names (object name prefixes) that ends
+        with an objectname. A value can be any Python object,
+        which is stored in an object.
+
+        S3_Dict can store objects in binary objects (as pickles)
+        or in human-readable texts objects (using jsonpickles).
+        """
+
+
+    def __init__(self, bucket_name: str
+                 , region:str = None
+                 , dir_name: str = "S3_Dict"
+                 , file_type: str = "pkl"):
+        """A constructor defines location of the store and object format to use.
+
+        bucket_name and region define an S3 location of the storage
+        that will contain all the objects in the S3_Dict.
+        If the bucket does not exist, it will be created.
+
+        dir_name is a local directory that will be used to store tmp files.
+
+        file_type can take one of two values: "pkl" or "json".
+        It defines which object format will be used by S3_Dict
+        to store values.
+        """
+
+        self.file_type = file_type
+        self.file_dir_dict = FileDirDict(dir_name = dir_name, file_type = file_type)
+
+        if region is None:
+            self.s3_client = boto3.client('s3')
+        else:
+            self.s3_client = boto3.client('s3', region_name=region)
+
+        self.bucket = self.s3_client.create_bucket(Bucket=bucket_name)
+        self.bucket_name = bucket_name
+
+    def _build_full_objectname(self, key):
+        key = self._normalize_key(key)
+        objectname =  "/".join(key)+ "." + self.file_type
+        return objectname
+
+    def __contains__(self, key):
+        try:
+            obj_name = self._build_full_objectname(key)
+            self.s3_client.head_object(Bucket=self.bucket_name, Key=obj_name)
+            return True
+        except:
+            return False
+
+    def __getitem__(self, key):
+        obj_name = self._build_full_objectname(key)
+        file_name = self.file_dir_dict._build_full_filename(key, create_subdirs=True)
+        self.s3_client.download_file(self.bucket_name, obj_name, file_name)
+        result =  self.file_dir_dict[key]
+        del self.file_dir_dict[key]
+        return result
+
+    def __setitem__(self, key, value):
+        obj_name = self._build_full_objectname(key)
+        file_name = self.file_dir_dict._build_full_filename(key, create_subdirs=True)
+        self.file_dir_dict[key]=value
+        self.s3_client.upload_file(file_name, self.bucket_name, obj_name)
+        del self.file_dir_dict[key]
+
+    def __delitem__(self, key):
+        obj_name = self._build_full_objectname(key)
+        self.s3_client.delete_object(Bucket = self.bucket_name, Key = obj_name)
+
+    def __len__(self):
+        num_files = 0
+        suffix = "." + self.file_type
+
+        paginator = self.s3_client.get_paginator("list_objects")
+        page_iterator = paginator.paginate(Bucket=self.bucket_name)
+
+        for page in page_iterator:
+            if "Contents" in page:
+                for key in page["Contents"]:
+                    obj_name = key["Key"]
+                    if obj_name.endswith(suffix):
+                        num_files += 1
+
+        return num_files
+
+    def _generic_iter(self, iter_type: str):
+        assert iter_type in {"keys", "values", "items"}
+        suffix = "." + self.file_type
+
+        ext_len = len(self.file_type) + 1
+
+        def splitter(full_name: str):
+            result = full_name.split(sep="/")
+            result[-1] = result[-1][:-ext_len]
+            return tuple(result)
+
+        def step():
+            paginator = self.s3_client.get_paginator("list_objects")
+            page_iterator = paginator.paginate(Bucket=self.bucket_name)
+            for page in page_iterator:
+                if "Contents" in page:
+                    for key in page["Contents"]:
+                        obj_name = key["Key"]
+                        if not obj_name.endswith(suffix):
+                            continue
+                        obj_key = splitter(obj_name)
+                        if iter_type == "keys":
+                            yield obj_key
+                        elif iter_type == "values":
+                            yield self[obj_key]
+                        else:
+                            yield (obj_key, self[obj_key])
+
+        return step()
