@@ -1,7 +1,7 @@
 from Pythagoras.misc_utils import *
 from Pythagoras.loggers import *
 from Pythagoras.caching import *
-from Pythagoras.converters import *
+
 
 class DemoDB:
     """ An OOP wrapper for popular SKLearn datasets"""

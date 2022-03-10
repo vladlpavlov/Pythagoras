@@ -10,7 +10,6 @@ from Pythagoras.filters import *
 from Pythagoras.base import *
 from Pythagoras.ensembles import *
 
-from Pythagoras.converters import *
 from Pythagoras.demo_framework import *
 
 from Pythagoras.global_objects import *
