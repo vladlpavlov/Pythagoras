@@ -273,7 +273,7 @@ class FileDirDict(SimpleDict):
 
 
 class S3_Dict(SimpleDict):
-    """ A persistent Dict that stores key-value pairs as S3 obkects.
+    """ A persistent Dict that stores key-value pairs as S3 objects.
 
         A new object is created for each key-value pair.
         A key is either an objectname (a 'filename' without an extension),
@@ -304,7 +304,7 @@ class S3_Dict(SimpleDict):
         """
 
         self.file_type = file_type
-        self.file_dir_dict = FileDirDict(dir_name = dir_name, file_type = file_type)
+        self.local_cache = FileDirDict(dir_name = dir_name, file_type = file_type)
 
         if region is None:
             self.s3_client = boto3.client('s3')
@@ -329,18 +329,18 @@ class S3_Dict(SimpleDict):
 
     def __getitem__(self, key):
         obj_name = self._build_full_objectname(key)
-        file_name = self.file_dir_dict._build_full_filename(key, create_subdirs=True)
+        file_name = self.local_cache._build_full_filename(key, create_subdirs=True)
         self.s3_client.download_file(self.bucket_name, obj_name, file_name)
-        result =  self.file_dir_dict[key]
-        del self.file_dir_dict[key]
+        result =  self.local_cache[key]
+        del self.local_cache[key]
         return result
 
     def __setitem__(self, key, value):
         obj_name = self._build_full_objectname(key)
-        file_name = self.file_dir_dict._build_full_filename(key, create_subdirs=True)
-        self.file_dir_dict[key]=value
+        file_name = self.local_cache._build_full_filename(key, create_subdirs=True)
+        self.local_cache[key]=value
         self.s3_client.upload_file(file_name, self.bucket_name, obj_name)
-        del self.file_dir_dict[key]
+        del self.local_cache[key]
 
     def __delitem__(self, key):
         obj_name = self._build_full_objectname(key)
@@ -391,3 +391,70 @@ class S3_Dict(SimpleDict):
                             yield (obj_key, self[obj_key])
 
         return step()
+
+
+class ImmutableS3_LocallyCached_Dict(S3_Dict):
+    """ A persistent Dict that stores immutable key-value pairs as S3 objects, and caches them locally.
+
+        A new object is created for each key-value pair.
+        A key is either an objectname (a 'filename' without an extension),
+        or a sequence of folder names (object name prefixes) that ends
+        with an objectname. A value can be any Python object,
+        which is stored in an object.
+
+        Once the key-value pair is created, it can't be deleted or changed.
+
+        The key-value pairs are stored in S3 backed, and also cached locally as files.
+
+        ImmutableS3_LocallyCached_Dict can store objects in binary objects (as pickles)
+        or in human-readable texts objects (using jsonpickles).
+        """
+
+
+    def __init__(self, bucket_name: str, region: str = None, dir_name: str = "S3_Dict", file_type: str = "pkl"):
+        """A constructor defines location of the store, local cache, and object format to use.
+
+        bucket_name and region define an S3 location of the storage
+        that will contain all the objects in the S3_Dict.
+        If the bucket does not exist, it will be created.
+
+        dir_name is a local directory that will be used to store cached files.
+
+        file_type can take one of two values: "pkl" or "json".
+        It defines which object format will be used by S3_Dict
+        to store values.
+        """
+
+        super().__init__(bucket_name, region, dir_name, file_type)
+        self._enforce_immutability = True
+        """ _enforce_immutability only exists for testing purposes, its value should never be changed"""
+
+    def __contains__(self, key):
+        return self.local_cache.__contains__(key) or super().__contains__(key)
+
+    def __getitem__(self, key):
+        obj_name = self._build_full_objectname(key)
+        file_name = self.local_cache._build_full_filename(key, create_subdirs=True)
+        try:
+            if not os.path.isfile(file_name):
+                self.s3_client.download_file(self.bucket_name, obj_name, file_name)
+        except:
+            raise KeyError(f"Object {file_name} does not exist or could not be accessed")
+        result =  self.local_cache[key]
+        return result
+
+    def __setitem__(self, key, value):
+        if self._enforce_immutability and self.__contains__(key):
+            raise KeyError(f"Key {key} is already present in ImmutableS3_LocallyCached_Dict, value can't be changed.")
+        obj_name = self._build_full_objectname(key)
+        file_name = self.local_cache._build_full_filename(key, create_subdirs=True)
+        self.local_cache[key]=value
+        self.s3_client.upload_file(file_name, self.bucket_name, obj_name)
+
+    def __delitem__(self, key):
+        if self._enforce_immutability:
+            raise KeyError(f"Can't delete {key}: operation is not allowed for immitable Dict.")
+        else:
+            super().__delitem__(key)
+            if key in self.local_cache:
+                del self.local_cache[key]

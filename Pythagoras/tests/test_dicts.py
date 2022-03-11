@@ -1,7 +1,7 @@
 
 from pathlib import Path
 
-from Pythagoras import FileDirDict, S3_Dict
+from Pythagoras import FileDirDict, S3_Dict, ImmutableS3_LocallyCached_Dict
 import pandas as pd
 from moto import mock_s3
 
@@ -82,3 +82,9 @@ def test_S3_Dict():
 
     d_p = S3_Dict(bucket_name="TEST", file_type="pkl")
     validate_dict_object(d_p)
+
+@mock_s3
+def test_ImmutableS3_LocallyCached_Dict():
+    dc = ImmutableS3_LocallyCached_Dict(bucket_name = "TTTTESTTT")
+    dc._enforce_immutability = False
+    validate_dict_object(dc)
