@@ -3,11 +3,10 @@
 </div>
 
 # Pythagoras
-## Advanced Meta-Algorithms for Data Scientists
 
 ### What Is It?
 
-An experimental SKLearn extension for researching meta-algorithms 
+An experimental framework aimed to democratize serverless compute for data scientists  
 
 ### How To Get It?
 
@@ -19,44 +18,16 @@ Binary installers for the latest released version are available at the Python pa
 
         pip install Pythagoras
 
-### Core Design Principles 
-
-* Rapid experimentation
-
-* Ubiquitous use of
-1. Overfitting detection 
-2. Ensembling  
-3. Data leakage prevention 
-
-* Practical software engineering
-1. Compatibility with SKLearn when reasonable
-2. Pandas as the main data vessel
-3. Storytelling via logging
-4. Acceleration via persistent caching
-5. Consistent use of OOP
 
 ### Major Components
-
-* **Learner**: An abstract base class, capable to be taught. 
-Implements .val_fit() method that enables overfitting detection.
-
-* **Mapper**: A universal predictor/transformer, implements .map() method 
-as a generalization of .predict() and transform() methods.
-
-* **LeakProofMapper**: An ensembling meta-learner. Implements .map() method 
- and provides guarantee against data leakage.
 
 * **LoggableObject**: Base class that provides logging-enabled granular story-telling tools.
 
 * **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
 
-* **FeatureShower**: Automatic data cleaner and feature generator (*coming soon*).
+* **FileDirDict**, **S3_Dict**, and **ImmutableS3_LocallyCached_Dict**: Persistent storage objects 
+with Dict-like interfaces
 
-* **SimpleGarden**: Efficient regression meta-algorithm: boosted feature selection factory creates 
-an assembly of parsimonious estimators (*coming soon*).
-
-* **MagicGarden**: Automated regression baseline creator. It builds well-performing regression models that 
-require no manual work from data scientists: no EDA, no data cleaning and no feature engineering (*coming soon*). 
 
 ### Tutorials
 
@@ -72,12 +43,11 @@ How to make Pythagoras PickleCache work with custom classes
 * [scikit-learn](https://scikit-learn.org/) 
 * [numpy](https://numpy.org/)
 * [scipy](https://www.scipy.org/)
-* [xxhash](https://pypi.org/project/xxhash/)
 * [psutil](https://pypi.org/project/psutil/)
 
 ### Key Contacts
 
-* [Vlad(imir) Pavlov](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
+* [Volodymyr (Vlad) Pavlov](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
 * [Kai Zhao](https://www.linkedin.com/in/kaimzhao/): quality assurance
 
 ### What Do The Name And Logo Mean?
