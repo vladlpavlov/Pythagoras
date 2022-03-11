@@ -7,7 +7,7 @@ import string, math
 import shutil, numbers
 from copy import deepcopy
 
-# import xxhash
+import xxhash
 from datetime import datetime
 from typing import Optional, Callable, Any, Tuple, List, ClassVar
 import numpy as np
