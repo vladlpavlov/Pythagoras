@@ -13,7 +13,9 @@ def validate_dict_object(dict_to_test):
     for i in range(10):
         k = ("_"+str(10*i),)
         dict_to_test[k] = i
+        dict_to_test[k] = i
         dict_to_test[k] = i+ 1
+        dict_to_test[k] = i + 1
         model_dict[k] = i
         model_dict[k] = i + 1
 
@@ -85,6 +87,10 @@ def test_S3_Dict():
 
 @mock_s3
 def test_ImmutableS3_LocallyCached_Dict():
-    dc = ImmutableS3_LocallyCached_Dict(bucket_name = "TTTTESTTT")
-    dc._enforce_immutability = False
-    validate_dict_object(dc)
+    d_j = ImmutableS3_LocallyCached_Dict(bucket_name = "TTTTESTTT", file_type="json")
+    d_j._enforce_immutability = False
+    validate_dict_object(d_j)
+
+    d_p = ImmutableS3_LocallyCached_Dict(bucket_name="TTTTESTTT", file_type="pkl")
+    d_p._enforce_immutability = False
+    validate_dict_object(d_p)
