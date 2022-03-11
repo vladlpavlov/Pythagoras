@@ -8,7 +8,7 @@ from Pythagoras.caching import *
 from Pythagoras.splitters import *
 from Pythagoras.filters import *
 from Pythagoras.base import *
-from Pythagoras.ensembles import *
+
 
 
 from Pythagoras.global_objects import *
