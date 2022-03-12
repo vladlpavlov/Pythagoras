@@ -45,9 +45,11 @@ class SimpleDict(ABC):
         if isinstance(key, str):
             key = (key,)
         for s in key:
-            assert isinstance(s,str), "Key must be a string or a sequence of strings."
+            assert isinstance(s,str), (
+                    "Key must be a string or a sequence of strings.")
             assert len(set(s) - self.allowed_key_chars) == 0, (
-                f"Only the following chars are allowed in a key: {self.allowed_key_chars}")
+                "Only the following chars are allowed in a key:"
+                + str(self.allowed_key_chars))
             assert len(s), "Only non-empty strings are allowed in a key"
         return key
 
