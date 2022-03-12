@@ -7,7 +7,8 @@ import string, math
 import shutil, numbers
 from copy import deepcopy
 
-import xxhash
+
+import hashlib
 from datetime import datetime
 from typing import Optional, Callable, Any, Tuple, List, ClassVar
 import numpy as np
@@ -303,7 +304,7 @@ class FingerprintReprBuilder(ReprBuilder):
         if isinstance(input_data, str):
             input_data = input_data.encode()
 
-        digest_str = xxhash.xxh64(input_data).hexdigest()
+        digest_str = hashlib.sha256(input_data).hexdigest()
 
         return digest_str
 

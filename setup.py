@@ -28,5 +28,5 @@ setuptools.setup(
     ]
     ,keywords='caching logging regression'
     ,python_requires='>=3.7'
-    ,install_requires=['numpy', 'scipy','pandas', 'xxhash','scikit-learn', 'psutil', 'boto3', 'moto', 'jsonpickle']
+    ,install_requires=['numpy', 'scipy','pandas','scikit-learn', 'psutil', 'boto3', 'moto', 'jsonpickle']
 )
