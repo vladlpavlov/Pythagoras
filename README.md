@@ -6,7 +6,8 @@
 
 ### What Is It?
 
-An experimental framework aimed to democratize serverless compute for data scientists  
+An experimental framework containing advanced Python tools for Data Scientists and ML/AI Engineers. 
+Pythagoras is going through a major overhaul now, come back later for updates about new functionality.
 
 ### How To Get It?
 
@@ -21,13 +22,14 @@ Binary installers for the latest released version are available at the Python pa
 
 ### Major Components
 
-* **LoggableObject**: Base class that provides logging-enabled granular story-telling tools.
-
-* **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
-
 * **FileDirDict**, **S3_Dict**, and **ImmutableS3_LocallyCached_Dict**: Persistent storage objects 
 with Dict-like interfaces
 
+### Legacy Components
+
+* **LoggableObject**: Base class that provides logging-enabled granular story-telling tools.
+
+* **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
 
 ### Tutorials
 
