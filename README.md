@@ -12,18 +12,21 @@ Pythagoras is going through a major overhaul now, come back later for updates ab
 ### How To Get It?
 
 The source code is hosted on GitHub at:
-[https://github.com/vladlpavlov/Pythagoras](https://github.com/vladlpavlov/Pythagoras) 
+[https://github.com/vladlpavlov/pythagoras](https://github.com/vladlpavlov/pythagoras) 
 
 Binary installers for the latest released version are available at the Python package index at:
-[https://pypi.org/project/Pythagoras](https://pypi.org/project/Pythagoras)
+[https://pypi.org/project/pythagoras](https://pypi.org/project/pythagoras)
 
-        pip install Pythagoras
+        pip install pythagoras
 
 
 ### Major Components
 
 * **FileDirDict**, **S3_Dict**, and **ImmutableS3_LocallyCached_Dict**: Persistent storage objects 
 with Dict-like interfaces
+
+* **PHashAddress**: A globally unique address of an immutable value. 
+Consists of a human-readable prefix and a hash code
 
 ### Legacy Components
 
@@ -33,10 +36,10 @@ with Dict-like interfaces
 
 ### Tutorials
 
-1. [Basic Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_introductory_tutorial.ipynb): 
+1. [Basic Caching](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_caching_introductory_tutorial.ipynb): 
 How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
-2. [Advanced Caching](https://github.com/vladlpavlov/Pythagoras/blob/master/Pythagoras_caching_advanced_tutorial.ipynb): 
-How to make Pythagoras PickleCache work with custom classes 
+2. [Advanced Caching](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_caching_advanced_tutorial.ipynb): 
+How to make pythagoras PickleCache work with custom classes 
 
 
 ### Dependencies

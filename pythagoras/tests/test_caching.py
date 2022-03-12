@@ -1,5 +1,5 @@
 import pytest
-from Pythagoras import *
+from pythagoras import *
 import time
 import os
 import numpy as np

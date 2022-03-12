@@ -6,7 +6,7 @@ from joblib.hashing import NumpyHasher,Hasher
 
 
 class PHashAddress:
-    """ A globally unique address of an immutable value. Consists of a human-readable prefix and a hash code.
+    """A globally unique address of an immutable value. Consists of a human-readable prefix and a hash code.
 
     PHashAddress is a universal global identifier of any (constant) value.
     Using only the value's hash should (theoretically) be enough to uniquely address

@@ -2,10 +2,8 @@
 # Above is temporarily commented to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
 
-import os
 import string, math
 import shutil, numbers
-from copy import deepcopy
 
 
 import hashlib
@@ -15,8 +13,8 @@ import numpy as np
 import pandas as pd
 import types
 from functools import wraps
-from Pythagoras.misc_utils import *
-from Pythagoras.loggers import *
+from pythagoras.misc_utils import *
+from pythagoras.loggers import *
 
 
 # Workaround to ensure compatibility with Python <= 3.6

@@ -1,4 +1,4 @@
-from Pythagoras import PHashAddress
+from pythagoras import PHashAddress
 import pandas as pd
 import numpy as np
 

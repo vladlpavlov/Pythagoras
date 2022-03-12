@@ -4,15 +4,15 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 setuptools.setup(
-    name="Pythagoras"
+    name="pythagoras"
     ,version="0.3.5"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description="Advanced Python tools for Data Scientists"
     ,long_description=long_description
     ,long_description_content_type="text/markdown"
-    ,url="https://github.com/vladlpavlov/Pythagoras"
-    ,packages=["Pythagoras"]
+    ,url="https://github.com/vladlpavlov/pythagoras"
+    ,packages=["pythagoras"]
     ,classifiers=[
         "Development Status :: 3 - Alpha"
         , "Intended Audience :: Developers"

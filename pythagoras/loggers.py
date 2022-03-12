@@ -5,7 +5,7 @@
 import logging as lg
 import os
 from typing import Optional, Any
-from Pythagoras.misc_utils import *
+from pythagoras.misc_utils import *
 
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
@@ -27,7 +27,7 @@ class LoggableObject:
 
     def __init__(self
              , *
-             , root_logger_name: str = "Pythagoras"
+             , root_logger_name: str = "pythagoras"
              , reveal_logger_identity: bool = True
              , reveal_calling_method: bool = False
              , logging_level: int = lg.WARNING

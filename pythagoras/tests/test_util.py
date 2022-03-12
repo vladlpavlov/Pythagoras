@@ -1,4 +1,4 @@
-from Pythagoras import *
+from pythagoras import *
 
 class TestNeatStr:
     def test_mem_size(self):
