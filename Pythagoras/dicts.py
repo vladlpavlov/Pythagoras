@@ -41,13 +41,14 @@ class SimpleDict(ABC):
         try:
             iter(key)
         except:
-            key=str(key)
+            raise KeyError(f"Key must be a string or a sequence of strings.")
         if isinstance(key, str):
             key = (key,)
-        key = tuple(str(s) for s in key)
         for s in key:
-            assert len(set(s) - self.allowed_key_chars) == 0
-            assert len(s)
+            assert isinstance(s,str), "Key must be a string or a sequence of strings."
+            assert len(set(s) - self.allowed_key_chars) == 0, (
+                f"Only the following chars are allowed in a key: {self.allowed_key_chars}")
+            assert len(s), "Only non-empty strings are allowed in a key"
         return key
 
     @abstractmethod
