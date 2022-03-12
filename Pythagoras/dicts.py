@@ -38,6 +38,10 @@ class SimpleDict(ABC):
         and characters from this list: ()_-.=
         """
 
+        try:
+            iter(key)
+        except:
+            key=str(key)
         if isinstance(key, str):
             key = (key,)
         key = tuple(str(s) for s in key)
