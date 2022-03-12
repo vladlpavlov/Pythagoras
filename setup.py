@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="Pythagoras"
-    ,version="0.3.0"
+    ,version="0.3.1"
     ,author="Vlad(imir) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description="Advanced Python tools for Data Scientists"
@@ -28,5 +28,5 @@ setuptools.setup(
     ]
     ,keywords='caching logging regression'
     ,python_requires='>=3.7'
-    ,install_requires=['numpy', 'scipy','pandas', 'xxhash','scikit-learn', 'psutil']
+    ,install_requires=['numpy', 'scipy','pandas', 'xxhash','scikit-learn', 'psutil', 'boto3', 'moto']
 )
