@@ -28,7 +28,7 @@ with Dict-like interfaces
 * **PHashAddress**: A globally unique address of an immutable value. 
 Consists of a human-readable prefix and a hash code
 
-### Legacy Components
+### Legacy Components (will be deprecated in H1-2022)
 
 * **LoggableObject**: Base class that provides logging-enabled granular story-telling tools.
 
