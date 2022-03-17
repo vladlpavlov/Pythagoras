@@ -36,6 +36,11 @@ Consists of a human-readable prefix and a hash code
 
 ### Tutorials
 
+1. [File-based persistent dictionaries](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_FileDirDict_tutorial.ipynb): 
+Dictionaries that keep their stated between sessions by stroring key-value pairs as local files.
+
+### Legacy Tutorials
+
 1. [Basic Caching](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_caching_introductory_tutorial.ipynb): 
 How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
 2. [Advanced Caching](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_caching_advanced_tutorial.ipynb): 
