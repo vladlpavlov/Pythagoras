@@ -1,6 +1,6 @@
 from random import shuffle
 
-def remote(**kargs):
+def sync_remote(**kargs):
     return kargs
 
 class ServerlessCloud:
@@ -17,6 +17,6 @@ class ServerlessCloud:
             return ret_rez
 
         a_func.parallel = prll
-        a_func.remote = a_func
+        a_func.sync_remote = a_func
 
         return a_func
