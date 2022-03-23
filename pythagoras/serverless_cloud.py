@@ -4,7 +4,7 @@ class ArgsDict(dict):
     def __init__(self,*args, **kargs):
         super().__init__(*args, **kargs)
 
-def remote_args(**kargs):
+def kwargs(**kargs):
     """ helper function to be used with .sync_parallel and similar methods"""
     result = ArgsDict()
     for k in sorted(kargs.keys()):
@@ -14,6 +14,7 @@ def remote_args(**kargs):
 class ServerlessCloud:
     def __init__(self, requires:str, **kargs):
         self.requires = requires
+        self.functions = []
 
     def add(self, a_func):
         assert callable(a_func)
@@ -24,7 +25,10 @@ class ServerlessCloud:
             shuffle(ret_rez)
             return ret_rez
 
-        a_func.sync_parallel = prll
+        a_func.parallel = prll
         a_func.sync_remote = a_func
+        a_func.serverless_cloud = self
+
+        self.functions.append(a_func)
 
         return a_func
