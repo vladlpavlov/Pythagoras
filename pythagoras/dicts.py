@@ -14,7 +14,7 @@ jsonpickle_numpy.register_handlers()
 jsonpickle_pandas.register_handlers()
 
 #
-class SimpleDict(ABC):
+class SimplePersistentDict(ABC):
     """Dict-like class that only accepts keys which are sequences of strings.
 
     An abstract class for a key-value store. It accepts keys in a form of
@@ -135,8 +135,19 @@ class SimpleDict(ABC):
         for k in self.keys():
             del self[k]
 
+    def blunt_delete(self, key):
+        """ Delete an item from a dictionary without raising an exception if the item does not exist.
 
-class FileDirDict(SimpleDict):
+        This method is absent in the original dict API, it is added here
+        to minimize network calls for (remote) persistent dictionaries.
+        """
+        try:
+            self.__delitem__(key)
+        except:
+            pass
+
+
+class FileDirPersistentDict(SimplePersistentDict):
     """ A persistent Dict that stores key-value pairs in local files.
 
     A new file is created for each key-value pair.
@@ -279,7 +290,7 @@ class FileDirDict(SimpleDict):
         return step()
 
 
-class S3_Dict(SimpleDict):
+class S3_Persistent_Dict(SimplePersistentDict):
     """ A persistent Dict that stores key-value pairs as S3 objects.
 
         A new object is created for each key-value pair.
@@ -311,7 +322,7 @@ class S3_Dict(SimpleDict):
         """
 
         self.file_type = file_type
-        self.local_cache = FileDirDict(dir_name = dir_name, file_type = file_type)
+        self.local_cache = FileDirPersistentDict(dir_name = dir_name, file_type = file_type)
 
         if region is None:
             self.s3_client = boto3.client('s3')
@@ -400,7 +411,7 @@ class S3_Dict(SimpleDict):
         return step()
 
 
-class ImmutableS3_LocallyCached_Dict(S3_Dict):
+class ImmutableS3_LocallyCached_Dict(S3_Persistent_Dict):
     """ A persistent Dict that stores immutable key-value pairs as S3 objects, and caches them locally.
 
         A new object is created for each key-value pair.
