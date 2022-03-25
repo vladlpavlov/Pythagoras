@@ -34,7 +34,7 @@ class SharedStorage_P2P_Cloud:
                                  # prevent sintax variability from impacting hash calculations
         self.functions = []
         self.value_store = FileDirDict(dir_name=os.path.join(self.base_dir, "value_store"))
-        self.func_execution_results = FileDirDict(dir_name=os.path.join(self.base_dir, "func_execution_results"))
+        self.func_output_store = FileDirDict(dir_name=os.path.join(self.base_dir, "func_execution_results"))
 
 
     def push_value(self,value):
@@ -52,14 +52,14 @@ class SharedStorage_P2P_Cloud:
             kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
             func_key = PFuncResultAddress(wrapped_function, kwargs_packed, self)
 
-            if func_key in self.func_execution_results:
-                result_key = self.func_execution_results[func_key]
+            if func_key in self.func_output_store:
+                result_key = self.func_output_store[func_key]
                 result = self.value_store[result_key]
             else:
                 kwargs_unpacked = KwArgsDict(kwargs).unpack(cloud=self)
                 result = a_func(**kwargs_unpacked)
                 result_key = self.push_value(result)
-                self.func_execution_results[func_key]=result_key
+                self.func_output_store[func_key]=result_key
 
             return result
 
