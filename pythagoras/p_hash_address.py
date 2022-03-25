@@ -3,8 +3,11 @@ import sys
 from typing import NamedTuple, Any, List, Callable
 from joblib.hashing import NumpyHasher,Hasher
 
-from pythagoras import KwArgsDict
+from pythagoras import SimplePersistentDict
 
+
+class KwArgsDict:
+    pass
 
 class PHashAddress(ABC):
     """A globally unique address of some value. Consists of a human-readable prefix and a hash code."""
@@ -41,7 +44,9 @@ class PHashAddress(ABC):
               and callable(x.__len__)):
             prfx += "___len_" + str(len(x))
 
-        return prfx
+        clean_prfx = "".join([c for c in prfx if c in SimplePersistentDict.allowed_key_chars])
+
+        return clean_prfx
 
     @staticmethod
     def _build_hash_id(x: Any) -> str:
@@ -117,3 +122,38 @@ class PFuncResultAddress(PHashAddress):
 
     def __repr__(self):
         return f"PFuncResAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
+
+
+class KwArgsDict(dict):
+    """ A class that encapsulates keyword arguments for a (remote) function call"""
+
+    def __init__(self,*args, **kargs):
+        super().__init__(*args, **kargs)
+
+    def pack(self, *, cloud):
+        """ Replace values in a dict with their hash addresses.
+
+        This function also "normalizes" the dictionary by sorting keys
+        in order to always get the same hash values for the same lists of arguments.
+        """
+        packed_copy = KwArgsDict()
+        for k in sorted(self.keys()):
+            value = self[k]
+            if isinstance(value,PValueAddress):
+                packed_copy[k] = value
+            else:
+                key = PValueAddress(value)
+                packed_copy[k] = key
+                if key not in cloud.value_store:
+                    cloud.value_store[key] = value
+        return packed_copy
+
+    def unpack(self,*,cloud):
+        """ Restore values based on their hash addresses"""
+        unpacked_copy = KwArgsDict()
+        for k,v in self.items():
+            if isinstance(v, PValueAddress):
+                unpacked_copy[k] = cloud.value_store[v]
+            else:
+                unpacked_copy[k] = v
+        return unpacked_copy
