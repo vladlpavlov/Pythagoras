@@ -73,10 +73,10 @@ def test_FileDirDict(tmpdir):
 
 @mock_s3
 def test_S3_Dict():
-    d = S3_Dict(bucket_name = "TEST")
+    d = S3_Dict(bucket_name ="TEST")
     validate_dict_object(d)
 
-    d_j = S3_Dict(bucket_name = "TEST", file_type="json")
+    d_j = S3_Dict(bucket_name ="TEST", file_type="json")
     validate_dict_object(d_j)
 
     d_p = S3_Dict(bucket_name="TEST", file_type="pkl")

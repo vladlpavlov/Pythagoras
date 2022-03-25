@@ -147,7 +147,7 @@ class SimplePersistentDict(ABC):
             pass
 
 
-class FileDirPersistentDict(SimplePersistentDict):
+class FileDirDict(SimplePersistentDict):
     """ A persistent Dict that stores key-value pairs in local files.
 
     A new file is created for each key-value pair.
@@ -290,7 +290,7 @@ class FileDirPersistentDict(SimplePersistentDict):
         return step()
 
 
-class S3_Persistent_Dict(SimplePersistentDict):
+class S3_Dict(SimplePersistentDict):
     """ A persistent Dict that stores key-value pairs as S3 objects.
 
         A new object is created for each key-value pair.
@@ -322,7 +322,7 @@ class S3_Persistent_Dict(SimplePersistentDict):
         """
 
         self.file_type = file_type
-        self.local_cache = FileDirPersistentDict(dir_name = dir_name, file_type = file_type)
+        self.local_cache = FileDirDict(dir_name = dir_name, file_type = file_type)
 
         if region is None:
             self.s3_client = boto3.client('s3')
@@ -411,7 +411,7 @@ class S3_Persistent_Dict(SimplePersistentDict):
         return step()
 
 
-class ImmutableS3_LocallyCached_Dict(S3_Persistent_Dict):
+class ImmutableS3_LocallyCached_Dict(S3_Dict):
     """ A persistent Dict that stores immutable key-value pairs as S3 objects, and caches them locally.
 
         A new object is created for each key-value pair.
