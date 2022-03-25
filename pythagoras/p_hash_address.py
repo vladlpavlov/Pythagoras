@@ -109,7 +109,8 @@ class PFuncResultAddress(PHashAddress):
     """
     def __init__(self, f:Callable, arguments:KwArgsDict, cloud = None):
         assert callable(f)
-        assert hasattr(f,"cloudized_function")
+        assert hasattr(f,"serverless_cloud")
+        assert hasattr(f,"full_string_repr")
         assert isinstance(arguments, KwArgsDict)
         self.prefix = self._build_prefix(f)
         self.hash_id = self._build_hash_id((f.full_string_repr, arguments.pack(cloud=cloud)))
