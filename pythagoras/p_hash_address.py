@@ -1,20 +1,13 @@
-import pandas as pd
-import numpy as np
+from abc import ABC, abstractmethod
 import sys
-from typing import NamedTuple, Any, List
+from typing import NamedTuple, Any, List, Callable
 from joblib.hashing import NumpyHasher,Hasher
 
+from pythagoras import KwArgsDict
 
-class PHashAddress:
-    """A globally unique address of an immutable value. Consists of a human-readable prefix and a hash code.
 
-    PHashAddress is a universal global identifier of any (constant) value.
-    Using only the value's hash should (theoretically) be enough to uniquely address
-    all possible data objects that the humanity  will create in the foreseeable future
-    (see, for example ipfs.io).
-    However, an address also includes a prefix. It makes it more easy for humans to interpret an address,
-    and further decreases collision risk.
-    """
+class PHashAddress(ABC):
+    """A globally unique address of some value. Consists of a human-readable prefix and a hash code."""
 
     prefix: str
     hash_id: str
@@ -58,13 +51,6 @@ class PHashAddress:
             hasher = Hasher(hash_name=PHashAddress._hash_type)
         return hasher.hash(x)
 
-    def __init__(self, x: Any):
-        if isinstance(x, PHashAddress):
-            self.prefix = x.prefix
-            self.hash_id = x.hash_id
-        else:
-            self.prefix = self._build_prefix(x)
-            self.hash_id = self._build_hash_id(x)
 
     def __iter__(self):
         def step():
@@ -84,5 +70,49 @@ class PHashAddress:
     def __len__(self):
         return 2
 
+    @abstractmethod
+    def __repr__(self):
+        raise NotImplementedError
+
+class PValueAddress(PHashAddress):
+    """A globally unique address of an immutable value. Consists of a human-readable prefix and a hash code.
+
+    PValueAddress is a universal global identifier of any (constant) value.
+    Using only the value's hash should (theoretically) be enough to uniquely address
+    all possible data objects that the humanity  will create in the foreseeable future
+    (see, for example ipfs.io).
+
+    However, an address also includes a prefix. It makes it more easy for humans to interpret an address,
+    and further decreases collision risk.
+    """
+    def __init__(self, x: Any):
+        if isinstance(x, PValueAddress):
+            self.prefix = x.prefix
+            self.hash_id = x.hash_id
+        else:
+            self.prefix = self._build_prefix(x)
+            self.hash_id = self._build_hash_id(x)
+
     def __repr__(self):
         return f"PHashAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
+
+class PFuncResultAddress(PHashAddress):
+    """A globally unique address of a function execution outcome. Consists of a human-readable prefix and a hash code.
+
+    PFuncResAddress is a universal global identifier of a value, which was (or will be)
+    an output of a function execution. Assuming a function is pure, we only need function name/definition,
+    and arguments' values to build a "signature", which serves as a unique key for the output object.
+    The hash component of an address is a hash of this unique key.
+
+    An address also includes a prefix, which makes it more easy for humans to interpret an address,
+    and further decreases collision risk.
+    """
+    def __init__(self, f:Callable, arguments:KwArgsDict, cloud = None):
+        assert callable(f)
+        assert hasattr(f,"cloudized_function")
+        assert isinstance(arguments, KwArgsDict)
+        self.prefix = self._build_prefix(f)
+        self.hash_id = self._build_hash_id((f.full_string_repr, arguments.pack(cloud=cloud)))
+
+    def __repr__(self):
+        return f"PFuncResAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
