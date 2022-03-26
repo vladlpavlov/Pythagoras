@@ -29,7 +29,7 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
     assert len(my_cloud.value_store) == 5 == len(my_cloud.func_output_store) + 1
 
     for i in range(4):
-        assert ggg.parallel(kw_args(a=i) for i in range(10)) == [i*i for i in range(10)]
+        assert ggg.sync_parallel(kw_args(a=i) for i in range(10)) == [i*i for i in range(10)]
 
 
 def test_SharedStorage_P2P_Cloud_func2args(tmpdir):

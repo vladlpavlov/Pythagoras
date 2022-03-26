@@ -9,7 +9,7 @@ from pythagoras import PHashAddress, SimplePersistentDict, PValueAddress, PFuncR
 
 
 def kw_args(**kwargs):
-    """ helper function to be used with .parallel and similar methods
+    """ Helper function to be used with .parallel and similar methods
 
     It enables simple syntax to simultaneously launch
     many remote instances of a function with different input arguments:
@@ -21,8 +21,16 @@ def kw_args(**kwargs):
 
 
 class SharedStorage_P2P_Cloud:
+    """ Simple P2P cloud based on using a shared folder (via Dropbox, NFS, etc.)
 
-    def __init__(self, requires:str="", shared_dir_name:str="Simple_P2P_Cloud"):
+    Allows to distribute an execution of a program via multiple computers that share the same file folder.
+    The program must be launched an every computer,
+    with shared_dir_name parameter of SharedStorage_P2P_Cloud objects pointing to the same shared folder.
+    Execution of parallelized calls ( function.sync_parallel(...) ) will be distributed between participating computers.
+    Execution of all other calls will be redundantly carried on each participating computer.
+    """
+
+    def __init__(self, requires:str="", shared_dir_name:str="SharedStorage_P2P_Cloud"):
 
         assert not os.path.isfile(shared_dir_name)
         if not os.path.isdir(shared_dir_name):
@@ -38,6 +46,7 @@ class SharedStorage_P2P_Cloud:
 
 
     def push_value(self,value):
+        """ Add a value to value_store"""
         key = PValueAddress(value)
         if not key in self.value_store:
             self.value_store[key] = value
@@ -49,6 +58,7 @@ class SharedStorage_P2P_Cloud:
 
         @wraps(a_func)
         def wrapped_function(**kwargs):
+            """compose memoized version of a function"""
             kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
             func_key = PFuncResultAddress(wrapped_function, kwargs_packed, self)
 
@@ -63,7 +73,8 @@ class SharedStorage_P2P_Cloud:
 
             return result
 
-        def parallel(inpt):
+        def sync_parallel(inpt):
+            """Enable parallel execution of multiple instances of function"""
             input_list = list(inpt)
             for e in input_list:
                 assert isinstance(e,KwArgsDict)
@@ -82,11 +93,12 @@ class SharedStorage_P2P_Cloud:
             return [e[1] for e in result]
 
         def is_stored(**kwargs):
+            """Check if the function output for these arguments has been calculated and cached"""
             kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
             func_key = PFuncResultAddress(wrapped_function, kwargs_packed, self)
             return func_key in self.func_output_store
 
-        wrapped_function.parallel = parallel
+        wrapped_function.sync_parallel = sync_parallel
         wrapped_function.serverless_cloud = self
         wrapped_function.full_string_repr = f"FUNCTION REQUIRES {self.requires}, SOURCE {getsource(a_func)}"
         wrapped_function.is_stored = is_stored
