@@ -1,9 +1,8 @@
 import os
 from functools import wraps
-from random import shuffle
+from random import Random
 from inspect import getsource
-from pythagoras import PHashAddress, SimplePersistentDict, PValueAddress, PFuncResultAddress, FileDirDict, KwArgsDict
-
+from pythagoras import PValueAddress, PFuncResultAddress, FileDirDict, KwArgsDict
 
 
 def kw_args(**kwargs):
@@ -40,7 +39,7 @@ class SharedStorage_P2P_Cloud:
                                  # prevent sintax variability from impacting hash calculations
         self.functions = []
         self.value_store = FileDirDict(dir_name=os.path.join(self.base_dir, "value_store"))
-        self.func_output_store = FileDirDict(dir_name=os.path.join(self.base_dir, "func_execution_results"))
+        self.func_output_store = FileDirDict(dir_name=os.path.join(self.base_dir, "func_output_store"))
 
 
     def push_value(self,value):
@@ -77,7 +76,13 @@ class SharedStorage_P2P_Cloud:
             for e in input_list:
                 assert isinstance(e,KwArgsDict)
             shuffled_input_list = list(enumerate(input_list))
-            shuffle(shuffled_input_list) #TODO: deal with seeds
+
+            Random().shuffle(shuffled_input_list)   # Important: we are using a new instance of Random object that
+                                                    # does not share the same seed with any other Random object.
+                                                    # This is done to ensure correct parallelization via randomization
+                                                    # in cases when a cloudized function
+                                                    # explicitly sets seed value for the default Random object,
+                                                    # which it might do in order to be qualified as a pure function.
 
             result = []
             for e in shuffled_input_list:
