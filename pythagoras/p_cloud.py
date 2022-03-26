@@ -1,9 +1,7 @@
 import os
-from copy import deepcopy
 from functools import wraps
 from random import shuffle
 from inspect import getsource
-from datetime import datetime
 from pythagoras import PHashAddress, SimplePersistentDict, PValueAddress, PFuncResultAddress, FileDirDict, KwArgsDict
 
 
@@ -25,7 +23,7 @@ class SharedStorage_P2P_Cloud:
 
     Allows to distribute an execution of a program via multiple computers that share the same file folder.
     The program must be launched an every computer,
-    with shared_dir_name parameter of SharedStorage_P2P_Cloud objects pointing to the same shared folder.
+    with shared_dir_name parameter of their SharedStorage_P2P_Cloud object pointing to the same shared folder.
     Execution of parallelized calls ( function.sync_parallel(...) ) will be distributed between participating computers.
     Execution of all other calls will be redundantly carried on each participating computer.
     """
@@ -92,6 +90,12 @@ class SharedStorage_P2P_Cloud:
 
             return [e[1] for e in result]
 
+        def async_parallel(inpt):
+            raise NotImplementedError
+
+        def async_remote(**kwargs):
+            raise NotImplementedError
+
         def is_stored(**kwargs):
             """Check if the function output for these arguments has been calculated and cached"""
             kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
@@ -99,6 +103,9 @@ class SharedStorage_P2P_Cloud:
             return func_key in self.func_output_store
 
         wrapped_function.sync_parallel = sync_parallel
+        wrapped_function.async_parallel = async_parallel
+        wrapped_function.sync_remote = a_func
+        wrapped_function.async_remote = async_remote
         wrapped_function.serverless_cloud = self
         wrapped_function.full_string_repr = f"FUNCTION REQUIRES {self.requires}, SOURCE {getsource(a_func)}"
         wrapped_function.is_stored = is_stored
