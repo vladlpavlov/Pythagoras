@@ -81,9 +81,15 @@ class SharedStorage_P2P_Cloud:
 
             return [e[1] for e in result]
 
+        def is_stored(**kwargs):
+            kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
+            func_key = PFuncResultAddress(wrapped_function, kwargs_packed, self)
+            return func_key in self.func_output_store
+
         wrapped_function.parallel = parallel
         wrapped_function.serverless_cloud = self
         wrapped_function.full_string_repr = f"FUNCTION REQUIRES {self.requires}, SOURCE {getsource(a_func)}"
+        wrapped_function.is_stored = is_stored
 
         self.functions.append(wrapped_function)
 

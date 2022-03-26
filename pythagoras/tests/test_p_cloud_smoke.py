@@ -44,6 +44,9 @@ def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
     assert len(my_cloud.value_store) == 3
     assert len(my_cloud.func_output_store) == 1
 
+    assert hihihi.is_stored(x=1, y=2)
+    assert not hihihi.is_stored(x=-1, y=-2)
+
 
 def test_SharedStorage_P2P_Cloud_func3args(tmpdir):
     my_cloud = SharedStorage_P2P_Cloud(shared_dir_name=tmpdir)
@@ -58,3 +61,6 @@ def test_SharedStorage_P2P_Cloud_func3args(tmpdir):
 
     assert len(my_cloud.value_store) == 4
     assert len(my_cloud.func_output_store) == 1
+
+    assert lyslyslya.is_stored(y=2, x=1, z=3)
+    assert not lyslyslya.is_stored(y=2000, x=1, z=3)
