@@ -118,3 +118,9 @@ class SharedStorage_P2P_Cloud:
         self.functions.append(wrapped_function)
 
         return wrapped_function
+
+class PCloud(SharedStorage_P2P_Cloud):
+    """ Dummy class used in the intro tutorial. Shall be removed later."""
+
+    def __inint__(self, requires:str="", shared_dir_name:str="SharedStorage_P2P_Cloud", **kwargs):
+        super().__init__(requires, shared_dir_name)
