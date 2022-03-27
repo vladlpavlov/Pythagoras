@@ -64,7 +64,7 @@ class SharedStorage_P2P_Cloud:
                 result = self.value_store[result_key]
             else:
                 kwargs_unpacked = KwArgsDict(kwargs).unpack(cloud=self)
-                result = a_func(**kwargs_unpacked)
+                result = a_func(**kwargs_unpacked) # TODO: add exception handling mechanism
                 result_key = self.push_value(result)
                 self.func_output_store[func_key]=result_key
 
