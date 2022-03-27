@@ -15,8 +15,10 @@ while allowing them to solve more complex problems in a shorter time with smalle
 Pythagoras offers:
 1. a powerful abstraction model for a global-scale serverless compute engine;
 2. a simple API for Python programmers to use the engine;
-3. a collection of backends that implement the API for various deployment scenarios (*work in progress, currently only P2P backend is available*)
-4. a collection of massively parallel algorithms that take advantage of Pythagoras serverless compute engine (*planned*)
+3. a collection of backends that implement the API for various deployment scenarios 
+(*work in progress, currently only P2P backend is available*)
+4. a collection of massively parallel algorithms that take advantage of 
+Pythagoras serverless compute engine (*planned*)
 
 ### ((2.1)) Pythagoras Abstraction Model For Global Compute Engine
 
@@ -37,7 +39,8 @@ mutable reference arguments or input/output streams).
 In return to adhering to these constraints, Pythagoras offers unlimited scalability 
 and elasticity of its serverless code execution environment.
 
-**Global persistent value store**, as the name implies, stores all the values ever created within any running instance of your code. 
+**Global persistent value store**, as the name implies, stores all the values ever created within 
+any running instance of your code. 
 It's a key-value store, where the key (the object's address) is composed using the object's hash.
 Under the hood, these hash-based addresses are used by Pythagoras the same way as RAM-based addresses are used
 (via pointers and references) in C and C++ programs. For example, 
@@ -47,7 +50,8 @@ not their actual values. Such approach makes it possible to significantly decrea
 while immutability of values allows to employ a variety of optimization techniques to speed up 
 access to the objects in a distributed system.
 
-**Global persistent function output store** caches all results of all function executions that ever happened in the system. 
+**Global persistent function output store** caches all results of 
+all function executions that ever happened in the system. 
 It allows to employ "calculate once, reuse forever" approach, which makes repeated execution of the same code 
 blazingly fast and ridiculously cheap. It also improves software recoverability and availability: 
 an interrupted program, once restarted, will reuse already calculated and cached values, 
@@ -84,7 +88,24 @@ Over time, we anticipate to have dozens of alternative backends.
 Please, reach to [Volodymyr (Vlad) Pavlov](https://www.linkedin.com/in/vlpavlov/) 
 if you want to help to create one.
 
-## (3) How To Get It?
+## (3) Roadmap
+
+Pythagoras has just started and is actively evolving. Here is our roadmap for 2022:
+
+1. Develop an abstraction model and API for the Global Compute Engine - **DONE**;
+2. Develop several alternative backend implementations:
+   1. P2P reference backend implementation - **DONE**;
+   2. Basic AWS reference backend implementation - **IN PROGRESS**;
+   3. Basic GCP backend implementation;
+   4. Basic Azure backend implementation;
+   5. Various advanced backend implementations for specific use-cases;
+3. Implement massively parallel algorithms for Data Science and Machine Learning:
+   1. Reference implementation for massively parallel grid search for hyperparameter optimisation - **IN PROGRESS**;
+   2. Massively parallel implementations of popular DS/ML algorithms 
+   that can benefit from highly scalable serverless compute;
+   3. Brand-new DS/ML algorithms that were impossible to ideate in pre-serverless era.
+   
+## (4) How To Get It?
 
 The source code is hosted on GitHub at:
 [https://github.com/vladlpavlov/pythagoras](https://github.com/vladlpavlov/pythagoras) 
@@ -94,20 +115,24 @@ Binary installers for the latest released version are available at the Python pa
 
         pip install pythagoras
 
-## (4) Dependencies
+## (5) Dependencies
 
 * [pandas](https://pandas.pydata.org/)
 * [scikit-learn](https://scikit-learn.org/) 
 * [numpy](https://numpy.org/)
 * [scipy](https://www.scipy.org/)
 * [psutil](https://pypi.org/project/psutil/)
+* [boto3](https://boto3.readthedocs.io/)
+* [moto](http://getmoto.org)
+* [jsonpickle](https://jsonpickle.github.io/)
 
-## (5) Key Contacts
+
+## (6) Key Contacts
 
 * [Volodymyr (Vlad) Pavlov](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
 * [Kai Zhao](https://www.linkedin.com/in/kaimzhao/): quality assurance
 
-## (6) What Do The Name And Logo Mean?
+## (7) What Do The Name And Logo Mean?
 
 Pythagoras was a famous ancient Greek thinker and scientist 
 who was the first man to call himself a philosopher ("lover of wisdom"). 
