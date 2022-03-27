@@ -7,7 +7,7 @@
 ## What Is It?
 
 An experimental framework that aims to democratize access to distributed serverless compute. 
-We make it simple and inexpensive to create and run cloud-deployed massively parallel algorithms 
+We make it simple and inexpensive to create, deploy and run cloud-hosted massively parallel algorithms 
 from within local Python scripts and notebooks. Pythagoras makes data scientists' lives easier, 
 while allowing them to solve more complex problems in a shorter time with smaller budgets.
 
