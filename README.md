@@ -4,20 +4,21 @@
 
 # Pythagoras
 
-## What Is It?
+## (1) What Is It?
 
 An experimental framework that aims to democratize access to distributed serverless compute. 
 We make it simple and inexpensive to create, deploy and run cloud-hosted massively parallel algorithms 
 from within local Python scripts and notebooks. Pythagoras makes data scientists' lives easier, 
 while allowing them to solve more complex problems in a shorter time with smaller budgets.
 
-## What Is Inside?
+## (2) What Is Inside?
 Pythagoras offers:
 1. a powerful abstraction model for a global-scale serverless compute engine;
 2. a simple API for Python programmers to use the engine;
-3. a collection of backends that implement the API for various deployment scenarios.
+3. a collection of backends that implement the API for various deployment scenarios (*work in progress*)
+4. a collection of massively parallel algorithms that take advantage of Pythagoras serverless compute engine (*planned*)
 
-### 1. Pythagoras Abstraction Model For Global Compute Engine
+### (2.1) Pythagoras Abstraction Model For Global Compute Engine
 
 Pythagoras offers a very powerful, yet extremely simple abstraction model for a serverless compute engine. 
 It contains three fundamental components:
@@ -52,7 +53,7 @@ blazingly fast and ridiculously cheap. It also improves software recoverability 
 an interrupted program, once restarted, will reuse already calculated and cached values, 
 and almost immediately will continue its execution from the point where it was terminated.
 
-### 2. Pythagoras API
+### (2.2) Pythagoras API
 
 Pythagoras makes it very easy to scale computationally expensive code to the cloud, 
 without a need to explicitly parallelize the code, to provision any infrastructure, 
@@ -68,13 +69,14 @@ and the execution results will seamlessly get back to local workstations.
 This [introduction tutorial](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_introduction.ipynb) 
 explains how to use the API. 
 
-### 3. Pythagoras backends
+### (2.3) Pythagoras backends
 Backends are seamlessly interchangeable.
 They differ by their under-the-hood implementations of deployment models and provisioning / orchestration algorithms. 
 A collection of backends will offer engineers a wide variety of trade-offs that fit different use-cases.
 
-As of now, Pythagoras team has implemented a P2P version of the backend. 
-It allows to parallelize program execution by simply launching the program simultaneously 
+As of now, Pythagoras team has implemented a 
+[P2P version](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_P2P_tutorial.ipynb) 
+of the backend. It allows to parallelize program execution by simply launching the program simultaneously 
 on a swarm of local computers (e.g. desktops and laptops in your office or dormitory).
 
 The Pythagoras team is currently working on a reference implementation for AWS-based backend. 
@@ -82,7 +84,7 @@ Over time, we anticipate to have dozens of alternative backends.
 Please, reach to [Volodymyr (Vlad) Pavlov](https://www.linkedin.com/in/vlpavlov/) 
 if you want to help to create one.
 
-## How To Get It?
+## (3) How To Get It?
 
 The source code is hosted on GitHub at:
 [https://github.com/vladlpavlov/pythagoras](https://github.com/vladlpavlov/pythagoras) 
@@ -92,7 +94,7 @@ Binary installers for the latest released version are available at the Python pa
 
         pip install pythagoras
 
-## Dependencies
+## (4) Dependencies
 
 * [pandas](https://pandas.pydata.org/)
 * [scikit-learn](https://scikit-learn.org/) 
@@ -100,12 +102,12 @@ Binary installers for the latest released version are available at the Python pa
 * [scipy](https://www.scipy.org/)
 * [psutil](https://pypi.org/project/psutil/)
 
-## Key Contacts
+## (5) Key Contacts
 
 * [Volodymyr (Vlad) Pavlov](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
 * [Kai Zhao](https://www.linkedin.com/in/kaimzhao/): quality assurance
 
-## What Do The Name And Logo Mean?
+## (6) What Do The Name And Logo Mean?
 
 Pythagoras was a famous ancient Greek thinker and scientist 
 who was the first man to call himself a philosopher ("lover of wisdom"). 
