@@ -22,8 +22,8 @@ Pythagoras offers:
 Pythagoras offers a very powerful, yet extremely simple abstraction model for a serverless compute engine. 
 It contains three fundamental components:
 * Massively parallel serverless code executor; 
-* Global store for immutable values with hash-based addressing; 
-* Global cache for function execution outputs.
+* Global persistent store for immutable values with hash-based addressing; 
+* Global persistent cache for function execution outputs.
 
 **Massively parallel serverless code executor** takes care of launching on demand 
 virtually unlimited number of concurrently running instances of code. Pythagoras requires the parallelized code 
@@ -36,17 +36,17 @@ mutable reference arguments or input/output streams).
 In return to adhering to these constraints, Pythagoras offers unlimited scalability 
 and elasticity of its serverless code execution environment.
 
-**Global value store**, as the name implies, stores all the values ever created within any running instance of your code. 
+**Global persistent value store**, as the name implies, stores all the values ever created within any running instance of your code. 
 It's a key-value store, where the key (the object's address) is composed using the object's hash.
 Under the hood, these hash-based addresses are used by Pythagoras the same way as RAM-based addresses are used
-(via pointers and references) in C and C++ libraries. For example, 
+(via pointers and references) in C and C++ programs. For example, 
 while passing input arguments to a remotely executed function, 
 only the hash-based addresses of the arguments are passed, 
 not their actual values. Such approach makes it possible to significantly decrease data marshalling overhead, 
 while immutability of values allows to employ a variety of optimization techniques to speed up 
 access to the objects in a distributed system.
 
-**Global function output store** caches all results of all function executions that ever happened in the system. 
+**Global persistent function output store** caches all results of all function executions that ever happened in the system. 
 It allows to employ "calculate once, reuse forever" approach, which makes repeated execution of the same code 
 blazingly fast and ridiculously cheap. It also improves software recoverability and availability: 
 an interrupted program, once restarted, will reuse already calculated and cached values, 
