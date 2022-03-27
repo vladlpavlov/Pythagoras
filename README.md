@@ -11,7 +11,7 @@ We make it simple and inexpensive to create, deploy and run cloud-hosted massive
 from within local Python scripts and notebooks. Pythagoras makes data scientists' lives easier, 
 while allowing them to solve more complex problems in a shorter time with smaller budgets.
 
-## What Is In It?
+## What Is Inside?
 Pythagoras offers:
 1. a powerful abstraction model for a global-scale serverless compute engine;
 2. a simple API for Python programmers to use the engine;
