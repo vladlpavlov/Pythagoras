@@ -7,25 +7,25 @@
 ## What Is It?
 
 An experimental framework that aims to democratize access to distributed serverless compute. 
-We make it simple and inexpensive to create and run massively parallel algorithms 
+We make it simple and inexpensive to create and run cloud-based massively parallel algorithms 
 from within local Python scripts and notebooks. Pythagoras makes data scientists' lives easier, 
 while allowing them to solve more complex problems in a shorter time with smaller budgets.
 
 ## What Is In It?
 Pythagoras offers:
-* a powerful abstraction model for a global-scale serverless compute engine;
-* a simple API for Python programmers to use the engine;
-* a collection of backends that implement the API for various deployment scenarios.
+1. a powerful abstraction model for a global-scale serverless compute engine;
+2. a simple API for Python programmers to use the engine;
+3. a collection of backends that implement the API for various deployment scenarios.
 
-### Pythagoras Abstraction Model For Global Compute Engine
+### 1. Pythagoras Abstraction Model For Global Compute Engine
 
 Pythagoras offers a very powerful, yet extremely simple abstraction model for a serverless compute engine. 
 It contains three fundamental components:
-1. Massively parallel serverless code executor;
-2. Global store for immutable values with hash-based addressing;
-3. Global cache for function execution outputs.
+* Massively parallel serverless code executor; 
+* Global store for immutable values with hash-based addressing; 
+* Global cache for function execution outputs.
 
-Massively **parallel serverless code executor** takes care of launching on demand 
+**Massively parallel serverless code executor** takes care of launching on demand 
 virtually unlimited number of concurrently running instances of code. Pythagoras requires the parallelized code 
 to be packaged into [pure](https://en.wikipedia.org/wiki/Pure_function) functions. 
 A function is considered pure when it is fully deterministic 
@@ -33,13 +33,13 @@ A function is considered pure when it is fully deterministic
 the function return values are identical for identical arguments), 
 and function execution has no side effects (no mutation of local static variables, non-local variables, 
 mutable reference arguments or input/output streams). 
-In return to adhering to these constraints, Pythagoras offers theoretically 
-unlimited scalability and elasticity of its serverless code execution environment.
+In return to adhering to these constraints, Pythagoras offers unlimited scalability 
+and elasticity of its serverless code execution environment.
 
-**Global value store**, as the name implies, stores all the values ever created within any instance of your code. 
+**Global value store**, as the name implies, stores all the values ever created within any running instance of your code. 
 It's a key-value store, where the key (the object's address) is composed using the object's hash.
-Under the hood, these hash-based addresses are used by Pythagoras the same way as RAM-based addresses are used 
-by pointers and references in C and C+ libraries. For example, 
+Under the hood, these hash-based addresses are used by Pythagoras the same way as RAM-based addresses are used
+(via pointers and references) in C and C++ libraries. For example, 
 while passing input arguments to a remotely executed function, 
 only the hash-based addresses of the arguments are passed, 
 not their actual values. Such approach makes it possible to significantly decrease data marshalling overhead, 
@@ -52,7 +52,7 @@ blazingly fast and ridiculously cheap. It also improves software recoverability 
 an interrupted program, once restarted, will reuse already calculated and cached values, 
 and almost immediately will continue its execution from the point where it was terminated.
 
-### Pythagoras API
+### 2. Pythagoras API
 
 Pythagoras makes it very easy to scale computationally expensive code to the cloud, 
 without a need to explicitly parallelize the code, to provision any infrastructure, 
@@ -68,7 +68,7 @@ and the execution results will seamlessly get back to local workstations.
 This [introduction tutorial](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_introduction.ipynb) 
 explains how to use the API. 
 
-### Pythagoras backends
+### 3. Pythagoras backends
 Backends are seamlessly interchangeable.
 They differ by their under-the-hood implementations of deployment models and provisioning / orchestration algorithms. 
 A collection of backends will offer engineers a wide variety of trade-offs that fit different use-cases.
