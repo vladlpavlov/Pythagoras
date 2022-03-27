@@ -18,7 +18,7 @@ Pythagoras offers:
 3. a collection of backends that implement the API for various deployment scenarios (*work in progress*)
 4. a collection of massively parallel algorithms that take advantage of Pythagoras serverless compute engine (*planned*)
 
-### (2.1) Pythagoras Abstraction Model For Global Compute Engine
+### ((2.1)) Pythagoras Abstraction Model For Global Compute Engine
 
 Pythagoras offers a very powerful, yet extremely simple abstraction model for a serverless compute engine. 
 It contains three fundamental components:
@@ -53,7 +53,7 @@ blazingly fast and ridiculously cheap. It also improves software recoverability 
 an interrupted program, once restarted, will reuse already calculated and cached values, 
 and almost immediately will continue its execution from the point where it was terminated.
 
-### (2.2) Pythagoras API
+### ((2.2)) Pythagoras API
 
 Pythagoras makes it very easy to scale computationally expensive code to the cloud, 
 without a need to explicitly parallelize the code, to provision any infrastructure, 
@@ -69,7 +69,7 @@ and the execution results will seamlessly get back to local workstations.
 This [introduction tutorial](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_introduction.ipynb) 
 explains how to use the API. 
 
-### (2.3) Pythagoras backends
+### ((2.3)) Pythagoras backends
 Backends are seamlessly interchangeable.
 They differ by their under-the-hood implementations of deployment models and provisioning / orchestration algorithms. 
 A collection of backends will offer engineers a wide variety of trade-offs that fit different use-cases.
