@@ -4,12 +4,85 @@
 
 # Pythagoras
 
-### What Is It?
+## What Is It?
 
-An experimental framework containing advanced Python tools for Data Scientists and ML/AI Engineers. 
-Pythagoras is going through a major overhaul now, come back later for updates about new functionality.
+An experimental framework that aims to democratize access to distributed serverless compute. 
+We make it simple and inexpensive to create and run massively parallel algorithms 
+from within local Python scripts and notebooks. Pythagoras makes data scientists' lives easier, 
+while allowing them to solve more complex problems in a shorter time with smaller budgets.
 
-### How To Get It?
+## What Is In It?
+Pythagoras offers:
+* a powerful abstraction model for a global-scale serverless compute engine;
+* a simple API for Python programmers to use the engine;
+* a collection of backends that implement the API for various deployment scenarios.
+
+### Pythagoras Abstraction Model For Global Compute Engine
+
+Pythagoras offers a very powerful, yet extremely simple abstraction model for a serverless compute engine. 
+It contains three fundamental components:
+1. Massively parallel serverless code executor;
+2. Global store for immutable values with hash-based addressing;
+3. Global cache for function execution outputs.
+
+Massively **parallel serverless code executor** takes care of launching on demand 
+virtually unlimited number of concurrently running instances of code. Pythagoras requires the parallelized code 
+to be packaged into [pure](https://en.wikipedia.org/wiki/Pure_function) functions. 
+A function is considered pure when it is fully deterministic 
+(it's output value depends solidly on input arguments, 
+the function return values are identical for identical arguments), 
+and function execution has no side effects (no mutation of local static variables, non-local variables, 
+mutable reference arguments or input/output streams). 
+In return to adhering to these constraints, Pythagoras offers theoretically 
+unlimited scalability and elasticity of its serverless code execution environment.
+
+**Global value store**, as the name implies, stores all the values ever created within any instance of your code. 
+It's a key-value store, where the key (the object's address) is composed using the object's hash.
+Under the hood, these hash-based addresses are used by Pythagoras the same way as RAM-based addresses are used 
+by pointers and references in C and C+ libraries. For example, 
+while passing input arguments to a remotely executed function, 
+only the hash-based addresses of the arguments are passed, 
+not their actual values. Such approach makes it possible to significantly decrease data marshalling overhead, 
+while immutability of values allows to employ a variety of optimization techniques to speed up 
+access to the objects in a distributed system.
+
+**Global function output store** caches all results of all function executions that ever happened in the system. 
+It allows to employ "calculate once, reuse forever" approach, which makes repeated execution of the same code 
+blazingly fast and ridiculously cheap. It also improves software recoverability and availability: 
+an interrupted program, once restarted, will reuse already calculated and cached values, 
+and almost immediately will continue its execution from the point where it was terminated.
+
+### Pythagoras API
+
+Pythagoras makes it very easy to scale computationally expensive code to the cloud, 
+without a need to explicitly parallelize the code, to provision any infrastructure, 
+or to orchestrate code deployment or execution.  
+
+Data scientists can continue using their local workstations. 
+They can keep working with their local Python scripts and Jupyter notebooks. 
+They will need to add just a few extra lines to their existing code. 
+After this change, computationally expensive parts of the local code will be 
+automatically executed in the cloud on dozens (or even hundreds or thousands) servers, 
+and the execution results will seamlessly get back to local workstations.
+
+This [introduction tutorial](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_introduction.ipynb) 
+explains how to use the API. 
+
+### Pythagoras backends
+Backends are seamlessly interchangeable.
+They differ by their under-the-hood implementations of deployment models and provisioning / orchestration algorithms. 
+A collection of backends will offer engineers a wide variety of trade-offs that fit different use-cases.
+
+As of now, Pythagoras team has implemented a P2P version of the backend. 
+It allows to parallelize program execution by simply launching the program simultaneously 
+on a swarm of local computers (e.g. desktops and laptops in your office or dorm).
+
+The Pythagoras team is currently working on a reference implementation for AWS-based backend. 
+Over time, we anticipate to have dozens of alternative backends. 
+Please, reach to [Volodymyr (Vlad) Pavlov](https://www.linkedin.com/in/vlpavlov/) 
+if you want to help to create one.
+
+## How To Get It?
 
 The source code is hosted on GitHub at:
 [https://github.com/vladlpavlov/pythagoras](https://github.com/vladlpavlov/pythagoras) 
@@ -19,35 +92,7 @@ Binary installers for the latest released version are available at the Python pa
 
         pip install pythagoras
 
-
-### Major Components
-
-* **FileDirDict**, **S3_Dict**, and **ImmutableS3_LocallyCached_Dict**: Persistent storage objects 
-with Dict-like interfaces
-
-* **PHashAddress**: A globally unique address of an immutable value. 
-Consists of a human-readable prefix and a hash code
-
-### Legacy Components (will be deprecated in H1-2022)
-
-* **LoggableObject**: Base class that provides logging-enabled granular story-telling tools.
-
-* **PickleCache**: Pandas-compatible persistent caching, extendable to work with new classes.
-
-### Tutorials
-
-1. [File-based persistent dictionaries](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_FileDirDict_tutorial.ipynb): 
-Dictionaries that keep their stated between sessions by stroring key-value pairs as local files.
-
-### Legacy Tutorials
-
-1. [Basic Caching](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_caching_introductory_tutorial.ipynb): 
-How to speed up your scripts and notebooks if your Python code works with Pandas and build-in datatypes
-2. [Advanced Caching](https://github.com/vladlpavlov/pythagoras/blob/master/pythagoras_caching_advanced_tutorial.ipynb): 
-How to make pythagoras PickleCache work with custom classes 
-
-
-### Dependencies
+## Dependencies
 
 * [pandas](https://pandas.pydata.org/)
 * [scikit-learn](https://scikit-learn.org/) 
@@ -55,12 +100,12 @@ How to make pythagoras PickleCache work with custom classes
 * [scipy](https://www.scipy.org/)
 * [psutil](https://pypi.org/project/psutil/)
 
-### Key Contacts
+## Key Contacts
 
 * [Volodymyr (Vlad) Pavlov](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
 * [Kai Zhao](https://www.linkedin.com/in/kaimzhao/): quality assurance
 
-### What Do The Name And Logo Mean?
+## What Do The Name And Logo Mean?
 
 Pythagoras was a famous ancient Greek thinker and scientist 
 who was the first man to call himself a philosopher ("lover of wisdom"). 
