@@ -75,7 +75,7 @@ A collection of backends will offer engineers a wide variety of trade-offs that 
 
 As of now, Pythagoras team has implemented a P2P version of the backend. 
 It allows to parallelize program execution by simply launching the program simultaneously 
-on a swarm of local computers (e.g. desktops and laptops in your office or dorm).
+on a swarm of local computers (e.g. desktops and laptops in your office or dormitory).
 
 The Pythagoras team is currently working on a reference implementation for AWS-based backend. 
 Over time, we anticipate to have dozens of alternative backends. 
