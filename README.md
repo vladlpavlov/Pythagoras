@@ -22,10 +22,10 @@ Pythagoras serverless compute engine (*planned*)
 
 ### ((2.1)) Pythagoras Abstraction Model For Global Compute Engine
 
-Pythagoras offers a very powerful, yet extremely simple abstraction model for a serverless compute engine. 
+Pythagoras offers a very powerful, yet simple abstraction model for a serverless compute engine. 
 It contains three fundamental components:
 * Massively parallel serverless code executor for pure functions; 
-* Global persistent store for immutable values with hash-based addressing; 
+* Global persistent store for immutable values with hash-based addressing scheme; 
 * Global persistent cache for function execution outputs.
 
 **Massively parallel serverless code executor** takes care of launching on demand 
