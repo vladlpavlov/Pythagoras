@@ -471,7 +471,7 @@ class ImmutableS3_LocallyCached_Dict(S3_Dict):
 
     def __delitem__(self, key):
         if self._enforce_immutability:
-            raise KeyError(f"Can't delete {key}: operation is not allowed for immitable Dict.")
+            raise KeyError(f"Can't delete {key}: operation is not allowed for immutable Dict.")
         else:
             super().__delitem__(key)
             if key in self.local_cache:
