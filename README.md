@@ -142,3 +142,5 @@ including the Pythagorean theorem.
 But not everyone knows that in antiquity, Pythagoras was also credited with major astronomical discoveries,
 such as sphericity of the Earth and the identity of the morning and evening stars as the planet Venus. 
 Our logo depicts these, lesser known but not less important achievements of Pythagoras.
+
+# Glory to Ukraine! Slava Ukraini!
