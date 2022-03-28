@@ -24,7 +24,7 @@ Pythagoras serverless compute engine (*planned*)
 
 Pythagoras offers a very powerful, yet extremely simple abstraction model for a serverless compute engine. 
 It contains three fundamental components:
-* Massively parallel serverless code executor; 
+* Massively parallel serverless code executor for pure functions; 
 * Global persistent store for immutable values with hash-based addressing; 
 * Global persistent cache for function execution outputs.
 
@@ -34,8 +34,7 @@ to be packaged into [pure](https://en.wikipedia.org/wiki/Pure_function) function
 A function is considered pure when it is fully deterministic 
 (it's output value depends solidly on input arguments, 
 the function return values are identical for identical arguments), 
-and function execution has no side effects (no mutation of local static variables, non-local variables, 
-mutable reference arguments or input/output streams). 
+and function execution has no side effects. 
 In return to adhering to these constraints, Pythagoras offers unlimited scalability 
 and elasticity of its serverless code execution environment.
 
