@@ -50,7 +50,7 @@ class SharedStorage_P2P_Cloud:
         return key
 
 
-    def add_pure_function(self, a_func): # TODO: add some basic checks for purity
+    def add_pure_function(self, a_func): # TODO: implement all 3 scenarios of stochastic purity checks
         assert callable(a_func)
 
         @wraps(a_func)
@@ -66,7 +66,12 @@ class SharedStorage_P2P_Cloud:
                 kwargs_unpacked = KwArgsDict(kwargs).unpack(cloud=self)
                 result = a_func(**kwargs_unpacked) # TODO: add exception handling mechanism
                 result_key = self.push_value(result)
-                self.func_output_store[func_key]=result_key
+
+                if func_key in self.func_output_store:
+                    assert self.func_output_store[func_key] == result_key, (
+                        "Stochastic purity check has failed") # TODO: change to a "raise" statement
+                else:
+                    self.func_output_store[func_key]=result_key
 
             return result
 
@@ -120,7 +125,7 @@ class SharedStorage_P2P_Cloud:
         return wrapped_function
 
 class PCloud(SharedStorage_P2P_Cloud):
-    """ Dummy class used in the intro tutorial. Shall be removed later."""
+    """ Dummy class used in the intro tutorial. Shall be refactored later into a parent class."""
 
     def __init__(self, requires:str="", shared_dir_name:str="SharedStorage_P2P_Cloud", connection:str=""):
         super().__init__(requires, shared_dir_name)
