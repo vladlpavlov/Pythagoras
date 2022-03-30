@@ -13,6 +13,8 @@ import jsonpickle.ext.pandas as jsonpickle_pandas
 jsonpickle_numpy.register_handlers()
 jsonpickle_pandas.register_handlers()
 
+from pythagoras import allowed_key_chars
+
 #
 class SimplePersistentDict(ABC):
     """Dict-like class that only accepts keys which are sequences of strings.
@@ -23,9 +25,6 @@ class SimplePersistentDict(ABC):
 
     The API for the class resemples the API of Python's built-in Dict.
     """
-
-    allowed_key_chars: Set = set(string.ascii_letters
-                                 + string.digits + "()_-.=")
 
     def _normalize_key(self, key):
         """Check if a key meets requirements and return its standardized form.
@@ -47,9 +46,9 @@ class SimplePersistentDict(ABC):
         for s in key:
             assert isinstance(s,str), (
                     "Key must be a string or a sequence of strings.")
-            assert len(set(s) - self.allowed_key_chars) == 0, (
+            assert len(set(s) - allowed_key_chars) == 0, (
                 "Only the following chars are allowed in a key:"
-                + str(self.allowed_key_chars))
+                + str(allowed_key_chars))
             assert len(s), "Only non-empty strings are allowed in a key"
         return key
 

@@ -3,7 +3,7 @@ import sys
 from typing import NamedTuple, Any, List, Callable
 from joblib.hashing import NumpyHasher,Hasher
 
-from pythagoras import SimplePersistentDict
+from pythagoras import allowed_key_chars
 
 
 class KwArgsDict:
@@ -45,7 +45,7 @@ class PHashAddress(ABC):
               and callable(x.__len__)):
             prfx += "___len_" + str(len(x))
 
-        clean_prfx = "".join([c for c in prfx if c in SimplePersistentDict.allowed_key_chars])
+        clean_prfx = "".join([(c if c in allowed_key_chars else "_") for c in prfx])
 
         return clean_prfx
 

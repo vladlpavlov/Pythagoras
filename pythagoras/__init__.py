@@ -1,4 +1,4 @@
-import logging as lg
+from pythagoras.global_objects import *
 from pythagoras.dicts import *
 from pythagoras.p_hash_address import *
 from pythagoras.misc_utils import *
