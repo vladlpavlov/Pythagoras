@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.3.21"
+    ,version="0.3.22"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description= "Simple and inexpensive way to create, deploy and run " 
@@ -27,7 +27,7 @@ setuptools.setup(
         , "Topic :: Software Development :: Libraries"
         , "Topic :: Software Development :: Libraries :: Python Modules"
     ]
-    ,keywords='caching logging regression'
-    ,python_requires='>=3.7'
+    ,keywords='cloud, ML, AI, serverless, distributed, parallel, machine-learning, deep-learning, pythagoras'
+    ,python_requires='>=3.8'
     ,install_requires=['numpy', 'scipy','pandas','scikit-learn', 'psutil', 'boto3', 'moto', 'jsonpickle']
 )
