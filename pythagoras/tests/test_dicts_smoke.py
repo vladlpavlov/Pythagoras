@@ -71,6 +71,16 @@ def test_FileDirDict(tmpdir):
     j = FileDirDict(dir_name = tmpdir, file_type="json")
     validate_dict_object(j)
 
+    # TODO: move this to generic validate_dict_object() once .get_subdict() gets implemented for the entire hierarchy
+    fdd = FileDirDict(dir_name=tmpdir)
+    fdd[("a","a_1")] = 10
+    fdd[("a","a_2")] = 100
+    fdd[("b", "b_1")] = 1000
+    assert len(fdd.get_subdict("a"))==2
+    assert len(fdd.get_subdict("b")) == 1
+    fdd.clear()
+    assert len(fdd.get_subdict("a")) == 0
+
 @mock_s3
 def test_S3_Dict():
     d = S3_Dict(bucket_name ="TEST")

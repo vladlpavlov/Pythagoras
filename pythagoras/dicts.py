@@ -200,21 +200,28 @@ class FileDirDict(SimplePersistentDict):
             if (subdir_name != self.base_dir) and len(os.listdir(subdir_name)) == 0:
                 os.rmdir(subdir_name)
 
-    def _build_full_filename(self, key, create_subdirs=False):
+    def _build_full_path(self, key, create_subdirs=False, is_file_path = True):
         key = self._normalize_key(key)
         key = [self.base_dir] + list(key)
-        dir_names = key[:-1]
+        dir_names = key[:-1] if is_file_path else key
 
         if create_subdirs:
-            current_dir = key[0]
-            for dir_name in key[1:-1]:
+            current_dir = dir_names[0]
+            for dir_name in dir_names[1:]:
                 new_dir = os.path.join(current_dir, dir_name)
                 if not os.path.isdir(new_dir):
                     os.mkdir(new_dir)
                 current_dir = new_dir
 
-        file_name = key[-1] + "." + self.file_type
-        return os.path.join(*dir_names, file_name)
+        if is_file_path:
+            file_name = key[-1] + "." + self.file_type
+            return os.path.join(*dir_names, file_name)
+        else:
+            return os.path.join(*dir_names)
+
+    def get_subdict(self, key):  # TODO: add this method to the entire hierarchy of persistent dict classes
+        full_dir_path = self._build_full_path(key, create_subdirs = True, is_file_path = False)
+        return FileDirDict(dir_name = full_dir_path, file_type=self.file_type)
 
     def _read_from_file(self, file_name: str):
         if self.file_type == "pkl":
@@ -236,22 +243,22 @@ class FileDirDict(SimplePersistentDict):
             raise ValueError("file_type must be either pkl or json")
 
     def __contains__(self, key):
-        filename = self._build_full_filename(key)
+        filename = self._build_full_path(key)
         return os.path.isfile(filename)
 
     def __getitem__(self, key):
-        filename = self._build_full_filename(key)
+        filename = self._build_full_path(key)
         if not os.path.isfile(filename):
             raise KeyError(f"File {filename} does not exist")
         result = self._read_from_file(filename)
         return result
 
     def __setitem__(self, key, value):
-        filename = self._build_full_filename(key, create_subdirs=True)
+        filename = self._build_full_path(key, create_subdirs=True)
         self._save_to_file(filename, value)
 
     def __delitem__(self, key):
-        filename = self._build_full_filename(key)
+        filename = self._build_full_path(key)
         os.remove(filename)
 
     def _generic_iter(self, iter_type: str):
@@ -347,7 +354,7 @@ class S3_Dict(SimplePersistentDict):
 
     def __getitem__(self, key):
         obj_name = self._build_full_objectname(key)
-        file_name = self.local_cache._build_full_filename(key, create_subdirs=True)
+        file_name = self.local_cache._build_full_path(key, create_subdirs=True)
         self.s3_client.download_file(self.bucket_name, obj_name, file_name)
         result =  self.local_cache[key]
         del self.local_cache[key]
@@ -355,7 +362,7 @@ class S3_Dict(SimplePersistentDict):
 
     def __setitem__(self, key, value):
         obj_name = self._build_full_objectname(key)
-        file_name = self.local_cache._build_full_filename(key, create_subdirs=True)
+        file_name = self.local_cache._build_full_path(key, create_subdirs=True)
         self.local_cache[key]=value
         self.s3_client.upload_file(file_name, self.bucket_name, obj_name)
         del self.local_cache[key]
@@ -452,7 +459,7 @@ class ImmutableS3_LocallyCached_Dict(S3_Dict):
 
     def __getitem__(self, key):
         obj_name = self._build_full_objectname(key)
-        file_name = self.local_cache._build_full_filename(key, create_subdirs=True)
+        file_name = self.local_cache._build_full_path(key, create_subdirs=True)
         try:
             if not os.path.isfile(file_name):
                 self.s3_client.download_file(self.bucket_name, obj_name, file_name)
@@ -465,7 +472,7 @@ class ImmutableS3_LocallyCached_Dict(S3_Dict):
         if self._enforce_immutability and self.__contains__(key):
             raise KeyError(f"Key {key} is already present in ImmutableS3_LocallyCached_Dict, value can't be changed.")
         obj_name = self._build_full_objectname(key)
-        file_name = self.local_cache._build_full_filename(key, create_subdirs=True)
+        file_name = self.local_cache._build_full_path(key, create_subdirs=True)
         self.local_cache[key]=value
         self.s3_client.upload_file(file_name, self.bucket_name, obj_name)
 
