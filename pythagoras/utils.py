@@ -16,7 +16,30 @@ import gc
 
 from scipy import stats
 from sklearn.base import BaseEstimator
-from sklearn.datasets import load_boston, fetch_california_housing
+
+from pythagoras import allowed_key_chars
+
+
+def get_long_infoname(x:Any, drop_special_chars = True):
+    """  Build a string with extended information about an object and its type"""
+
+    name = str(type(x).__module__)
+
+    if hasattr(type(x), "__qualname__"):
+        name += "." + str(type(x).__qualname__)
+    else:
+        name += "." + str(type(x).__name__)
+
+    if hasattr(x, "__qualname__"):
+        name += "___" + str(x.__qualname__)
+    elif hasattr(x, "__name__"):
+        name += "___" + str(x.__name__)
+
+    if drop_special_chars:
+        name = "".join([(c if c in allowed_key_chars else "_") for c in name])
+
+    return name
+
 
 def update_param_if_supported(
         estimator: BaseEstimator

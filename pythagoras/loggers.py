@@ -5,7 +5,7 @@
 import logging as lg
 import os
 from typing import Optional, Any
-from pythagoras.misc_utils import *
+from pythagoras.utils import *
 
 # Workaround to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation

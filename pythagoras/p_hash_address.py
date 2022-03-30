@@ -3,7 +3,7 @@ import sys
 from typing import NamedTuple, Any, List, Callable
 from joblib.hashing import NumpyHasher,Hasher
 
-from pythagoras import allowed_key_chars
+from pythagoras import allowed_key_chars, get_long_infoname
 
 
 class KwArgsDict:
@@ -19,17 +19,7 @@ class PHashAddress(ABC):
 
     @staticmethod
     def _build_prefix(x: Any) -> str:
-        prfx = str(type(x).__module__)
-
-        if hasattr(type(x), "__qualname__"):
-            prfx += "." + str(type(x).__qualname__)
-        else:
-            prfx += "." + str(type(x).__name__)
-
-        if hasattr(x, "__qualname__"):
-            prfx += "___" + str(x.__qualname__)
-        elif hasattr(x, "__name__"):
-            prfx += "___" + str(x.__name__)
+        prfx = get_long_infoname(x)
 
         if (hasattr(x, "shape")
                 and hasattr(x.shape, "__iter__")

@@ -10,3 +10,10 @@ class TestNeatStr:
         assert NeatStr.mem_size(1_073_741_824,"") == "1Gb"
         assert NeatStr.mem_size(1_099_511_627_776) == "1 Tb"
 
+def test_get_long_infoname():
+    assert "int" in get_long_infoname(10)
+    assert "str" in get_long_infoname("QWERTY")
+    assert get_long_infoname(FileDirDict())  == "pythagoras.dicts.FileDirDict"
+    self_name = get_long_infoname(get_long_infoname)
+    assert "function" in self_name
+    assert "get_long_infoname" in self_name

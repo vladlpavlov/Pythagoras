@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import types
 from functools import wraps
-from pythagoras.misc_utils import *
+from pythagoras.utils import *
 from pythagoras.loggers import *
 
 
