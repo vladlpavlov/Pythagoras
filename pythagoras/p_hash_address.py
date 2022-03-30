@@ -7,6 +7,7 @@ from pythagoras import SimplePersistentDict
 
 
 class KwArgsDict:
+    """Dirty way to do forward declaration"""
     pass
 
 class PHashAddress(ABC):
@@ -101,7 +102,7 @@ class PValueAddress(PHashAddress):
     def __repr__(self):
         return f"PHashAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
 
-class PFuncResultAddress(PHashAddress):
+class PFuncOutputAddress(PHashAddress):
     """A globally unique address of a function execution outcome. Consists of a human-readable prefix and a hash code.
 
     PFuncResAddress is a universal global identifier of a value, which was (or will be)

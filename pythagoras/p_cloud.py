@@ -2,7 +2,7 @@ import os
 from functools import wraps
 from random import Random
 from inspect import getsource
-from pythagoras import PValueAddress, PFuncResultAddress, FileDirDict, KwArgsDict
+from pythagoras import PValueAddress, PFuncOutputAddress, FileDirDict, KwArgsDict
 
 
 def kw_args(**kwargs):
@@ -36,7 +36,7 @@ class SharedStorage_P2P_Cloud:
         self.base_dir = os.path.abspath(shared_dir_name)
         self.requires = requires # TODO: polish this functionality later
                                  # we need to convert "requires" to some "normal" form to
-                                 # prevent sintax variability from impacting hash calculations
+                                 # prevent syntax variability from impacting hash calculations
         self.functions = []
         self.value_store = FileDirDict(dir_name=os.path.join(self.base_dir, "value_store"))
         self.func_output_store = FileDirDict(dir_name=os.path.join(self.base_dir, "func_output_store"))
@@ -57,7 +57,7 @@ class SharedStorage_P2P_Cloud:
         def wrapped_function(**kwargs):
             """compose memoized version of a function"""
             kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
-            func_key = PFuncResultAddress(wrapped_function, kwargs_packed, self)
+            func_key = PFuncOutputAddress(wrapped_function, kwargs_packed, self)
 
             if func_key in self.func_output_store:
                 result_key = self.func_output_store[func_key]
@@ -109,7 +109,7 @@ class SharedStorage_P2P_Cloud:
         def is_stored(**kwargs):
             """Check if the function output for these arguments has been calculated and cached"""
             kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
-            func_key = PFuncResultAddress(wrapped_function, kwargs_packed, self)
+            func_key = PFuncOutputAddress(wrapped_function, kwargs_packed, self)
             return func_key in self.func_output_store
 
         wrapped_function.sync_parallel = sync_parallel

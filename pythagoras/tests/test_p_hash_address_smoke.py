@@ -1,4 +1,4 @@
-from pythagoras import PHashAddress
+from pythagoras import PValueAddress
 import pandas as pd
 import numpy as np
 
@@ -24,11 +24,11 @@ simple_cases = [
 def test_PHashAddress():
     all_hash_ids = set()
     for case in simple_cases:
-        address = PHashAddress(case["obj"])
+        address = PValueAddress(case["obj"])
         assert len(address) == 2
         assert len(list(address)) == 2
-        assert address == PHashAddress(address)
-        assert address != PHashAddress(list(address))
+        assert address == PValueAddress(address)
+        assert address != PValueAddress(list(address))
 
         prfx_str = list(address)[0]
         assert isinstance(prfx_str, str)
