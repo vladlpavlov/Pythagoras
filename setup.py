@@ -5,11 +5,11 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.3.20"
+    ,version="0.3.21"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
-    ,description= "Pythagoras makes it simple and inexpensive to create, deploy and run " 
-                  "cloud-hosted massively parallel algorithms from within local Python scripts and notebooks."
+    ,description= "Simple and inexpensive way to create, deploy and run " 
+                  "cloud-scale algorithms from within local Python scripts and notebooks."
     ,long_description=long_description
     ,long_description_content_type="text/markdown"
     ,url="https://github.com/vladlpavlov/pythagoras"
