@@ -39,13 +39,18 @@ class SharedStorage_P2P_Cloud:
     def __init__(self
                  , requires:str=""
                  , shared_dir_name:str="SharedStorage_P2P_Cloud"
-                 , baseline_timezone = ZoneInfo("America/Los_Angeles")):
+                 , baseline_timezone = ZoneInfo("America/Los_Angeles")
+                 , p_purity_checks:float = 0.1
+                 ):
 
         assert not os.path.isfile(shared_dir_name)
         if not os.path.isdir(shared_dir_name):
             os.mkdir(shared_dir_name)
         assert os.path.isdir(shared_dir_name)
         self.base_dir = os.path.abspath(shared_dir_name)
+        assert 0 <= p_purity_checks <= 1
+        self.p_purity_checks = p_purity_checks
+
         self.requires = requires # TODO: polish this functionality later
                                  # we need to convert "requires" to some "normal" form to
                                  # prevent syntax variability from impacting hash calculations
@@ -94,7 +99,7 @@ class SharedStorage_P2P_Cloud:
         event_store[key] = event
 
 
-    def add_pure_function(self, a_func): # TODO: implement all scenarios of stochastic purity checks
+    def add_pure_function(self, a_func):
         assert callable(a_func)
 
         @wraps(a_func)
@@ -105,12 +110,19 @@ class SharedStorage_P2P_Cloud:
                 kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
                 func_key = PFuncOutputAddress(wrapped_function, kwargs_packed, self)
 
-                if func_key in self.func_output_store:
+                if self.p_purity_checks == 0:
+                    use_cached_output = True
+                elif self.p_purity_checks == 1:
+                    use_cached_output = False
+                else:
+                    use_cached_output =  ( self.p_purity_checks < Random().uniform(0,1) )
+
+                if use_cached_output and func_key in self.func_output_store:
                     result_key = self.func_output_store[func_key]
                     result = self.value_store[result_key]
                 else:
                     kwargs_unpacked = KwArgsDict(kwargs).unpack(cloud=self)
-                    result = a_func(**kwargs_unpacked) # TODO: add exception handling mechanism
+                    result = a_func(**kwargs_unpacked)
                     result_key = self.push_value(result)
 
                     if func_key in self.func_output_store:
