@@ -59,6 +59,13 @@ class SharedStorage_P2P_Cloud:
         self.func_output_store = FileDirDict(dir_name=os.path.join(self.base_dir, "func_output_store"))
         self.baseline_timezone = baseline_timezone
         self.exceptions = FileDirDict(dir_name=os.path.join(self.base_dir, "exceptions"), file_type="json")
+        self._event_counter = 0
+
+        self._randomizer = Random()
+        """We are using a new instance of Random object that does not share the same seed with other Random objects.
+        This is done to ensure correct parallelization via randomization in cases when a cloudized function
+        explicitly sets seed value for the default Random object, which it might do in order 
+        to be qualified as a pure function."""
 
         self._old_excepthook =  sys.excepthook
 
@@ -74,7 +81,6 @@ class SharedStorage_P2P_Cloud:
         self._post_event(event_store=self.exceptions, key=None, event="Finished PCloud creation")
 
 
-
     def push_value(self,value):
         """ Add a value to value_store"""
         key = PValueAddress(value)
@@ -87,8 +93,13 @@ class SharedStorage_P2P_Cloud:
         event_id = str(datetime.now(self.baseline_timezone)).replace(":", "-")
         event_id += f"   USER={getuser()}"
         event_id += f"   HOST={socket.gethostname()}"
+        event_id += f"   PID={os.getpid()}"
         event_id += f"   PLATFORM={platform.platform()}"
         event_id += f"   EVENT={get_long_infoname(event)}"
+        self._event_counter +=1
+        if self._event_counter >= 1_000_000_000_000:
+            self._event_counter = 1
+        event_id += f"   CNTR={self._event_counter}"
         event_id = drop_special_chars(event_id)
 
         if key is None:
@@ -115,7 +126,7 @@ class SharedStorage_P2P_Cloud:
                 elif self.p_purity_checks == 1:
                     use_cached_output = False
                 else:
-                    use_cached_output =  ( self.p_purity_checks < Random().uniform(0,1) )
+                    use_cached_output =  ( self.p_purity_checks < self._randomizer.uniform(0,1) )
 
                 if use_cached_output and func_key in self.func_output_store:
                     result_key = self.func_output_store[func_key]
@@ -145,12 +156,7 @@ class SharedStorage_P2P_Cloud:
                 assert isinstance(e,KwArgsDict)
             shuffled_input_list = list(enumerate(input_list))
 
-            Random().shuffle(shuffled_input_list)   # Important: we are using a new instance of Random object that
-                                                    # does not share the same seed with any other Random object.
-                                                    # This is done to ensure correct parallelization via randomization
-                                                    # in cases when a cloudized function
-                                                    # explicitly sets seed value for the default Random object,
-                                                    # which it might do in order to be qualified as a pure function.
+            self._randomizer.shuffle(shuffled_input_list)
 
             result = []
             for e in shuffled_input_list:

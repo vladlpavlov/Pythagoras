@@ -2,7 +2,7 @@ from pythagoras import *
 from moto import mock_s3
 
 def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
-    my_cloud = SharedStorage_P2P_Cloud(shared_dir_name=tmpdir)
+    my_cloud = SharedStorage_P2P_Cloud(shared_dir_name=tmpdir, p_purity_checks=0.5)
 
     @my_cloud.add_pure_function
     def fff():
@@ -33,7 +33,7 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
 
 
 def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
-    my_cloud = SharedStorage_P2P_Cloud(shared_dir_name=tmpdir)
+    my_cloud = SharedStorage_P2P_Cloud(shared_dir_name=tmpdir, p_purity_checks=0.5)
 
     @my_cloud.add_pure_function
     def hihihi(*, x: int, y: int):
@@ -49,7 +49,7 @@ def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
 
 
 def test_SharedStorage_P2P_Cloud_func3args(tmpdir):
-    my_cloud = SharedStorage_P2P_Cloud(shared_dir_name=tmpdir)
+    my_cloud = SharedStorage_P2P_Cloud(shared_dir_name=tmpdir, p_purity_checks=0.5)
 
     @my_cloud.add_pure_function
     def lyslyslya(*, x: float, y: float, z:float):
