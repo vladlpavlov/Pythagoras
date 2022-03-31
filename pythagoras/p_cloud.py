@@ -54,8 +54,8 @@ class SharedStorage_P2P_Cloud:
         self.func_output_store = FileDirDict(dir_name=os.path.join(self.base_dir, "func_output_store"))
         self.baseline_timezone = baseline_timezone
         self.exceptions = FileDirDict(dir_name=os.path.join(self.base_dir, "exceptions"), file_type="json")
+
         self._old_excepthook =  sys.excepthook
-        self._old_displayhook = sys.displayhook
 
         def cloud_excepthook(exctype, value, traceback):
             self._post_event(event_store = self.exceptions, key=None, event = value)
@@ -63,11 +63,15 @@ class SharedStorage_P2P_Cloud:
 
         sys.excepthook = cloud_excepthook
 
-        def cloud_displayhook(value):
-            self._post_event(event_store=self.exceptions, key=None, event=value)
-            self._old_displayhook(value)
+        # self._old_displayhook = sys.displayhook
+        #
+        # def cloud_displayhook(value):
+        #     self._post_event(event_store=self.exceptions, key=None, event=value)
+        #     self._old_displayhook(value)
+        #
+        # sys.displayhook = cloud_displayhook
 
-        sys.displayhook = cloud_displayhook
+        self._post_event(event_store=self.exceptions, key=None, event="Finished PCloud creation")
 
 
 
