@@ -1,8 +1,17 @@
 import os
+import platform
+import socket
+import sys
+from datetime import datetime
 from functools import wraps
+from getpass import getuser
 from random import Random
 from inspect import getsource
-from pythagoras import PValueAddress, PFuncOutputAddress, FileDirDict, KwArgsDict
+from typing import Any
+from zoneinfo import ZoneInfo
+
+from pythagoras import PValueAddress, PFuncOutputAddress, FileDirDict, KwArgsDict, get_long_infoname, \
+    drop_special_chars, SimplePersistentDict
 
 
 def kw_args(**kwargs):
@@ -11,7 +20,7 @@ def kw_args(**kwargs):
     It enables simple syntax to simultaneously launch
     many remote instances of a function with different input arguments:
 
-    some_slow_function.parallel(
+    some_slow_function.sync_parallel(
         kw_args(arg1=i, arg2=j) for i in range(100) for j in range(15)  )
     """
     return  KwArgsDict(**kwargs)
@@ -27,7 +36,10 @@ class SharedStorage_P2P_Cloud:
     Execution of all other calls will be redundantly carried on each participating computer.
     """
 
-    def __init__(self, requires:str="", shared_dir_name:str="SharedStorage_P2P_Cloud"):
+    def __init__(self
+                 , requires:str=""
+                 , shared_dir_name:str="SharedStorage_P2P_Cloud"
+                 , baseline_timezone = ZoneInfo("America/Los_Angeles")):
 
         assert not os.path.isfile(shared_dir_name)
         if not os.path.isdir(shared_dir_name):
@@ -40,7 +52,15 @@ class SharedStorage_P2P_Cloud:
         self.functions = []
         self.value_store = FileDirDict(dir_name=os.path.join(self.base_dir, "value_store"))
         self.func_output_store = FileDirDict(dir_name=os.path.join(self.base_dir, "func_output_store"))
+        self.baseline_timezone = baseline_timezone
+        self.exceptions = FileDirDict(dir_name=os.path.join(self.base_dir, "exceptions"), file_type="json")
+        self._old_excepthook =  sys.excepthook
 
+        def cloud_excepthook(exctype, value, traceback):
+            self._post_event(event_store = self.exceptions, key=None, event = value)
+            self._old_excepthook(exctype, value, traceback)
+
+        sys.excepthook = cloud_excepthook
 
     def push_value(self,value):
         """ Add a value to value_store"""
@@ -49,8 +69,24 @@ class SharedStorage_P2P_Cloud:
             self.value_store[key] = value
         return key
 
+    def _post_event(self, event_store: SimplePersistentDict, key, event: Any):
+        """ Add an event to an event store """
+        event_id = str(datetime.now(self.baseline_timezone)).replace(":", "-")
+        event_id += f"   USER={getuser()}"
+        event_id += f"   HOST={socket.gethostname()}"
+        event_id += f"   PLATFORM={platform.platform()}"
+        event_id += f"   EVENT={get_long_infoname(event)}"
+        event_id = drop_special_chars(event_id)
 
-    def add_pure_function(self, a_func): # TODO: implement all 3 scenarios of stochastic purity checks
+        if key is None:
+            key = (event_id,)
+        else:
+            key = event_store._normalize_key(key) + (event_id,)
+
+        event_store[key] = event
+
+
+    def add_pure_function(self, a_func): # TODO: implement all scenarios of stochastic purity checks
         assert callable(a_func)
 
         @wraps(a_func)
@@ -125,7 +161,13 @@ class SharedStorage_P2P_Cloud:
         return wrapped_function
 
 class PCloud(SharedStorage_P2P_Cloud):
-    """ Dummy class used in the intro tutorial. Shall be refactored later into a parent class."""
+    """ Dummy class used in the intro tutorial. Shall be refactored later into a parent class.
+
+    Currently, we are learning from experimenting with P2P_cloud, this is our main focus now.
+    PCloud is just a dummy class at this point, used in the tutorial for the sake of simplicity.
+    Later, when we know enough to generalize, PCloud will become a base class in the hierarchy
+    of cloud classes.
+    """
 
     def __init__(self, requires:str="", shared_dir_name:str="SharedStorage_P2P_Cloud", connection:str=""):
         super().__init__(requires, shared_dir_name)

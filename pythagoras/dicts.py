@@ -1,9 +1,16 @@
 import os
+import platform
+from _socket import gethostname
+from datetime import datetime
+from getpass import getpass, getuser
+from socket import socket
+from zoneinfo import ZoneInfo
+
 import pandas as pd
 
 import string
 from abc import *
-from typing import Set
+from typing import Set, Any
 import boto3
 
 
@@ -13,7 +20,8 @@ import jsonpickle.ext.pandas as jsonpickle_pandas
 jsonpickle_numpy.register_handlers()
 jsonpickle_pandas.register_handlers()
 
-from pythagoras import allowed_key_chars
+from pythagoras import allowed_key_chars, get_long_infoname, drop_special_chars
+
 
 #
 class SimplePersistentDict(ABC):
@@ -144,6 +152,8 @@ class SimplePersistentDict(ABC):
             self.__delitem__(key)
         except:
             pass
+
+
 
 
 class FileDirDict(SimplePersistentDict):
