@@ -63,13 +63,8 @@ class SharedStorage_P2P_Cloud:
 
         sys.excepthook = cloud_excepthook
 
-        # self._old_displayhook = sys.displayhook
-        #
-        # def cloud_displayhook(value):
-        #     self._post_event(event_store=self.exceptions, key=None, event=value)
-        #     self._old_displayhook(value)
-        #
-        # sys.displayhook = cloud_displayhook
+        # TODO: add handler for exceptions in Jupyter Notebooks
+        # Something like get_ipython().set_custom_exc((Exception,), custom_exc)
 
         self._post_event(event_store=self.exceptions, key=None, event="Finished PCloud creation")
 
@@ -105,27 +100,34 @@ class SharedStorage_P2P_Cloud:
         @wraps(a_func)
         def wrapped_function(**kwargs):
             """compose memoized version of a function"""
-            kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
-            func_key = PFuncOutputAddress(wrapped_function, kwargs_packed, self)
+            try:
 
-            if func_key in self.func_output_store:
-                result_key = self.func_output_store[func_key]
-                result = self.value_store[result_key]
-            else:
-                kwargs_unpacked = KwArgsDict(kwargs).unpack(cloud=self)
-                result = a_func(**kwargs_unpacked) # TODO: add exception handling mechanism
-                result_key = self.push_value(result)
+                kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
+                func_key = PFuncOutputAddress(wrapped_function, kwargs_packed, self)
 
                 if func_key in self.func_output_store:
-                    assert self.func_output_store[func_key] == result_key, (
-                        "Stochastic purity check has failed") # TODO: change to a "raise" statement
+                    result_key = self.func_output_store[func_key]
+                    result = self.value_store[result_key]
                 else:
-                    self.func_output_store[func_key]=result_key
+                    kwargs_unpacked = KwArgsDict(kwargs).unpack(cloud=self)
+                    result = a_func(**kwargs_unpacked) # TODO: add exception handling mechanism
+                    result_key = self.push_value(result)
+
+                    if func_key in self.func_output_store:
+                        assert self.func_output_store[func_key] == result_key, (
+                            "Stochastic purity check has failed") # TODO: change to a "raise" statement
+                    else:
+                        self.func_output_store[func_key]=result_key
+
+            except BaseException as ex:
+                self._post_event(event_store=self.exceptions, key=None, event=ex)
+                raise
 
             return result
 
         def sync_parallel(inpt):
             """Enable parallel execution of multiple instances of function"""
+
             input_list = list(inpt)
             for e in input_list:
                 assert isinstance(e,KwArgsDict)
@@ -146,8 +148,9 @@ class SharedStorage_P2P_Cloud:
                 result.append( result_item )
 
             result = sorted(result, key=lambda t:t[0])
+            result = [e[1] for e in result]
 
-            return [e[1] for e in result]
+            return result
 
         def async_parallel(inpt):
             raise NotImplementedError
