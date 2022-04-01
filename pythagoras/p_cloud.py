@@ -79,10 +79,10 @@ class SharedStorage_P2P_Cloud:
 
         def cloud_excepthandler(other_self, etype, value, tb, tb_offset=None):
             self._post_event(event_store=self.exceptions, key=None, event=value)
-            print("\n\n\n\n")
+            print("\n\n\n\n\n")
             print(' {{{{{==========EXCEPTION==========}}}}} \n')
             pprint(value)
-            print("\n\n\n\n")
+            print("\n\n\n\n\n")
             return
 
         try: # if we are inside a notebook
