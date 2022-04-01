@@ -15,7 +15,7 @@ import pkg_resources
 import psutil
 
 from pythagoras import PValueAddress, PFuncOutputAddress, FileDirDict, KwArgsDict, get_long_infoname, \
-    drop_special_chars, SimplePersistentDict
+    replace_special_chars, SimplePersistentDict
 
 
 class ExceptionInfo:
@@ -134,7 +134,7 @@ class SharedStorage_P2P_Cloud:
             self._event_counter = 1
         event_id += f"   CNTR={self._event_counter}"
         event_id += f"   RNMD={self._randomizer.uniform(0,1)}"
-        event_id = drop_special_chars(event_id)
+        event_id = replace_special_chars(event_id)
 
         if key is None:
             key = (event_id,)

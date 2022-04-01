@@ -21,8 +21,9 @@ from pythagoras import allowed_key_chars
 
 
 
-def drop_special_chars(a_str):
-    result = "".join([(c if c in allowed_key_chars else "_") for c in a_str])
+def replace_special_chars(a_str, replace_with = "_"):
+    """ Replace special characters with an allowed character (underscore by default)"""
+    result = "".join([(c if c in allowed_key_chars else replace_with) for c in a_str])
     return result
 
 def get_long_infoname(x:Any, drop_special = True):
@@ -41,7 +42,7 @@ def get_long_infoname(x:Any, drop_special = True):
         name += "___" + str(x.__name__)
 
     if drop_special:
-        name = drop_special_chars(name)
+        name = replace_special_chars(name)
 
     return name
 
