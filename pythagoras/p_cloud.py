@@ -23,7 +23,7 @@ class ExceptionInfo:
 
     def __init__(self, exc_type, exc_value, trace_back, path):
         assert isinstance(exc_value, BaseException)
-        self.__name__ = str(type(exc_value).__name__)
+        self.__name__ = "..." + get_long_infoname(exc_value)
         self.exception = exc_value
         self.exception_description = format_exception(exc_type,exc_value, trace_back)
         self.available_packages = pkg_resources.working_set
