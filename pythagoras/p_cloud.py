@@ -75,9 +75,9 @@ class SharedStorage_P2P_Cloud:
 
         sys.excepthook = cloud_excepthook
 
-        def cloud_excepthandler(self, etype, value, tb, tb_offset=None):
+        def cloud_excepthandler(other_self, etype, value, tb, tb_offset=None):
             self._post_event(event_store=self.exceptions, key=None, event=value)
-            stb = self.InteractiveTB.structured_traceback(
+            stb = other_self.InteractiveTB.structured_traceback(
                 (etype, value, tb), tb_offset=tb_offset )
             return stb
             # print('*** Simple custom exception handler ***')
