@@ -77,13 +77,13 @@ class SharedStorage_P2P_Cloud:
 
         def cloud_excepthandler(other_self, etype, value, tb, tb_offset=None):
             self._post_event(event_store=self.exceptions, key=None, event=value)
-            stb = other_self.InteractiveTB.structured_traceback(
-                (etype, value, tb), tb_offset=tb_offset )
-            return stb
-            # print('*** Simple custom exception handler ***')
-            # print('Exception type :', etype)
-            # print('Exception value:', value)
-            # print('Traceback      :', tb)
+            # stb = other_self.InteractiveTB.structured_traceback(
+            #     (etype, value, tb), tb_offset=tb_offset )
+            # return stb
+            print('   {{{{{ EXCEPTION }}}}}')
+            print('Exception type :', etype)
+            print('Exception value:', value)
+            print('Traceback      Traceback:', tb)
 
         try:
             get_ipython().set_custom_exc((BaseException,), cloud_excepthandler)
