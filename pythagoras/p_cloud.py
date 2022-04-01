@@ -78,9 +78,9 @@ class SharedStorage_P2P_Cloud:
 
         def cloud_excepthandler(other_self, etype, value, tb, tb_offset=None):
             try:
-                stb = self.InteractiveTB.structured_traceback(
+                stb = other_self.InteractiveTB.structured_traceback(
                     (etype, value, tb), tb_offset=tb_offset)
-                print(self.InteractiveTB.stb2text(stb))
+                print(other_self.InteractiveTB.stb2text(stb))
             except:
                 self._post_event(event_store=self.exceptions, key=None, event=value)
                 print("\n\n\n\n")
