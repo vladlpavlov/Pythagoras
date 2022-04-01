@@ -75,6 +75,21 @@ class SharedStorage_P2P_Cloud:
 
         sys.excepthook = cloud_excepthook
 
+        def cloud_excepthandler(self, etype, value, tb, tb_offset=None):
+            self._post_event(event_store=self.exceptions, key=None, event=value)
+            stb = self.InteractiveTB.structured_traceback(
+                (etype, value, tb), tb_offset=tb_offset )
+            return stb
+            # print('*** Simple custom exception handler ***')
+            # print('Exception type :', etype)
+            # print('Exception value:', value)
+            # print('Traceback      :', tb)
+
+        try:
+            get_ipython().set_custom_exc((BaseException,), cloud_excepthandler)
+        except:
+            pass
+
         # TODO: add handler for exceptions in Jupyter Notebooks
         # Something like get_ipython().set_custom_exc((Exception,), custom_exc)
 
