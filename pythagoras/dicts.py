@@ -142,7 +142,7 @@ class SimplePersistentDict(ABC):
         for k in self.keys():
             del self[k]
 
-    def blunt_delete(self, key):
+    def safe_delete(self, key):
         """ Delete an item from a dictionary without raising an exception if the item does not exist.
 
         This method is absent in the original dict API, it is added here
