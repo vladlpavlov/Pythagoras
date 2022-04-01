@@ -8,16 +8,39 @@ from getpass import getuser
 from pprint import pprint
 from random import Random
 from inspect import getsource
-from traceback import print_exception
+from traceback import print_exception, format_exception
 from typing import Any
 from zoneinfo import ZoneInfo
+import pkg_resources
+import psutil
 
 from pythagoras import PValueAddress, PFuncOutputAddress, FileDirDict, KwArgsDict, get_long_infoname, \
     drop_special_chars, SimplePersistentDict
 
 
+class ExceptionInfo:
+    """ Helper class for remote logging. It encapsulates exception and execution environment information."""
+
+    def __init__(self, exc_type, exc_value, trace_back, path):
+        assert isinstance(exc_value, BaseException)
+        self.__name__ = str(type(exc_value).__class__)
+        self.exception = exc_value
+        self.exception_description = format_exception(exc_type,exc_value, trace_back)
+        self.available_packages = pkg_resources.working_set
+        self.cpu_count = psutil.cpu_count()
+        self.cpu_load_avg = psutil.getloadavg()
+        self.disk_usage = psutil.disk_usage(path)
+        self.virtual_memory = psutil.virtual_memory()
+        self.user = getuser()
+        self.hostname = socket.gethostname()
+        self.pid = os.getpid()
+        self.platform = platform.platform()
+        self.python_implementation = platform.python_implementation()
+        self.python_version = platform.python_version()
+        self.processor = platform.processor()
+
 def kw_args(**kwargs):
-    """ Helper function to be used with .parallel and similar methods
+    """ Helper function to be used with .sync_parallel and similar methods
 
     It enables simple syntax to simultaneously launch
     many remote instances of a function with different input arguments:
@@ -71,16 +94,18 @@ class SharedStorage_P2P_Cloud:
 
         self._old_excepthook =  sys.excepthook
 
-        def cloud_excepthook(exctype, value, traceback):
-            self._post_event(event_store = self.exceptions, key=None, event = value)
-            self._old_excepthook(exctype, value, traceback)
+        def cloud_excepthook(exc_type, exc_value, trace_back):
+            exc_event = ExceptionInfo(exc_type, exc_value, trace_back, self.base_dir)
+            self._post_event(event_store = self.exceptions, key=None, event = exc_event)
+            self._old_excepthook(exc_type, exc_value, trace_back)
             return
 
         sys.excepthook = cloud_excepthook
 
-        def cloud_excepthandler(other_self, etype, value, tb, tb_offset=None):
-            self._post_event(event_store=self.exceptions, key=None, event=value)
-            print_exception(etype, value, tb)
+        def cloud_excepthandler(other_self, exc_type, exc_value, trace_back, tb_offset=None):
+            exc_event = ExceptionInfo(exc_type, exc_value, trace_back, self.base_dir)
+            self._post_event(event_store=self.exceptions, key=None, event=exc_event)
+            print_exception(exc_type, exc_value, trace_back)
             return
 
         try: # if we are inside a notebook
