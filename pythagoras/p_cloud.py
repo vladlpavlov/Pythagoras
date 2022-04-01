@@ -5,6 +5,7 @@ import sys
 from datetime import datetime
 from functools import wraps
 from getpass import getuser
+from pprint import pprint
 from random import Random
 from inspect import getsource
 from typing import Any
@@ -79,9 +80,8 @@ class SharedStorage_P2P_Cloud:
         def cloud_excepthandler(other_self, etype, value, tb, tb_offset=None):
             self._post_event(event_store=self.exceptions, key=None, event=value)
             print("\n\n\n\n")
-            print('   {{{{{ EXCEPTION }}}}}')
-            print('Exception type :', etype)
-            print('Exception value:', value)
+            print(' {{{{{==========EXCEPTION==========}}}}} \n')
+            pprint(value)
             print("\n\n\n\n")
             return
 
