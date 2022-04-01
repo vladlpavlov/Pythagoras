@@ -100,6 +100,7 @@ class SharedStorage_P2P_Cloud:
         if self._event_counter >= 1_000_000_000_000:
             self._event_counter = 1
         event_id += f"   CNTR={self._event_counter}"
+        event_id += f"   RNMD={self._randomizer.uniform(0,1)}"
         event_id = drop_special_chars(event_id)
 
         if key is None:
