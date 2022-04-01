@@ -15,29 +15,18 @@ import pkg_resources
 import psutil
 
 from pythagoras import PValueAddress, PFuncOutputAddress, FileDirDict, KwArgsDict, get_long_infoname, \
-    replace_special_chars, SimplePersistentDict
+    replace_special_chars, SimplePersistentDict, buid_context
 
 
 class ExceptionInfo:
     """ Helper class for remote logging. It encapsulates exception and execution environment information."""
 
-    def __init__(self, exc_type, exc_value, trace_back, path):
+    def __init__(self, exc_type, exc_value, trace_back, path, time_zone):
         assert isinstance(exc_value, BaseException)
         self.__name__ = get_long_infoname(exc_value)
         self.exception = exc_value
         self.exception_description = format_exception(exc_type,exc_value, trace_back)
-        self.hostname = socket.gethostname()
-        self.user = getuser()
-        self.pid = os.getpid()
-        self.platform = platform.platform()
-        self.python_implementation = platform.python_implementation()
-        self.python_version = platform.python_version()
-        self.processor = platform.processor()
-        self.cpu_count = psutil.cpu_count()
-        self.cpu_load_avg = psutil.getloadavg()
-        self.disk_usage = psutil.disk_usage(path)
-        self.virtual_memory = psutil.virtual_memory()
-        self.available_packages = pkg_resources.working_set
+        self.context = buid_context(path,time_zone)
 
 def kw_args(**kwargs):
     """ Helper function to be used with .sync_parallel and similar methods
@@ -95,7 +84,7 @@ class SharedStorage_P2P_Cloud:
         self._old_excepthook =  sys.excepthook
 
         def cloud_excepthook(exc_type, exc_value, trace_back):
-            exc_event = ExceptionInfo(exc_type, exc_value, trace_back, self.base_dir)
+            exc_event = ExceptionInfo(exc_type, exc_value, trace_back, self.base_dir, self.baseline_timezone)
             self._post_event(event_store = self.exceptions, key=None, event = exc_event)
             self._old_excepthook(exc_type, exc_value, trace_back)
             return
@@ -103,7 +92,7 @@ class SharedStorage_P2P_Cloud:
         sys.excepthook = cloud_excepthook
 
         def cloud_excepthandler(other_self, exc_type, exc_value, trace_back, tb_offset=None):
-            exc_event = ExceptionInfo(exc_type, exc_value, trace_back, self.base_dir)
+            exc_event = ExceptionInfo(exc_type, exc_value, trace_back, self.base_dir, self.baseline_timezone)
             self._post_event(event_store=self.exceptions, key=None, event=exc_event)
             print_exception(exc_type, exc_value, trace_back)
             return

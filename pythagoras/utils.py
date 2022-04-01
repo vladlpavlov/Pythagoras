@@ -1,14 +1,21 @@
 # from __future__ import annotations
 # Above is temporarily commented to ensure compatibility with Python <= 3.6
 # Versions 3.6 and below do not support postponed evaluation
-
+import datetime
 import logging as lg
 import math
+import os
+import platform
+import socket
+from getpass import getuser
+
 import numpy as np
 import inspect
 import numbers, time
 from typing import Any, ClassVar, Union
 from copy import deepcopy
+
+import pkg_resources
 import psutil
 import gc
 # import logging
@@ -19,6 +26,25 @@ from sklearn.base import BaseEstimator
 
 from pythagoras import allowed_key_chars
 
+
+def buid_context(file_path:str=None, time_zone=None):
+    result = dict(
+        date_time = datetime.datetime.now(time_zone)
+        ,hostname = socket.gethostname()
+        ,user = getuser()
+        ,pid = os.getpid()
+        ,platform = platform.platform()
+        ,python_implementation = platform.python_implementation()
+        ,python_version = platform.python_version()
+        ,processor = platform.processor()
+        ,cpu_count = psutil.cpu_count()
+        ,cpu_load_avg = psutil.getloadavg()
+        ,disk_usage = psutil.disk_usage(file_path)
+        ,virtual_memory = psutil.virtual_memory()
+        ,available_packages = pkg_resources.working_set
+        )
+
+    return result
 
 
 def replace_special_chars(a_str, replace_with = "_"):
