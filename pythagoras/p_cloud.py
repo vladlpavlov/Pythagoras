@@ -23,21 +23,21 @@ class ExceptionInfo:
 
     def __init__(self, exc_type, exc_value, trace_back, path):
         assert isinstance(exc_value, BaseException)
-        self.__name__ = "..." + get_long_infoname(exc_value)
+        self.__name__ = get_long_infoname(exc_value)
         self.exception = exc_value
         self.exception_description = format_exception(exc_type,exc_value, trace_back)
-        self.available_packages = pkg_resources.working_set
-        self.cpu_count = psutil.cpu_count()
-        self.cpu_load_avg = psutil.getloadavg()
-        self.disk_usage = psutil.disk_usage(path)
-        self.virtual_memory = psutil.virtual_memory()
-        self.user = getuser()
         self.hostname = socket.gethostname()
+        self.user = getuser()
         self.pid = os.getpid()
         self.platform = platform.platform()
         self.python_implementation = platform.python_implementation()
         self.python_version = platform.python_version()
         self.processor = platform.processor()
+        self.cpu_count = psutil.cpu_count()
+        self.cpu_load_avg = psutil.getloadavg()
+        self.disk_usage = psutil.disk_usage(path)
+        self.virtual_memory = psutil.virtual_memory()
+        self.available_packages = pkg_resources.working_set
 
 def kw_args(**kwargs):
     """ Helper function to be used with .sync_parallel and similar methods
