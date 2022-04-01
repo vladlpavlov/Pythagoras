@@ -77,17 +77,12 @@ class SharedStorage_P2P_Cloud:
         sys.excepthook = cloud_excepthook
 
         def cloud_excepthandler(other_self, etype, value, tb, tb_offset=None):
-            try:
-                stb = other_self.InteractiveTB.structured_traceback(
-                    (etype, value, tb), tb_offset=tb_offset)
-                print(other_self.InteractiveTB.stb2text(stb))
-            except:
-                self._post_event(event_store=self.exceptions, key=None, event=value)
-                print("\n\n\n\n")
-                print('   {{{{{ EXCEPTION }}}}}')
-                print('Exception type :', etype)
-                print('Exception value:', value)
-                print("\n\n\n\n")
+            self._post_event(event_store=self.exceptions, key=None, event=value)
+            print("\n\n\n\n")
+            print('   {{{{{ EXCEPTION }}}}}')
+            print('Exception type :', etype)
+            print('Exception value:', value)
+            print("\n\n\n\n")
             return
 
         try: # if we are inside a notebook
