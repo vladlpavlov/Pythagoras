@@ -77,23 +77,23 @@ class SharedStorage_P2P_Cloud:
         sys.excepthook = cloud_excepthook
 
         def cloud_excepthandler(other_self, etype, value, tb, tb_offset=None):
-            self._post_event(event_store=self.exceptions, key=None, event=value)
-            print("\n\n\n\n")
-            print('   {{{{{ EXCEPTION }}}}}')
-            print('Exception type :', etype)
-            print('Exception value:', value)
-            print("\n\n\n\n")
+            try:
+                stb = self.InteractiveTB.structured_traceback(
+                    (etype, value, tb), tb_offset=tb_offset)
+                print(self.InteractiveTB.stb2text(stb))
+            except:
+                self._post_event(event_store=self.exceptions, key=None, event=value)
+                print("\n\n\n\n")
+                print('   {{{{{ EXCEPTION }}}}}')
+                print('Exception type :', etype)
+                print('Exception value:', value)
+                print("\n\n\n\n")
             return
 
-        try:
+        try: # if we are inside a notebook
             get_ipython().set_custom_exc((BaseException,), cloud_excepthandler)
         except:
             pass
-
-        # TODO: add handler for exceptions in Jupyter Notebooks
-        # Something like get_ipython().set_custom_exc((Exception,), custom_exc)
-
-        self._post_event(event_store=self.exceptions, key=None, event="Finished PCloud creation")
 
 
     def push_value(self,value):
