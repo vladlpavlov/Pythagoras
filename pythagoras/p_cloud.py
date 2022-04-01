@@ -8,6 +8,7 @@ from getpass import getuser
 from pprint import pprint
 from random import Random
 from inspect import getsource
+from traceback import print_exception
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -79,10 +80,7 @@ class SharedStorage_P2P_Cloud:
 
         def cloud_excepthandler(other_self, etype, value, tb, tb_offset=None):
             self._post_event(event_store=self.exceptions, key=None, event=value)
-            print("\n\n\n\n\n")
-            print(' {{{{{==========EXCEPTION==========}}}}} \n')
-            pprint(value)
-            print("\n\n\n\n\n")
+            print_exception(etype, value, tb)
             return
 
         try: # if we are inside a notebook
