@@ -96,6 +96,22 @@ class PValueAddress(PHashAddress):
 
 
 class PFuncSnapshotAddress(PHashAddress):
+    """ Global address of a function snapshot: text prefix + hash code for source code and list of required modules.
+
+        PFuncSnapshotAddress is a universal global identifier of a function. It contains a hash valued
+        for the function's source cod, combined with its "requires" list
+        (a list of required modules with their versions).
+        A change in the source code, or a change in the "requires" list results in the creation of a new hash,
+        hence, a new address.
+
+        An address also includes a prefix, which makes it more simple for humans to interpret an address,
+        and further decreases collision risk.
+
+        For the sake of debuggability, the first time a new PFuncSnapshotAddress is created, it writes a new entry to
+        PCloud.function_snapshots dictionary, which serves as a journal that records details of
+        all PFuncSnapshotAddress-s.
+        """
+
     def __init__(self, f:Callable):
         assert callable(f)
         assert hasattr(f,"p_cloud")
@@ -123,14 +139,15 @@ class PFuncSnapshotAddress(PHashAddress):
 class PFuncOutputAddress(PHashAddress):
     """A globally unique address of a function execution outcome. Consists of a human-readable prefix and a hash code.
 
-    PFuncResAddress is a universal global identifier of a value, which was (or will be)
-    an output of a function execution. Assuming a function is pure, we only need function name/definition,
+    PFuncOutputAddress is a universal global identifier of a value, which was (or will be)
+    an output of a function execution. Assuming a function is pure, we only need function's PFuncSnapshotAddress
     and arguments' values to build a "signature", which serves as a unique key for the output object.
     The hash component of an address is a hash of this unique key.
 
-    An address also includes a prefix, which makes it more easy for humans to interpret an address,
+    An address also includes a prefix, which makes it  easy for humans to interpret the address,
     and further decreases collision risk.
     """
+
     def __init__(self, f:Callable, arguments:KwArgsDict):
         f_base_address =  PFuncSnapshotAddress(f)
         assert isinstance(arguments, KwArgsDict)
