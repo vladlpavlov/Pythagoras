@@ -3,12 +3,13 @@ import sys
 from typing import NamedTuple, Any, List, Callable
 from joblib.hashing import NumpyHasher,Hasher
 
-from pythagoras import allowed_key_chars, get_long_infoname
+from pythagoras import allowed_key_chars, get_long_infoname, buid_context
 
 
 class KwArgsDict:
     """Dirty way to do forward declaration"""
     pass
+
 
 class PHashAddress(ABC):
     """A globally unique address of some value. Consists of a human-readable prefix and a hash code."""
@@ -70,6 +71,7 @@ class PHashAddress(ABC):
     def __repr__(self):
         raise NotImplementedError
 
+
 class PValueAddress(PHashAddress):
     """A globally unique address of an immutable value. Consists of a human-readable prefix and a hash code.
 
@@ -92,6 +94,32 @@ class PValueAddress(PHashAddress):
     def __repr__(self):
         return f"PHashAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
 
+
+class PFuncSnapshotAddress(PHashAddress):
+    def __init__(self, f:Callable):
+        assert callable(f)
+        assert hasattr(f,"p_cloud")
+        assert hasattr(f,"original_source")
+        if hasattr(f,"func_snapshot_address"):
+            self.prefix = f.func_snapshot_address.prefix
+            self.hash_id = f.func_snapshot_address.hash_id
+            return
+        cloud = f.p_cloud
+        self.prefix = self._build_prefix(f)
+        self.hash_id = self._build_hash_id((cloud.requires, f.original_source))
+        f.func_snapshot_address = self
+        if not self in cloud.func_snapshots:
+            new_snapshot = dict(
+                requires = cloud.requires
+                , source = f.original_source
+                , first_use_context = buid_context(cloud.base_dir, cloud.baseline_timezone)
+                )
+            cloud.func_snapshots[self] = new_snapshot
+
+    def __repr__(self):
+        return f"PFuncSnapshotAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
+
+
 class PFuncOutputAddress(PHashAddress):
     """A globally unique address of a function execution outcome. Consists of a human-readable prefix and a hash code.
 
@@ -103,16 +131,14 @@ class PFuncOutputAddress(PHashAddress):
     An address also includes a prefix, which makes it more easy for humans to interpret an address,
     and further decreases collision risk.
     """
-    def __init__(self, f:Callable, arguments:KwArgsDict, cloud = None):
-        assert callable(f)
-        assert hasattr(f,"serverless_cloud")
-        assert hasattr(f,"full_string_repr")
+    def __init__(self, f:Callable, arguments:KwArgsDict):
+        f_base_address =  PFuncSnapshotAddress(f)
         assert isinstance(arguments, KwArgsDict)
-        self.prefix = self._build_prefix(f)
-        self.hash_id = self._build_hash_id((f.full_string_repr, arguments.pack(cloud=cloud)))
+        self.prefix = f_base_address.prefix
+        self.hash_id = self._build_hash_id((f_base_address.hash_id, arguments.pack(cloud=f.p_cloud)))
 
     def __repr__(self):
-        return f"PFuncResAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
+        return f"PFuncOutputAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
 
 
 class KwArgsDict(dict):

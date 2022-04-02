@@ -8,7 +8,7 @@ from getpass import getuser
 from pprint import pprint
 from random import Random
 from inspect import getsource
-from traceback import print_exception, format_exception
+import traceback
 from typing import Any
 from zoneinfo import ZoneInfo
 import pkg_resources
@@ -25,7 +25,7 @@ class ExceptionInfo:
         assert isinstance(exc_value, BaseException)
         self.__name__ = get_long_infoname(exc_value)
         self.exception = exc_value
-        self.exception_description = format_exception(exc_type,exc_value, trace_back)
+        self.exception_description = traceback.format_exception(exc_type,exc_value, trace_back)
         self.context = buid_context(path,time_zone)
 
 def kw_args(**kwargs):
@@ -74,6 +74,7 @@ class SharedStorage_P2P_Cloud:
         self.baseline_timezone = baseline_timezone
         self.exceptions = FileDirDict(dir_name=os.path.join(self.base_dir, "exceptions"), file_type="json")
         self._event_counter = 0
+        self.func_snapshots = FileDirDict(dir_name=os.path.join(self.base_dir, "func_snapshots"),file_type="json")
 
         self._randomizer = Random()
         """We are using a new instance of Random object that does not share the same seed with other Random objects.
@@ -94,7 +95,7 @@ class SharedStorage_P2P_Cloud:
         def cloud_excepthandler(other_self, exc_type, exc_value, trace_back, tb_offset=None):
             exc_event = ExceptionInfo(exc_type, exc_value, trace_back, self.base_dir, self.baseline_timezone)
             self._post_event(event_store=self.exceptions, key=None, event=exc_event)
-            print_exception(exc_type, exc_value, trace_back)
+            traceback.print_exception(exc_type, exc_value, trace_back)
             return
 
         try: # if we are inside a notebook
@@ -142,7 +143,7 @@ class SharedStorage_P2P_Cloud:
             try:
 
                 kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
-                func_key = PFuncOutputAddress(wrapped_function, kwargs_packed, self)
+                func_key = PFuncOutputAddress(wrapped_function, kwargs_packed)
 
                 if self.p_purity_checks == 0:
                     use_cached_output = True
@@ -202,15 +203,15 @@ class SharedStorage_P2P_Cloud:
         def is_stored(**kwargs):
             """Check if the function output for these arguments has been calculated and cached"""
             kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
-            func_key = PFuncOutputAddress(wrapped_function, kwargs_packed, self)
+            func_key = PFuncOutputAddress(wrapped_function, kwargs_packed)
             return func_key in self.func_output_store
 
         wrapped_function.sync_parallel = sync_parallel
         wrapped_function.async_parallel = async_parallel
         wrapped_function.sync_remote = a_func
         wrapped_function.async_remote = async_remote
-        wrapped_function.serverless_cloud = self
-        wrapped_function.full_string_repr = f"FUNCTION REQUIRES {self.requires}, SOURCE {getsource(a_func)}"
+        wrapped_function.p_cloud = self
+        wrapped_function.original_source = getsource(a_func)
         wrapped_function.is_stored = is_stored
 
         self.functions.append(wrapped_function)
