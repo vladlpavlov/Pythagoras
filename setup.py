@@ -29,5 +29,16 @@ setuptools.setup(
     ]
     ,keywords='cloud, ML, AI, serverless, distributed, parallel, machine-learning, deep-learning, pythagoras'
     ,python_requires='>=3.8'
-    ,install_requires=['numpy', 'scipy','pandas','scikit-learn', 'psutil', 'boto3', 'moto', 'jsonpickle']
+    ,install_requires=[
+        'numpy'
+        , 'scipy'
+        , 'pandas'
+        , 'scikit-learn'
+        , 'jsonpickle'
+        , 'psutil'
+        , 'boto3'
+        , 'moto'
+        , 'pytest'
+        , 'hypothesis'
+    ]
 )

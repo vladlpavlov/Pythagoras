@@ -91,14 +91,16 @@ Binary installers for the latest released version are available at the Python pa
 
 ## (5) Dependencies
 
-* [pandas](https://pandas.pydata.org/)
-* [scikit-learn](https://scikit-learn.org/) 
-* [numpy](https://numpy.org/)
-* [scipy](https://www.scipy.org/)
-* [psutil](https://pypi.org/project/psutil/)
-* [boto3](https://boto3.readthedocs.io/)
+* [pandas](https://pandas.pydata.org)
+* [scikit-learn](https://scikit-learn.org) 
+* [numpy](https://numpy.org)
+* [scipy](https://www.scipy.org)
+* [psutil](https://pypi.org/project/psutil)
+* [boto3](https://boto3.readthedocs.io)
 * [moto](http://getmoto.org)
-* [jsonpickle](https://jsonpickle.github.io/)
+* [jsonpickle](https://jsonpickle.github.io)
+* [pytest](https://pytest.org)
+* [hypothesis](https://hypothesis.works) 
 
 
 ## (6) Key Contacts
