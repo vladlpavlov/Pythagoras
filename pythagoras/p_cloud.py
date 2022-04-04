@@ -14,8 +14,9 @@ from zoneinfo import ZoneInfo
 import pkg_resources
 import psutil
 
-from pythagoras import PValueAddress, PFuncOutputAddress, FileDirDict, KwArgsDict, get_long_infoname, \
-    replace_special_chars, SimplePersistentDict, buid_context
+from pythagoras.p_hash_address import PValueAddress, PFuncOutputAddress, KwArgsDict
+from pythagoras.dicts import   FileDirDict, SimplePersistentDict
+from pythagoras.utils import get_long_infoname, replace_special_chars, buid_context
 
 
 class ExceptionInfo:
