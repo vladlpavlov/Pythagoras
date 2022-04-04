@@ -3,7 +3,8 @@ import sys
 from typing import NamedTuple, Any, List, Callable
 from joblib.hashing import NumpyHasher,Hasher
 
-from pythagoras import allowed_key_chars, get_long_infoname, buid_context
+from pythagoras.global_objects import allowed_key_chars
+from pythagoras.utils import get_long_infoname, buid_context
 
 
 class KwArgsDict:
