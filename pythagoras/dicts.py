@@ -243,7 +243,7 @@ class FileDirDict(SimplePersistentDict):
 
     def _save_to_file(self, file_name: str, value):
         if self.file_type == "pkl":
-            pd.to_pickle(value, file_name)
+            pd.to_pickle(value, file_name) # TODO: Remove dependency from pandas
         elif self.file_type == "json":
             with open(file_name, 'w') as f:
                 f.write(jsonpickle.dumps(value, indent=4))

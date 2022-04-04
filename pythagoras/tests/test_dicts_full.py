@@ -1,3 +1,4 @@
+import time
 from tempfile import TemporaryDirectory
 from pythagoras import FileDirDict
 from pythagoras import allowed_key_chars

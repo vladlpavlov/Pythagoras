@@ -61,6 +61,10 @@ def validate_dict_object(dict_to_test):
 
     assert len(dict_to_test) == 0
 
+def test_TimeboxedFileDirDict(tmpdir):
+    """a placeholder for unit test for test_TimeboxedFileDirDict"""
+    pass
+
 def test_FileDirDict(tmpdir):
     p = FileDirDict(dir_name = tmpdir, file_type="pkl")
     validate_dict_object(p)
