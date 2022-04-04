@@ -229,4 +229,4 @@ class PCloud(SharedStorage_P2P_Cloud):
     """
 
     def __init__(self, requires:str="", shared_dir_name:str="SharedStorage_P2P_Cloud", connection:str=""):
-        super().__init__(requires, shared_dir_name)
+        super().__init__(requires, shared_dir_name, p_purity_checks=0)
