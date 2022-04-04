@@ -20,7 +20,7 @@ import jsonpickle.ext.pandas as jsonpickle_pandas
 jsonpickle_numpy.register_handlers()
 jsonpickle_pandas.register_handlers()
 
-from pythagoras import allowed_key_chars
+from pythagoras.global_objects import *
 
 #
 class SimplePersistentDict(ABC):
