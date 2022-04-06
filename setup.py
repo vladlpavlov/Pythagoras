@@ -28,7 +28,7 @@ setuptools.setup(
         , "Topic :: Software Development :: Libraries :: Python Modules"
     ]
     ,keywords='cloud, ML, AI, serverless, distributed, parallel, machine-learning, deep-learning, pythagoras'
-    ,python_requires='>=3.8'
+    ,python_requires='>=3.9'
     ,install_requires=[
         'numpy'
         , 'scipy'
