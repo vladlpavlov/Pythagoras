@@ -1,12 +1,11 @@
 import os
+import pickle
 import platform
 from _socket import gethostname
 from datetime import datetime
 from getpass import getpass, getuser
 from socket import socket
 from zoneinfo import ZoneInfo
-
-import pandas as pd
 
 import string
 from abc import *
@@ -23,7 +22,7 @@ jsonpickle_pandas.register_handlers()
 from pythagoras.global_objects import *
 
 SimpleDictKey = Union[ str, List[str], Tuple[str,...] ]
-""" A value which can be used as a key for SimplePersistentDict. 
+""" A value which can be used as a key for SimplePersistentDict.
 
 SimpleDictKey must be a string or a sequence of strings.
 """
@@ -238,7 +237,8 @@ class FileDirDict(SimplePersistentDict):
 
     def _read_from_file(self, file_name: str):
         if self.file_type == "pkl":
-            result = pd.read_pickle(file_name)
+            with open(file_name, 'rb') as f:
+                result = pickle.load(f)
         elif self.file_type == "json":
             with open(file_name, 'r') as f:
                 result = jsonpickle.loads(f.read())
@@ -248,7 +248,8 @@ class FileDirDict(SimplePersistentDict):
 
     def _save_to_file(self, file_name: str, value:Any):
         if self.file_type == "pkl":
-            pd.to_pickle(value, file_name) # TODO: Remove dependency from pandas
+            with open(file_name, 'wb') as f:
+                pickle.dump(value, f)
         elif self.file_type == "json":
             with open(file_name, 'w') as f:
                 f.write(jsonpickle.dumps(value, indent=4))
