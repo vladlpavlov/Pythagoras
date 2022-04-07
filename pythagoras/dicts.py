@@ -267,6 +267,8 @@ class FileDirDict(SimplePersistentDict):
 
     def __delitem__(self, key):
         filename = self._build_full_path(key)
+        if not os.path.isfile(filename):
+            raise KeyError(f"File {filename} does not exist")
         os.remove(filename)
 
     def _generic_iter(self, iter_type: str):
