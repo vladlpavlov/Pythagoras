@@ -10,7 +10,7 @@ import pandas as pd
 
 import string
 from abc import *
-from typing import Set, Any
+from typing import Set, Any, List, Tuple, Union
 import boto3
 
 
@@ -22,18 +22,23 @@ jsonpickle_pandas.register_handlers()
 
 from pythagoras.global_objects import *
 
-#
+SimpleDictKey = Union[ str, List[str], Tuple[str,...] ]
+""" A value which can be used as a key for SimplePersistentDict. 
+
+SimpleDictKey must be a string or a sequence of strings.
+"""
+
 class SimplePersistentDict(ABC):
-    """Dict-like class that only accepts keys which are sequences of strings.
+    """Dict-like class that only accepts keys which are sequences of strings (SimpleDictKey-s).
 
     An abstract class for a key-value store. It accepts keys in a form of
-    either a single sting or a sequence (tuple, list, etc.) of strings.
+    either a single sting or a sequence (tuple, list) of strings.
     It imposes no restrictions on types of values in the key-value pairs.
 
-    The API for the class resemples the API of Python's built-in Dict.
+    The API for the class resembles the API of Python's built-in Dict.
     """
 
-    def _normalize_key(self, key):
+    def _normalize_key(self, key:SimpleDictKey) -> Tuple[str,...]:
         """Check if a key meets requirements and return its standardized form.
 
         A key must be either a string or a sequence of non-empty strings.
@@ -60,23 +65,23 @@ class SimplePersistentDict(ABC):
         return key
 
     @abstractmethod
-    def __contains__(self, key):
+    def __contains__(self, key:SimpleDictKey) -> bool:
         raise NotImplementedError
 
     @abstractmethod
-    def __getitem__(self, key):
+    def __getitem__(self, key:SimpleDictKey) -> Any:
         raise NotImplementedError
 
     @abstractmethod
-    def __setitem__(self, key, value):
+    def __setitem__(self, key:SimpleDictKey, value:Any):
         raise NotImplementedError
 
     @abstractmethod
-    def __delitem__(self, key):
+    def __delitem__(self, key:SimpleDictKey):
         raise NotImplementedError
 
     @abstractmethod
-    def __len__(self):
+    def __len__(self) -> int:
         raise NotImplementedError
 
     @abstractmethod
@@ -96,20 +101,20 @@ class SimplePersistentDict(ABC):
     def items(self):
         return self._generic_iter("items")
 
-    def get(self, key, default=None):
+    def get(self, key:SimpleDictKey, default:Any=None):
         if key in self:
             return self[key]
         else:
             return default
 
-    def setdefault(self, key, default=None):
+    def setdefault(self, key:SimpleDictKey, default:Any=None):
         if key in self:
             return self[key]
         else:
             self[key] = default
             return default
 
-    def pop(self, key, default):
+    def pop(self, key:SimpleDictKey, default:Any):
         if key in self:
             result = self[key]
             del self[key]
@@ -117,13 +122,13 @@ class SimplePersistentDict(ABC):
         else:
             return default
 
-    def popitem(self):
+    def popitem(self) -> Any:
         key = next(iter(self))
         result = self[key]
         del self[key]
         return result
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         try:
             if len(self) != len(other):
                 return False
@@ -134,14 +139,14 @@ class SimplePersistentDict(ABC):
         except:
             return False
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not (self == other)
 
     def clear(self):
         for k in self.keys():
             del self[k]
 
-    def safe_delete(self, key):
+    def safe_delete(self, key:SimpleDictKey):
         """ Delete an item from a dictionary without raising an exception if the item does not exist.
 
         This method is absent in the original dict API, it is added here
@@ -189,7 +194,7 @@ class FileDirDict(SimplePersistentDict):
 
         self.base_dir = os.path.abspath(dir_name)
 
-    def __len__(self):
+    def __len__(self) -> int:
         num_files = 0
         for subdir_info in os.walk(self.base_dir):
             files = subdir_info[2]
@@ -208,7 +213,7 @@ class FileDirDict(SimplePersistentDict):
             if (subdir_name != self.base_dir) and len(os.listdir(subdir_name)) == 0:
                 os.rmdir(subdir_name)
 
-    def _build_full_path(self, key, create_subdirs=False, is_file_path = True):
+    def _build_full_path(self, key:SimpleDictKey, create_subdirs:bool=False, is_file_path:bool = True):
         key = self._normalize_key(key)
         key = [self.base_dir] + list(key)
         dir_names = key[:-1] if is_file_path else key
@@ -227,7 +232,7 @@ class FileDirDict(SimplePersistentDict):
         else:
             return os.path.join(*dir_names)
 
-    def get_subdict(self, key):  # TODO: add this method to the entire hierarchy of persistent dict classes
+    def get_subdict(self, key:SimpleDictKey):  # TODO: add this method to the entire hierarchy of persistent dict classes
         full_dir_path = self._build_full_path(key, create_subdirs = True, is_file_path = False)
         return FileDirDict(dir_name = full_dir_path, file_type=self.file_type)
 
@@ -241,7 +246,7 @@ class FileDirDict(SimplePersistentDict):
             raise ValueError("file_type must be either pkl or json")
         return result
 
-    def _save_to_file(self, file_name: str, value):
+    def _save_to_file(self, file_name: str, value:Any):
         if self.file_type == "pkl":
             pd.to_pickle(value, file_name) # TODO: Remove dependency from pandas
         elif self.file_type == "json":
@@ -250,22 +255,22 @@ class FileDirDict(SimplePersistentDict):
         else:
             raise ValueError("file_type must be either pkl or json")
 
-    def __contains__(self, key):
+    def __contains__(self, key:SimpleDictKey) -> bool:
         filename = self._build_full_path(key)
         return os.path.isfile(filename)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key:SimpleDictKey) -> Any:
         filename = self._build_full_path(key)
         if not os.path.isfile(filename):
             raise KeyError(f"File {filename} does not exist")
         result = self._read_from_file(filename)
         return result
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key:SimpleDictKey, value:Any):
         filename = self._build_full_path(key, create_subdirs=True)
         self._save_to_file(filename, value)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key:SimpleDictKey):
         filename = self._build_full_path(key)
         if not os.path.isfile(filename):
             raise KeyError(f"File {filename} does not exist")
@@ -349,12 +354,12 @@ class S3_Dict(SimplePersistentDict):
         self.bucket = self.s3_client.create_bucket(Bucket=bucket_name)
         self.bucket_name = bucket_name
 
-    def _build_full_objectname(self, key):
+    def _build_full_objectname(self, key:SimpleDictKey) -> str:
         key = self._normalize_key(key)
         objectname =  "/".join(key)+ "." + self.file_type
         return objectname
 
-    def __contains__(self, key):
+    def __contains__(self, key:SimpleDictKey) -> bool:
         try:
             obj_name = self._build_full_objectname(key)
             self.s3_client.head_object(Bucket=self.bucket_name, Key=obj_name)
@@ -362,7 +367,7 @@ class S3_Dict(SimplePersistentDict):
         except:
             return False
 
-    def __getitem__(self, key):
+    def __getitem__(self, key:SimpleDictKey) -> Any:
         obj_name = self._build_full_objectname(key)
         file_name = self.local_cache._build_full_path(key, create_subdirs=True)
         self.s3_client.download_file(self.bucket_name, obj_name, file_name)
@@ -370,18 +375,18 @@ class S3_Dict(SimplePersistentDict):
         del self.local_cache[key]
         return result
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key:SimpleDictKey, value:Any):
         obj_name = self._build_full_objectname(key)
         file_name = self.local_cache._build_full_path(key, create_subdirs=True)
         self.local_cache[key]=value
         self.s3_client.upload_file(file_name, self.bucket_name, obj_name)
         del self.local_cache[key]
 
-    def __delitem__(self, key):
+    def __delitem__(self, key:SimpleDictKey):
         obj_name = self._build_full_objectname(key)
         self.s3_client.delete_object(Bucket = self.bucket_name, Key = obj_name)
 
-    def __len__(self):
+    def __len__(self) -> int:
         num_files = 0
         suffix = "." + self.file_type
 
@@ -464,10 +469,10 @@ class ImmutableS3_LocallyCached_Dict(S3_Dict):
         self._enforce_immutability = True
         """ _enforce_immutability only exists for testing purposes, its value should never be changed"""
 
-    def __contains__(self, key):
+    def __contains__(self, key:SimpleDictKey) -> bool:
         return self.local_cache.__contains__(key) or super().__contains__(key)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key:SimpleDictKey) -> Any:
         obj_name = self._build_full_objectname(key)
         file_name = self.local_cache._build_full_path(key, create_subdirs=True)
         try:
@@ -478,7 +483,7 @@ class ImmutableS3_LocallyCached_Dict(S3_Dict):
         result =  self.local_cache[key]
         return result
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key:SimpleDictKey, value:Any):
         if self._enforce_immutability and self.__contains__(key):
             raise KeyError(f"Key {key} is already present in ImmutableS3_LocallyCached_Dict, value can't be changed.")
         obj_name = self._build_full_objectname(key)
@@ -486,7 +491,7 @@ class ImmutableS3_LocallyCached_Dict(S3_Dict):
         self.local_cache[key]=value
         self.s3_client.upload_file(file_name, self.bucket_name, obj_name)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key:SimpleDictKey):
         if self._enforce_immutability:
             raise KeyError(f"Can't delete {key}: operation is not allowed for immutable Dict.")
         else:
