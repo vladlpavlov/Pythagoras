@@ -105,7 +105,7 @@ class SharedStorage_P2P_Cloud:
             pass
 
 
-    def push_value(self,value):
+    def push_value(self, value):
         """ Add a value to value_store"""
         key = PValueAddress(value)
         if not key in self.value_store:
@@ -137,12 +137,12 @@ class SharedStorage_P2P_Cloud:
 
     def add_pure_function(self, a_func):
         assert callable(a_func)
+        assert not hasattr(a_func, "p_cloud"), "A function is not allowed to be added to the cloud twice"
 
         @wraps(a_func)
         def wrapped_function(**kwargs):
-            """compose memoized version of a function"""
+            """compose memoized/cloudized version of a function"""
             try:
-
                 kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
                 func_key = PFuncOutputAddress(wrapped_function, kwargs_packed)
 
