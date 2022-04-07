@@ -10,7 +10,7 @@ import pandas as pd
 
 import string
 from abc import *
-from typing import Set, Any, List, Tuple, Union
+from typing import Set, Any, Tuple, Union, Sequence
 import boto3
 
 
@@ -22,7 +22,7 @@ jsonpickle_pandas.register_handlers()
 
 from pythagoras.global_objects import *
 
-SimpleDictKey = Union[ str, List[str], Tuple[str,...] ]
+SimpleDictKey = Union[ str, Sequence[str] ]
 """ A value which can be used as a key for SimplePersistentDict. 
 
 SimpleDictKey must be a string or a sequence of strings.
