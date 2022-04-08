@@ -3,6 +3,8 @@ import pickle
 from abc import *
 from typing import Set, Any, Tuple, Union, Sequence
 import boto3
+from pythagoras.p_hash_address import PHashAddress
+
 from pythagoras.global_objects import *
 
 import jsonpickle
@@ -13,7 +15,7 @@ jsonpickle_numpy.register_handlers()
 jsonpickle_pandas.register_handlers()
 
 
-SimpleDictKey = Union[ str, Sequence[str] ]
+SimpleDictKey = Union[ str, Sequence[str], PHashAddress ]
 """ A value which can be used as a key for SimplePersistentDict. 
 
 SimpleDictKey must be a string or a sequence of strings.

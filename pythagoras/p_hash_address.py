@@ -51,21 +51,21 @@ class PHashAddress(ABC):
 
 
     def __iter__(self):
-        def step():
+        def step() -> str:
             yield self.prefix
             yield self.hash_id
 
         return step()
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return ( isinstance(other, self.__class__)
                 and self.prefix  == other.prefix
                 and self.hash_id == other.hash_id )
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not self.__eq__(other)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return 2
 
     @abstractmethod
@@ -165,7 +165,7 @@ class KwArgsDict(dict):
     def __init__(self,*args, **kargs):
         super().__init__(*args, **kargs)
 
-    def pack(self, *, cloud):
+    def pack(self, *, cloud) -> KwArgsDict:
         """ Replace values in a dict with their hash addresses.
 
         This function also "normalizes" the dictionary by sorting keys
@@ -183,7 +183,7 @@ class KwArgsDict(dict):
                     cloud.value_store[key] = value
         return packed_copy
 
-    def unpack(self,*,cloud):
+    def unpack(self,*,cloud) -> KwArgsDict:
         """ Restore values based on their hash addresses"""
         unpacked_copy = KwArgsDict()
         for k,v in self.items():
