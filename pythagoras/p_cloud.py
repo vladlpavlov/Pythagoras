@@ -69,7 +69,7 @@ class SharedStorage_P2P_Cloud:
         self.requires = requires # TODO: polish this functionality later
                                  # we need to convert "requires" to some "normal" form to
                                  # prevent syntax variability from impacting hash calculations
-        self.functions = []
+        self.functions = {}
         self.value_store = FileDirDict(dir_name=os.path.join(self.base_dir, "value_store"))
         self.func_output_store = FileDirDict(dir_name=os.path.join(self.base_dir, "func_output_store"))
         self.baseline_timezone = baseline_timezone
@@ -215,7 +215,10 @@ class SharedStorage_P2P_Cloud:
         wrapped_function.original_source = getsource(a_func)
         wrapped_function.is_stored = is_stored
 
-        self.functions.append(wrapped_function)
+        assert wrapped_function.__name__ not in self.functions, (   # TODO: change to custom exception
+            f"Function {wrapped_function.__name__} has already been added to the cloud. Can't add one more time.")
+
+        self.functions[wrapped_function.__name__] = wrapped_function
 
         return wrapped_function
 
