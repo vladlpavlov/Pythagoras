@@ -2,7 +2,7 @@ from typing import Union, Callable, Any
 import re, inspect, copy
 
 def _name_is_used_in_source(name: str, source: Union[Callable, str]) -> bool:
-    """ Check if func_name is used within the source.
+    """ Check if name is used within the source.
 
     This is a naive implementation for now. Should be refactored later.
     """
@@ -16,7 +16,7 @@ def _name_is_used_in_source(name: str, source: Union[Callable, str]) -> bool:
     if callable(source):
         source = inspect.getsource(source)
 
-    searh_pattern = "[^a-zA-Z_]" + name + "[^a-zA-Z0-9_]"
+    searh_pattern = "[^a-zA-Z0-9_]" + name + "[^a-zA-Z0-9_]"
     search_result = re.search(searh_pattern, source)
     return bool(search_result)
 
