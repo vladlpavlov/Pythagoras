@@ -139,6 +139,7 @@ class SharedStorage_P2P_Cloud:
         assert callable(a_func)
         assert not hasattr(a_func, "p_cloud"), "A function is not allowed to be added to the cloud twice"
         assert hasattr(a_func,"__name__"), "Nameless functions can not be cloudized"
+        assert a_func.__name__ != "<lambda>", "Lambda dunctions can not be cloudized"
 
         @wraps(a_func)
         def wrapped_function(**kwargs):
