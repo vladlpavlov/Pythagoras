@@ -5,6 +5,7 @@ from joblib.hashing import NumpyHasher,Hasher
 
 from pythagoras.global_objects import allowed_key_chars
 from pythagoras.utils import get_long_infoname, buid_context
+from pythagoras._dependency_discovery import _all_dependencies_one_func
 
 
 class KwArgsDict:
@@ -116,19 +117,29 @@ class PFuncSnapshotAddress(PHashAddress):
     def __init__(self, f:Callable):
         assert callable(f)
         assert hasattr(f,"p_cloud")
-        assert hasattr(f,"original_source")
+        assert hasattr(f,"__wrapped__")
+        assert f.__name__ in f.p_cloud.functions
         if hasattr(f,"func_snapshot_address"):
             self.prefix = f.func_snapshot_address.prefix
             self.hash_id = f.func_snapshot_address.hash_id
             return
         cloud = f.p_cloud
         self.prefix = self._build_prefix(f)
-        self.hash_id = self._build_hash_id((cloud.requires, f.original_source))
+
+        dependencies = _all_dependencies_one_func(f.__name__, f.p_cloud.functions)
+        dependencies = sorted(dependencies)
+        f.original_source_with_dependencies = ""
+
+        for f_depend in dependencies:
+            f.original_source_with_dependencies += (cloud.functions[f_depend].original_source+"\n\n")
+
+        self.hash_id = self._build_hash_id((cloud.requires, f.original_source_with_dependencies))
         f.func_snapshot_address = self
         if not self in cloud.func_snapshots:
             new_snapshot = dict(
                 requires = cloud.requires
                 , source = f.original_source
+                , source_with_dependencies = f.original_source_with_dependencies
                 , first_use_context = buid_context(cloud.base_dir, cloud.baseline_timezone)
                 )
             cloud.func_snapshots[self] = new_snapshot
