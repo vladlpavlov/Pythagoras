@@ -35,7 +35,8 @@ class SimplePersistentDict(ABC):
 
     digest_len:int = 8
 
-    def _create_suffix(self,input_str:str) -> str:
+    def _create_suffix(self, input_str:str) -> str:
+        """ Create a hash signtature suffix for a string."""
 
         assert isinstance(input_str, str)
 
@@ -48,6 +49,7 @@ class SimplePersistentDict(ABC):
 
 
     def _add_suffix_if_absent(self, input_str:str) -> str:
+        """ Add a hash signtature suffix to a string if it hasn't been already added."""
 
         assert isinstance(input_str, str)
 
@@ -60,7 +62,7 @@ class SimplePersistentDict(ABC):
 
 
     def _normalize_key(self, key:SimpleDictKey) -> Tuple[str,...]:
-        """Check if a key meets requirements and return its standardized form.
+        """Check if a key meets requirements and return its standardized form with hash suffixes.
 
         A key must be either a string or a sequence of non-empty strings.
         If it is a single string, it will be transformed into a tuple,
