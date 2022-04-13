@@ -49,7 +49,7 @@ class SimplePersistentDict(ABC):
         hash_object = hashlib.md5(input_str)
         full_digest = base64.b32encode(hash_object.digest()).decode()
             # TODO: decide how to deal with leading spaces (which are not allowed on FAT32)
-        suffix = "_" + full_digest[-self.digest_len:]
+        suffix = "_" + full_digest[:self.digest_len]
 
         return suffix
 
