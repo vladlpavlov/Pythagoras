@@ -20,7 +20,7 @@ SimpleDictKey = Union[ str, Sequence[str], PHashAddress ]
 """ A value which can be used as a key for SimplePersistentDict. 
 
 SimpleDictKey must be a string or a sequence of strings.
-Thec characters within strings are restricted to allowed_key_chars set.
+The characters within strings are restricted to allowed_key_chars set.
 """
 
 class SimplePersistentDict(ABC):
@@ -33,7 +33,7 @@ class SimplePersistentDict(ABC):
     The API for the class resembles the API of Python's built-in Dict.
     """
 
-    digest_len:int = 4
+    digest_len:int = 8
 
     def _create_suffix(self,input_str:str) -> str:
 
