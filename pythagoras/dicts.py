@@ -34,16 +34,20 @@ class SimplePersistentDict(ABC):
     The API for the class resembles the API of Python's built-in Dict.
     """
 
-    digest_len:int = 7
+    digest_len:int = 8
 
     def _create_suffix(self, input_str:str) -> str:
-        """ Create a hash signtature suffix for a string."""
+        """ Create a hash signtature suffix for a string.
+
+        We need it to ensure correct work of persistent dictionaries
+        with case-insensitive (even if case-preserving) filesystems, such as MacOS HFS
+        """
 
         assert isinstance(input_str, str)
 
         input_str = input_str.encode()
         hash_object = hashlib.md5(input_str)
-        full_digest = base64.urlsafe_b64encode(hash_object.digest()).decode()
+        full_digest = base64.b32encode(hash_object.digest()).decode()
             # TODO: decide how to deal with leading spaces (which are not allowed on FAT32)
         suffix = "_" + full_digest[-self.digest_len:]
 
