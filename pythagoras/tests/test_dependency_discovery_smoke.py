@@ -35,9 +35,15 @@ def long_function(n:int) -> Any:
     else:
         return -100
 
+def turn_left():
+    turn_right()
+
+def turn_right():
+    turn_left()
+
 def test_dependency_discovery():
     functions_dict = {}
-    for fn in [f, kuku, a, rep_f, long_function, both, b, o, e]:
+    for fn in [f, kuku, a, rep_f, long_function, both, b, o, e, turn_left, turn_right]:
         functions_dict[fn.__name__] = fn
     assert len(_all_dependencies_one_func("f", functions_dict)) == 1
     assert len(_all_dependencies_one_func("kuku", functions_dict)) == 1
@@ -48,3 +54,4 @@ def test_dependency_discovery():
     assert len(_all_dependencies_one_func("a", functions_dict)) == 4
     assert len(_all_dependencies_one_func("b", functions_dict)) == 5
     assert len(_all_dependencies_one_func("long_function", functions_dict)) == 6
+    assert len(_all_dependencies_one_func("turn_left",functions_dict)) == 2
