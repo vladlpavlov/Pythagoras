@@ -6,6 +6,9 @@ def validate_dict_object(dict_to_test):
     dict_to_test.clear()
     model_dict = dict()
 
+    a_key = dict_to_test._normalize_key(["Blah-Blah-Blah"])
+    assert a_key == dict_to_test._normalize_key(a_key)
+
     assert len(dict_to_test) == 0
     for i in range(10):
         k = ("_"+str(10*i),)
@@ -61,9 +64,6 @@ def validate_dict_object(dict_to_test):
 
     assert len(dict_to_test) == 0
 
-def test_TimeboxedFileDirDict(tmpdir):
-    """a placeholder for unit test for test_TimeboxedFileDirDict"""
-    pass
 
 def test_FileDirDict(tmpdir):
     p = FileDirDict(dir_name = tmpdir, file_type="pkl")

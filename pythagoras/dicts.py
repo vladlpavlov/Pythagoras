@@ -1,3 +1,4 @@
+import hashlib
 import os
 import pickle
 from abc import *
@@ -32,6 +33,32 @@ class SimplePersistentDict(ABC):
     The API for the class resembles the API of Python's built-in Dict.
     """
 
+    digest_len:int = 4
+
+    def _create_suffix(self,input_str:str) -> str:
+
+        assert isinstance(input_str, str)
+
+        input_str = input_str.encode()
+        hash_object = hashlib.md5(input_str)
+        full_digest = hash_object.hexdigest()
+        suffix = "_" + full_digest[-self.digest_len:]
+
+        return suffix
+
+
+    def _add_suffix_if_absent(self, input_str:str) -> str:
+
+        assert isinstance(input_str, str)
+
+        if len(input_str) > self.digest_len + 1:
+            possibly_already_present_suffix = self._create_suffix(input_str[:-1-self.digest_len])
+            if input_str.endswith(possibly_already_present_suffix):
+                return input_str
+
+        return input_str + self._create_suffix(input_str)
+
+
     def _normalize_key(self, key:SimpleDictKey) -> Tuple[str,...]:
         """Check if a key meets requirements and return its standardized form.
 
@@ -56,7 +83,14 @@ class SimplePersistentDict(ABC):
                 "Only the following chars are allowed in a key:"
                 + str(allowed_key_chars))
             assert len(s), "Only non-empty strings are allowed in a key"
-        return key
+
+        new_key = []
+        for s in key:
+            new_key.append(self._add_suffix_if_absent(s))
+
+        new_key = tuple(new_key)
+
+        return new_key
 
     @abstractmethod
     def __contains__(self, key:SimpleDictKey) -> bool:
