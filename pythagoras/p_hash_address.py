@@ -48,7 +48,7 @@ class PHashAddress(ABC):
             hasher = NumpyHasher(hash_name=PHashAddress._hash_type)
         else:
             hasher = Hasher(hash_name=PHashAddress._hash_type)
-        return hasher.hash(x)
+        return hasher.hash(x) #TODO: switch to URLSafe Base 64
 
 
     def __iter__(self):

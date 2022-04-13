@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import os
 import pickle
@@ -33,7 +34,7 @@ class SimplePersistentDict(ABC):
     The API for the class resembles the API of Python's built-in Dict.
     """
 
-    digest_len:int = 8
+    digest_len:int = 7
 
     def _create_suffix(self, input_str:str) -> str:
         """ Create a hash signtature suffix for a string."""
@@ -42,7 +43,8 @@ class SimplePersistentDict(ABC):
 
         input_str = input_str.encode()
         hash_object = hashlib.md5(input_str)
-        full_digest = hash_object.hexdigest()
+        full_digest = base64.urlsafe_b64encode(hash_object.digest()).decode()
+            # TODO: decide how to deal with leading spaces (which are not allowed on FAT32)
         suffix = "_" + full_digest[-self.digest_len:]
 
         return suffix
@@ -82,8 +84,9 @@ class SimplePersistentDict(ABC):
             assert isinstance(s,str), (
                     "Key must be a string or a sequence of strings.")
             assert len(set(s) - allowed_key_chars) == 0, (
-                "Only the following chars are allowed in a key:"
-                + str(allowed_key_chars))
+                f"Invalid characters in the key: {(set(s) - allowed_key_chars)}" +
+                "\nOnly the following chars are allowed in a key:"
+                + "".join(list(allowed_key_chars)))
             assert len(s), "Only non-empty strings are allowed in a key"
 
         new_key = []
