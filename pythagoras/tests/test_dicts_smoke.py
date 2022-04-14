@@ -14,7 +14,7 @@ def validate_dict_object(dict_to_test):
         k = ("_"+str(10*i),)
         dict_to_test[k] = i
         dict_to_test[k] = i
-        dict_to_test[k] = i+ 1
+        dict_to_test[k] = i + 1
         dict_to_test[k] = i + 1
         model_dict[k] = i
         model_dict[k] = i + 1
@@ -48,6 +48,10 @@ def validate_dict_object(dict_to_test):
             == len(list(dict_to_test.keys()))
             == len(list(dict_to_test.values()))
             == len(list(dict_to_test.items())))
+
+    assert sorted([str(k) for k in dict_to_test.keys()]) == sorted([str(k) for k in model_dict.keys()])
+    assert sorted([str(v) for v in dict_to_test.values()]) == sorted([str(v) for v in model_dict.values()])
+
 
     for j in range(len(dict_to_test)):
         dict_to_test.popitem()

@@ -67,6 +67,32 @@ class SimplePersistentDict(ABC):
         return input_str + self._create_suffix(input_str)
 
 
+    def _remove_suffix_if_present(self, input_str:str) -> str:
+        """ Remove a hash signtature suffix from a string if it has been detected."""
+
+        assert isinstance(input_str, str)
+
+        if len(input_str) > self.digest_len + 1:
+            possibly_already_present_suffix = self._create_suffix(input_str[:-1-self.digest_len])
+            if input_str.endswith(possibly_already_present_suffix):
+                return input_str[:-1-self.digest_len]
+
+        return input_str
+
+
+    def _remove_all_suffixes_if_present(self, key:SimpleDictKey) -> SimpleDictKey:
+        """ Remove hash signtature suffixes from all strings in a key."""
+
+        new_key = []
+        for sub_key in key:
+            new_sub_key = self._remove_suffix_if_present(sub_key)
+            new_key.append(new_sub_key)
+
+        new_key = tuple(new_key)
+
+        return new_key
+
+
     def _normalize_key(self, key:SimpleDictKey) -> Tuple[str,...]:
         """Check if a key meets requirements and return its standardized form with hash suffixes.
 
@@ -193,8 +219,6 @@ class SimplePersistentDict(ABC):
             self.__delitem__(key)
         except:
             pass
-
-
 
 
 class FileDirDict(SimplePersistentDict):
@@ -342,11 +366,12 @@ class FileDirDict(SimplePersistentDict):
                         result_key = (*splitter(prefix_key), f[:-ext_len])
 
                         if iter_type == "keys":
-                            yield result_key
+                            yield self._remove_all_suffixes_if_present(result_key)
                         elif iter_type == "values":
                             yield self[result_key]
                         else:
-                            yield (result_key, self[result_key])
+                            yield (self._remove_all_suffixes_if_present(result_key)
+                                   , self[result_key])
 
         return step()
 
@@ -463,11 +488,12 @@ class S3_Dict(SimplePersistentDict):
                             continue
                         obj_key = splitter(obj_name)
                         if iter_type == "keys":
-                            yield obj_key
+                            yield self._remove_all_suffixes_if_present(obj_key)
                         elif iter_type == "values":
                             yield self[obj_key]
                         else:
-                            yield (obj_key, self[obj_key])
+                            yield (self._remove_all_suffixes_if_present(obj_key)
+                                   , self[obj_key])
 
         return step()
 
