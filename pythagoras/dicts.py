@@ -373,12 +373,13 @@ class FileDirDict(SimplePersistentDict):
                         result_key = (*splitter(prefix_key), f[:-ext_len])
 
                         if iter_type == "keys":
-                            yield self._remove_all_suffixes_if_present(result_key)
+                            yield self._remove_all_suffixes_if_present(
+                                result_key)
                         elif iter_type == "values":
                             yield self[result_key]
                         else:
-                            yield (self._remove_all_suffixes_if_present(result_key)
-                                   , self[result_key])
+                            yield (self._remove_all_suffixes_if_present(
+                                result_key), self[result_key])
 
         return step()
 
