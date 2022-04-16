@@ -1,4 +1,4 @@
-from pythagoras import FileDirDict, S3_Dict, ImmutableS3_LocallyCached_Dict
+from pythagoras import FileDirDict, S3_Dict
 import pandas as pd
 from moto import mock_s3
 
@@ -79,7 +79,8 @@ def test_FileDirDict(tmpdir):
     j = FileDirDict(dir_name = tmpdir, file_type="json")
     validate_dict_object(j)
 
-    # TODO: move this to generic validate_dict_object() once .get_subdict() gets implemented for the entire hierarchy
+    # TODO: move this to generic validate_dict_object()
+    # once .get_subdict() gets implemented for the entire hierarchy
     fdd = FileDirDict(dir_name=tmpdir)
     fdd[("a","a_1")] = 10
     fdd[("a","a_2")] = 100
@@ -98,14 +99,4 @@ def test_S3_Dict():
     validate_dict_object(d_j)
 
     d_p = S3_Dict(bucket_name="TEST", file_type="pkl")
-    validate_dict_object(d_p)
-
-@mock_s3
-def test_ImmutableS3_LocallyCached_Dict():
-    d_j = ImmutableS3_LocallyCached_Dict(bucket_name = "TTTTESTTT", file_type="json")
-    d_j._enforce_immutability = False
-    validate_dict_object(d_j)
-
-    d_p = ImmutableS3_LocallyCached_Dict(bucket_name="TTTTESTTT", file_type="pkl")
-    d_p._enforce_immutability = False
     validate_dict_object(d_p)
