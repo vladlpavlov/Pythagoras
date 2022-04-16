@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import sys
-from typing import NamedTuple, Any, List, Callable
-from joblib.hashing import NumpyHasher,Hasher
+from typing import Any, Callable
+from joblib.hashing import NumpyHasher, Hasher
 
 from pythagoras.global_objects import allowed_key_chars
 from pythagoras.utils import get_long_infoname, buid_context
@@ -9,12 +9,12 @@ from pythagoras._dependency_discovery import _all_dependencies_one_func
 
 
 class KwArgsDict:
-    """Dirty way to do forward declaration"""
+    """A dirty forward declaration. Actual KwArgsDict is redefined below."""
     pass
 
 
 class PHashAddress(ABC):
-    """A globally unique address of some value. Consists of a human-readable prefix and a hash code."""
+    """A globally unique address, includes a human-readable prefix and a hash."""
 
     prefix: str
     hash_id: str
@@ -52,6 +52,11 @@ class PHashAddress(ABC):
 
 
     def __iter__(self):
+        """An iterator allows converting address into a sequence of strings.
+
+        It enables automatic conversion into SimpleDictKey, hence
+        PHashAddress can be used as a key for SimplePersistentDict objects.
+        """
         def step() -> str:
             yield self.prefix
             yield self.hash_id
@@ -75,15 +80,15 @@ class PHashAddress(ABC):
 
 
 class PValueAddress(PHashAddress):
-    """A globally unique address of an immutable value. Consists of a human-readable prefix and a hash code.
+    """A globally unique address of an immutable value: a prefix + a hash code.
 
     PValueAddress is a universal global identifier of any (constant) value.
-    Using only the value's hash should (theoretically) be enough to uniquely address
-    all possible data objects that the humanity  will create in the foreseeable future
-    (see, for example ipfs.io).
+    Using only the value's hash should (theoretically) be enough to
+    uniquely address all possible data objects that the humanity  will create
+    in the foreseeable future (see, for example ipfs.io).
 
-    However, an address also includes a prefix. It makes it more easy for humans to interpret an address,
-    and further decreases collision risk.
+    However, an address also includes a prefix. It makes it more easy
+    for humans to interpret an address, and further decreases collision risk.
     """
     def __init__(self, x: Any):
         if isinstance(x, PValueAddress):
@@ -98,27 +103,38 @@ class PValueAddress(PHashAddress):
 
 
 class PFuncSnapshotAddress(PHashAddress):
-    """ Global address of a function snapshot: text prefix + hash code for source code and list of required modules.
+    """ Globally unique address of a function snapshot (version).
 
-        PFuncSnapshotAddress is a universal global identifier of a function. It contains a hash valued
-        for the function's source cod, combined with its "requires" list
+        PFuncSnapshotAddress is a universal global identifier of a function.
+        It contains a hash value for the cloudized function's source code,
+        combined with the source code of all other cloudized functions that
+        the function is using, as well as  its "requires" list
         (a list of required modules with their versions).
-        A change in the source code, or a change in the "requires" list results in the creation of a new hash,
-        hence, a new address.
+        A change in the source code, or a change in the "requires" list
+        results in the creation of a new hash, hence, a new address.
 
-        An address also includes a prefix, which makes it more simple for humans to interpret an address,
+        An address also includes a prefix, which makes it more simple
+        for humans to interpret an address,
         and further decreases collision risk.
 
-        For the sake of debuggability, the first time a new PFuncSnapshotAddress is created, it writes a new entry to
-        PCloud.function_snapshots dictionary, which serves as a journal that records details of
+        For the sake of debuggability,
+        the first time a new PFuncSnapshotAddress is created,
+        it writes a new entry to P_Cloud.function_snapshots store,
+        which serves as a journal that records details of
         all PFuncSnapshotAddress-s.
         """
 
     def __init__(self, f:Callable):
+        """Create an address of a cloudized function's snapshot.
+
+        Actual calculation happens only the first time the constructor
+        is called. Then the address is stored in the .func_snapshot_address
+        attribute of the cloudized function.
+        """
         assert callable(f)
         assert hasattr(f,"p_cloud")
         assert hasattr(f,"__wrapped__")
-        assert f.__name__ in f.p_cloud.functions
+        assert f.__name__ in f.p_cloud.cloudized_functions
         if hasattr(f,"func_snapshot_address"):
             self.prefix = f.func_snapshot_address.prefix
             self.hash_id = f.func_snapshot_address.hash_id
@@ -126,61 +142,73 @@ class PFuncSnapshotAddress(PHashAddress):
         cloud = f.p_cloud
         self.prefix = self._build_prefix(f)
 
-        dependencies = _all_dependencies_one_func(f.__name__, f.p_cloud.functions)
+        dependencies = _all_dependencies_one_func(
+            f.__name__, f.p_cloud.cloudized_functions)
         dependencies = sorted(dependencies)
         f.original_source_with_dependencies = ""
 
         for f_depend in dependencies:
-            f.original_source_with_dependencies += (cloud.functions[f_depend].original_source+"\n\n")
+            f.original_source_with_dependencies += (
+                    cloud.cloudized_functions[f_depend].original_source+"\n\n")
 
-        self.hash_id = self._build_hash_id((cloud.requires, f.original_source_with_dependencies))
+        self.hash_id = self._build_hash_id(
+            (cloud.install_requires, cloud.python_requires
+             , f.original_source_with_dependencies))
         f.func_snapshot_address = self
         if not self in cloud.func_snapshots:
             new_snapshot = dict(
-                requires = cloud.requires
+                install_requires = cloud.install_requires
+                , python_requires = cloud.python_requires
                 , source = f.original_source
                 , source_with_dependencies = f.original_source_with_dependencies
-                , first_use_context = buid_context(cloud.base_dir, cloud.baseline_timezone)
+                , first_use_context = buid_context(
+                    cloud.base_dir, cloud.baseline_timezone)
                 )
             cloud.func_snapshots[self] = new_snapshot
 
     def __repr__(self):
-        return f"PFuncSnapshotAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
+        return (f"PFuncSnapshotAddress( prefix={self.prefix} ,"
+               + f" hash_id={self.hash_id} )")
 
 
 class PFuncOutputAddress(PHashAddress):
-    """A globally unique address of a function execution outcome. Consists of a human-readable prefix and a hash code.
+    """A globally unique address of a function execution result.
 
-    PFuncOutputAddress is a universal global identifier of a value, which was (or will be)
-    an output of a function execution. Assuming a function is pure, we only need function's PFuncSnapshotAddress
-    and arguments' values to build a "signature", which serves as a unique key for the output object.
+    PFuncOutputAddress is a universal global identifier of a value,
+    which was (or will be) an output of a cloudized function execution.
+    Assuming a function is pure, we only need function's PFuncSnapshotAddress
+    and arguments' values to build a "signature",
+    which serves as a unique key for the output object.
     The hash component of an address is a hash of this unique key.
 
-    An address also includes a prefix, which makes it  easy for humans to interpret the address,
-    and further decreases collision risk.
+    An address also includes a prefix, which makes it easy for humans
+    to interpret the address, and further decreases collision risk.
     """
 
     def __init__(self, f:Callable, arguments:KwArgsDict):
         f_base_address =  PFuncSnapshotAddress(f)
         assert isinstance(arguments, KwArgsDict)
         self.prefix = f_base_address.prefix
-        self.hash_id = self._build_hash_id((f_base_address.hash_id, arguments.pack(cloud=f.p_cloud)))
+        self.hash_id = self._build_hash_id(
+            (f_base_address.hash_id, arguments.pack(cloud=f.p_cloud)))
 
     def __repr__(self):
-        return f"PFuncOutputAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
+        return (f"PFuncOutputAddress( prefix={self.prefix} ,"
+               + f" hash_id={self.hash_id} )")
 
 
 class KwArgsDict(dict):
-    """ A class that encapsulates keyword arguments for a (remote) function call"""
+    """ A class that encapsulates keyword arguments for a function call."""
 
-    def __init__(self,*args, **kargs):
+    def __init__(self,*args, **kargs): # TODO: check if we need *args here
         super().__init__(*args, **kargs)
 
     def pack(self, *, cloud) -> KwArgsDict:
         """ Replace values in a dict with their hash addresses.
 
         This function also "normalizes" the dictionary by sorting keys
-        in order to always get the same hash values for the same lists of arguments.
+        in order to always get the same hash values
+        for the same lists of arguments.
         """
         packed_copy = KwArgsDict()
         for k in sorted(self.keys()):
@@ -195,7 +223,7 @@ class KwArgsDict(dict):
         return packed_copy
 
     def unpack(self,*,cloud) -> KwArgsDict:
-        """ Restore values based on their hash addresses"""
+        """ Restore values based on their hash addresses."""
         unpacked_copy = KwArgsDict()
         for k,v in self.items():
             if isinstance(v, PValueAddress):

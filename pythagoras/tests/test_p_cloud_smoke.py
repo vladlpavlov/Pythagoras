@@ -2,13 +2,13 @@ from pythagoras import *
 from moto import mock_s3
 
 def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
-    my_cloud = SharedStorage_P2P_Cloud(shared_dir_name=tmpdir, p_purity_checks=0.5)
+    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
 
     @my_cloud.add_pure_function
     def fff():
         return int(1)
 
-    assert len(my_cloud.functions)==1
+    assert len(my_cloud.original_functions) == len(my_cloud.cloudized_functions) == 1
 
     for i in range(4): assert fff() == 1
     assert len(my_cloud.value_store) == len(my_cloud.func_output_store) == 1
@@ -17,7 +17,7 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
     def ggg(a:int):
         return int(a*a)
 
-    assert len(my_cloud.functions) == 2
+    assert len(my_cloud.original_functions) == len(my_cloud.cloudized_functions) == 2
 
     for i in range(4): assert ggg(a=1) == 1
     assert len(my_cloud.value_store) + 1 == len(my_cloud.func_output_store) == 2
@@ -33,7 +33,7 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
 
 
 def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
-    my_cloud = SharedStorage_P2P_Cloud(shared_dir_name=tmpdir, p_purity_checks=0.5)
+    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
 
     @my_cloud.add_pure_function
     def hihihi(*, x: int, y: int):
@@ -49,7 +49,7 @@ def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
 
 
 def test_SharedStorage_P2P_Cloud_func3args(tmpdir):
-    my_cloud = SharedStorage_P2P_Cloud(shared_dir_name=tmpdir, p_purity_checks=0.5)
+    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
 
     @my_cloud.add_pure_function
     def lyslyslya(*, x: float, y: float, z:float):
