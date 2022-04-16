@@ -31,7 +31,9 @@ class SimplePersistentDict(ABC):
     either a single sting or a sequence (tuple, list) of strings.
     It imposes no restrictions on types of values in the key-value pairs.
 
-    The API for the class resembles the API of Python's built-in Dict.
+    The API for the class resembles the API of Python's built-in Dict
+    (see https://docs.python.org/3/library/stdtypes.html#mapping-types-dict)
+    with a few changes.
     """
 
     digest_len:int = 8
