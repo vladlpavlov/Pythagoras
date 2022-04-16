@@ -73,7 +73,7 @@ class SimplePersistentDict(ABC):
 
 
     def _remove_suffix_if_present(self, input_str:str) -> str:
-        """ Remove a hash signtature suffix from a string if it is detected."""
+        """ Remove a hash signature suffix from a string if it's detected."""
 
         assert isinstance(input_str, str)
 
@@ -87,7 +87,7 @@ class SimplePersistentDict(ABC):
 
 
     def _remove_all_suffixes_if_present(self, key:SimpleDictKey) -> SimpleDictKey:
-        """ Remove hash signtature suffixes from all strings in a key."""
+        """ Remove hash signature suffixes from all strings in a key."""
 
         new_key = []
         for sub_key in key:
@@ -217,7 +217,7 @@ class SimplePersistentDict(ABC):
             del self[k]
 
     def safe_delete(self, key:SimpleDictKey):
-        """ Delete an item from a dictionary without raising an exception if the item does not exist.
+        """ Delete an item without raising an exception if it doesn't exist.
 
         This method is absent in the original dict API, it is added here
         to minimize network calls for (remote) persistent dictionaries.
