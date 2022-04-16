@@ -121,8 +121,8 @@ class SimplePersistentDict(ABC):
             assert isinstance(s,str), (
                     "Key must be a string or a sequence of strings.")
             assert len(set(s) - allowed_key_chars) == 0, (
-                f"Invalid characters in the key: {(set(s) - allowed_key_chars)}" +
-                "\nOnly the following chars are allowed in a key:"
+                f"Invalid characters in the key: {(set(s)-allowed_key_chars)}"
+                + "\nOnly the following chars are allowed in a key:"
                 + "".join(list(allowed_key_chars)))
             assert len(s), "Only non-empty strings are allowed in a key"
 
@@ -278,10 +278,14 @@ class FileDirDict(SimplePersistentDict):
             for f in files:
                 if f.endswith(self.file_type):
                     os.remove(os.path.join(subdir_name, f))
-            if (subdir_name != self.base_dir) and len(os.listdir(subdir_name)) == 0:
+            if (subdir_name != self.base_dir) and (
+                    len(os.listdir(subdir_name)) == 0 ):
                 os.rmdir(subdir_name)
 
-    def _build_full_path(self, key:SimpleDictKey, create_subdirs:bool=False, is_file_path:bool = True):
+    def _build_full_path(self
+                         , key:SimpleDictKey
+                         , create_subdirs:bool=False
+                         , is_file_path:bool = True):
         key = self._normalize_key(key)
         key = [self.base_dir] + list(key)
         dir_names = key[:-1] if is_file_path else key
@@ -300,8 +304,10 @@ class FileDirDict(SimplePersistentDict):
         else:
             return os.path.join(*dir_names)
 
-    def get_subdict(self, key:SimpleDictKey):  # TODO: add this method to the entire hierarchy of persistent dict classes
-        full_dir_path = self._build_full_path(key, create_subdirs = True, is_file_path = False)
+    # TODO: add this method to the entire hierarchy of persistent dict classes
+    def get_subdict(self, key:SimpleDictKey):
+        full_dir_path = self._build_full_path(
+            key, create_subdirs = True, is_file_path = False)
         return FileDirDict(dir_name = full_dir_path, file_type=self.file_type)
 
     def _read_from_file(self, file_name: str):
@@ -416,7 +422,8 @@ class S3_Dict(SimplePersistentDict):
         """
 
         self.file_type = file_type
-        self.local_cache = FileDirDict(dir_name = dir_name, file_type = file_type)
+        self.local_cache = FileDirDict(
+            dir_name = dir_name, file_type = file_type)
 
         if region is None:
             self.s3_client = boto3.client('s3')
@@ -507,9 +514,9 @@ class S3_Dict(SimplePersistentDict):
 
 
 class ImmutableS3_LocallyCached_Dict(S3_Dict):
-    """ A persistent Dict that stores immutable key-value pairs as S3 objects, and caches them locally.
+    """ A persistent Dict, stores immutable key-values in S3, with local cache.
 
-        A new object is created for each key-value pair.
+        A new S3 object is created for each key-value pair.
         A key is either an objectname (a 'filename' without an extension),
         or a sequence of folder names (object name prefixes) that ends
         with an objectname. A value can be any Python object,
@@ -517,15 +524,20 @@ class ImmutableS3_LocallyCached_Dict(S3_Dict):
 
         Once the key-value pair is created, it can't be deleted or changed.
 
-        The key-value pairs are stored in S3 backed, and also cached locally as files.
+        The key-value pairs are stored in S3 backed,
+        and also cached locally as files.
 
-        ImmutableS3_LocallyCached_Dict can store objects in binary objects (as pickles)
-        or in human-readable texts objects (using jsonpickles).
+        ImmutableS3_LocallyCached_Dict can store objects in binary objects
+        (as pickles) or in human-readable texts objects (using jsonpickles).
         """
 
 
-    def __init__(self, bucket_name: str, region: str = None, dir_name: str = "S3_Dict", file_type: str = "pkl"):
-        """A constructor defines location of the store, local cache, and object format to use.
+    def __init__(self
+                 , bucket_name: str
+                 , region: str = None
+                 , dir_name: str = "S3_Dict"
+                 , file_type: str = "pkl"):
+        """A constructor defines store & cache locations, object format to use.
 
         bucket_name and region define an S3 location of the storage
         that will contain all the objects in the S3_Dict.
@@ -540,7 +552,9 @@ class ImmutableS3_LocallyCached_Dict(S3_Dict):
 
         super().__init__(bucket_name, region, dir_name, file_type)
         self._enforce_immutability = True
-        """ _enforce_immutability only exists for testing purposes, its value should never be changed"""
+        """ _enforce_immutability only exists for testing purposes,
+        its value should never be changed
+        """
 
     def __contains__(self, key:SimpleDictKey) -> bool:
         return self.local_cache.__contains__(key) or super().__contains__(key)
@@ -550,15 +564,18 @@ class ImmutableS3_LocallyCached_Dict(S3_Dict):
         file_name = self.local_cache._build_full_path(key, create_subdirs=True)
         try:
             if not os.path.isfile(file_name):
-                self.s3_client.download_file(self.bucket_name, obj_name, file_name)
+                self.s3_client.download_file(
+                    self.bucket_name, obj_name, file_name)
         except:
-            raise KeyError(f"Object {file_name} does not exist or could not be accessed")
+            raise KeyError(f"Object {file_name} does not exist"
+                           +" or could not be accessed")
         result =  self.local_cache[key]
         return result
 
     def __setitem__(self, key:SimpleDictKey, value:Any):
         if self._enforce_immutability and self.__contains__(key):
-            raise KeyError(f"Key {key} is already present in ImmutableS3_LocallyCached_Dict, value can't be changed.")
+            raise KeyError(f"Key {key} is already present in"
+                + " ImmutableS3_LocallyCached_Dict, value can't be changed.")
         obj_name = self._build_full_objectname(key)
         file_name = self.local_cache._build_full_path(key, create_subdirs=True)
         self.local_cache[key]=value
@@ -566,7 +583,8 @@ class ImmutableS3_LocallyCached_Dict(S3_Dict):
 
     def __delitem__(self, key:SimpleDictKey):
         if self._enforce_immutability:
-            raise KeyError(f"Can't delete {key}: operation is not allowed for immutable Dict.")
+            raise KeyError(f"Can't delete {key}: operation is not allowed"
+                           +" for immutable Dict.")
         else:
             super().__delitem__(key)
             if key in self.local_cache:
