@@ -25,7 +25,7 @@ The characters within strings are restricted to allowed_key_chars set.
 """
 
 class SimplePersistentDict(ABC):
-    """Dict-like class that only accepts keys which are sequences of strings (SimpleDictKey-s).
+    """Dict-like durable store that accepts sequences of strings as keys.
 
     An abstract class for a key-value store. It accepts keys in a form of
     either a single sting or a sequence (tuple, list) of strings.
@@ -36,13 +36,14 @@ class SimplePersistentDict(ABC):
     with a few changes.
     """
 
-    digest_len:int = 8
+    digest_len:int = 8 # TODO: refactor to support variable length
 
     def _create_suffix(self, input_str:str) -> str:
-        """ Create a hash signtature suffix for a string.
+        """ Create a hash signature suffix for a string.
 
         We need it to ensure correct work of persistent dictionaries
-        with case-insensitive (even if case-preserving) filesystems, such as MacOS HFS
+        with case-insensitive (even if case-preserving) filesystems,
+        such as MacOS HFS.
         """
 
         assert isinstance(input_str, str)
@@ -50,19 +51,21 @@ class SimplePersistentDict(ABC):
         input_str = input_str.encode()
         hash_object = hashlib.md5(input_str)
         full_digest = base64.b32encode(hash_object.digest()).decode()
-            # TODO: decide how to deal with leading spaces (which are not allowed on FAT32)
+            # TODO: decide how to deal with leading spaces
+            # (which are not allowed on FAT32)
         suffix = "_" + full_digest[:self.digest_len]
 
         return suffix
 
 
     def _add_suffix_if_absent(self, input_str:str) -> str:
-        """ Add a hash signtature suffix to a string if it hasn't been already added."""
+        """ Add a hash signature suffix to a string if it's not there."""
 
         assert isinstance(input_str, str)
 
         if len(input_str) > self.digest_len + 1:
-            possibly_already_present_suffix = self._create_suffix(input_str[:-1-self.digest_len])
+            possibly_already_present_suffix = self._create_suffix(
+                input_str[:-1-self.digest_len])
             if input_str.endswith(possibly_already_present_suffix):
                 return input_str
 
@@ -70,12 +73,13 @@ class SimplePersistentDict(ABC):
 
 
     def _remove_suffix_if_present(self, input_str:str) -> str:
-        """ Remove a hash signtature suffix from a string if it has been detected."""
+        """ Remove a hash signtature suffix from a string if it is detected."""
 
         assert isinstance(input_str, str)
 
         if len(input_str) > self.digest_len + 1:
-            possibly_already_present_suffix = self._create_suffix(input_str[:-1-self.digest_len])
+            possibly_already_present_suffix = self._create_suffix(
+                input_str[:-1-self.digest_len])
             if input_str.endswith(possibly_already_present_suffix):
                 return input_str[:-1-self.digest_len]
 
@@ -96,14 +100,15 @@ class SimplePersistentDict(ABC):
 
 
     def _normalize_key(self, key:SimpleDictKey) -> Tuple[str,...]:
-        """Check if a key meets requirements and return its standardized form with hash suffixes.
+        """Check if a key meets requirements and return its standardized form.
 
         A key must be either a string or a sequence of non-empty strings.
         If it is a single string, it will be transformed into a tuple,
-        consisting of this sole string.
+        consisting of this sole string. During the transformation,
+        each string will also get a hash-based suffix (a signature).
 
-        Each string in a sequence can contain only alphanumerical characters
-        and characters from this list: ()_-.=
+        Each string in an input  sequence can contain
+        only alphanumerical characters and characters from this list: ()_-.=
         """
 
         try:
