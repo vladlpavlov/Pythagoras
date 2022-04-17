@@ -53,19 +53,22 @@ class SimplePersistentDict(ABC):
                  (even if case-preserving) filesystems, such as MacOS HFS.
 
     """
-
-    digest_len:int = 8
     # TODO: refactor to support variable length
-    # TODO: explicitly process 0-length case
+    digest_len:int
+    immutable_items:bool
 
-    def __init__(self, immutable_items:bool, **kwargas):
+    def __init__(self, immutable_items:bool, digest_len:int = 8, **kwargas):
+        assert digest_len >= 0
+        self.digest_len = digest_len
         self.immutable_items = bool(immutable_items)
-
 
     def _create_suffix(self, input_str:str) -> str:
         """ Create a hash signature suffix for a string."""
 
         assert isinstance(input_str, str)
+
+        if self.digest_len == 0:
+            return ""
 
         input_str = input_str.encode()
         hash_object = hashlib.md5(input_str)
@@ -82,6 +85,9 @@ class SimplePersistentDict(ABC):
 
         assert isinstance(input_str, str)
 
+        if self.digest_len == 0:
+            return input_str
+
         if len(input_str) > self.digest_len + 1:
             possibly_already_present_suffix = self._create_suffix(
                 input_str[:-1-self.digest_len])
@@ -96,6 +102,9 @@ class SimplePersistentDict(ABC):
 
         assert isinstance(input_str, str)
 
+        if self.digest_len == 0:
+            return input_str
+
         if len(input_str) > self.digest_len + 1:
             possibly_already_present_suffix = self._create_suffix(
                 input_str[:-1-self.digest_len])
@@ -107,6 +116,9 @@ class SimplePersistentDict(ABC):
 
     def _remove_all_suffixes_if_present(self, key:SimpleDictKey) -> SimpleDictKey:
         """ Remove hash signature suffixes from all strings in a key."""
+
+        if self.digest_len == 0:
+            return key
 
         new_key = []
         for sub_key in key:
@@ -463,11 +475,11 @@ class S3_Dict(SimplePersistentDict):
         """
 
 
-    def __init__(self, bucket_name: str
+    def __init__(self, bucket_name:str
                  , region:str = None
-                 , dir_name: str = "S3_Dict"
-                 , file_type: str = "pkl"
-                 , immutable_items = False):
+                 , dir_name:str = "S3_Dict"
+                 , file_type:str = "pkl"
+                 , immutable_items:bool = False):
         """A constructor defines location of the store and object format to use.
 
         bucket_name and region define an S3 location of the storage
@@ -481,7 +493,7 @@ class S3_Dict(SimplePersistentDict):
         to store values.
         """
 
-        super().__init__(immutable_items = immutable_items)
+        super().__init__(immutable_items = immutable_items, digest_len = 0)
 
         self.file_type = file_type
         self.local_cache = FileDirDict(
