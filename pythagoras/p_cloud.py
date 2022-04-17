@@ -51,6 +51,22 @@ class P_Cloud(ABC):
 
     Attributes
     ----------
+    value_store : SimplePersistentDict
+                  An abstract property: a persistent dict-like object that
+                  stores all the values ever created within any running instance
+                  of your cloudized functions. It's a key-value store, where
+                  the key (the object's address) is composed using
+                  the object's hash. Under the hood, these hash-based addresses
+                  are used by Pythagoras the same way as RAM-based addresses
+                  are used (via pointers and references) in C and C++ programs.
+
+    func_output_store : SimplePersistentDict
+                        An abstract property: a persistent dict-like object that
+                        caches all results of all cloudized function executions
+                        that ever happened in the system. Enables distributed
+                        memoization functionality ("calculate once, reuse
+                        forever").
+
     p_purity_checks : float
                       Probability of stochastic purity checks. If a functions
                       output has been stored on a cache, when the function is
@@ -71,7 +87,7 @@ class P_Cloud(ABC):
                           the @add_pure_function decorator) versions of all
                           cloudized functions in P_Cloud. Keys are the names
                           of the functions.
-     """
+    """
     p_cloud_single_instance = None
 
     install_requires: Optional[str] = None
@@ -88,7 +104,7 @@ class P_Cloud(ABC):
     _is_running_inside_IPython: Optional[bool] = None
     _randomizer:Random = Random()
     """We are using a new instance of Random object that does not share 
-    the same seed with other Random objects.
+    its seed with other Random objects.
     This is done to ensure correct parallelization via randomization 
     in cases when a cloudized function explicitly sets seed value 
     for the default Random object, which it might do in order 
