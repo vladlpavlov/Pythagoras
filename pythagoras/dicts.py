@@ -54,7 +54,9 @@ class SimplePersistentDict(ABC):
 
     """
 
-    digest_len:int = 8 # TODO: refactor to support variable length
+    digest_len:int = 8
+    # TODO: refactor to support variable length
+    # TODO: explicitly process 0-length case
 
     def __init__(self, immutable_items:bool, **kwargas):
         self.immutable_items = bool(immutable_items)
