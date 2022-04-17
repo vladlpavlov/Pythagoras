@@ -45,10 +45,32 @@ def kw_args(**kwargs) -> KwArgsDict:
 class P_Cloud(ABC):
     """ A base class for all Pythagoras clouds.
 
-     It is a base class for all objects that are implementing
-     Pythagoras Abstraction Model:
-     https://docs.google.com/document/d/1lgNOaRcZNGvW4wF894s7KmIWjhLX2cDVM_15a4lE02Y
+    It is a base class for all objects that are implementing
+    Pythagoras Abstraction Model:
+    https://docs.google.com/document/d/1lgNOaRcZNGvW4wF894s7KmIWjhLX2cDVM_15a4lE02Y
 
+    Attributes
+    ----------
+    p_purity_checks : float
+                      Probability of stochastic purity checks. If a functions
+                      output has been stored on a cache, when the function is
+                      called with the same arguments next time, it will re-use
+                      cached output with probability (1-p_purity_checks).
+                      With probability p_purity_checks the function will be
+                      executed once again, and its output will be compared with
+                      the cached one: if they differ, purity check will fail.
+
+    original_functions : dict[str, Callable]
+                         A dictionary with original (before application of the
+                         @add_pure_function decorator) versions of all cloudized
+                         functions in P_Cloud. Keys are the names of the
+                         functions.
+
+    cloudized_functions : dict[str, Callable]
+                          A dictionary with modified (as a result of  applying
+                          the @add_pure_function decorator) versions of all
+                          cloudized functions in P_Cloud. Keys are the names
+                          of the functions.
      """
     p_cloud_single_instance = None
 
