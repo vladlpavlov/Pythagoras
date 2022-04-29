@@ -70,12 +70,12 @@ class SimplePersistentDict(ABC):
         if self.digest_len == 0:
             return ""
 
-        input_str = input_str.encode()
-        hash_object = hashlib.md5(input_str)
-        full_digest = base64.b32encode(hash_object.digest()).decode()
+        input_b = input_str.encode()
+        hash_object = hashlib.md5(input_b)
+        full_digest_str = base64.b32encode(hash_object.digest()).decode()
             # TODO: decide how to deal with leading spaces
             # (which are not allowed on FAT32)
-        suffix = "_" + full_digest[:self.digest_len]
+        suffix = "_" + full_digest_str[:self.digest_len]
 
         return suffix
 
@@ -139,7 +139,8 @@ class SimplePersistentDict(ABC):
         each string will also get a hash-based suffix (a signature).
 
         Each string in an input  sequence can contain
-        only alphanumerical characters and characters from this list: ()_-.=
+        only URL-safe characters (alphanumerical characters
+        and characters from this list: ()_-.=)
         """
 
         try:
@@ -323,6 +324,8 @@ class FileDirDict(SimplePersistentDict):
         self.base_dir = os.path.abspath(dir_name)
 
     def __len__(self) -> int:
+        """ Get number of key-value pairs in the dictionary."""
+
         num_files = 0
         for subdir_info in os.walk(self.base_dir):
             files = subdir_info[2]
@@ -332,6 +335,7 @@ class FileDirDict(SimplePersistentDict):
         return num_files
 
     def clear(self):
+        """ Remove all elements form the dictionary."""
 
         assert not self.immutable_items, (
             "Can't clear a dict that contains immutable items")
@@ -349,7 +353,7 @@ class FileDirDict(SimplePersistentDict):
     def _build_full_path(self
                          , key:SimpleDictKey
                          , create_subdirs:bool=False
-                         , is_file_path:bool = True):
+                         , is_file_path:bool=True) -> str:
         key = self._normalize_key(key)
         key = [self.base_dir] + list(key)
         dir_names = key[:-1] if is_file_path else key
@@ -377,7 +381,7 @@ class FileDirDict(SimplePersistentDict):
             , file_type=self.file_type
             , immutable_items= self.immutable_items)
 
-    def _read_from_file(self, file_name: str):
+    def _read_from_file(self, file_name:str) -> Any:
         if self.file_type == "pkl":
             with open(file_name, 'rb') as f:
                 result = pickle.load(f)
@@ -388,7 +392,7 @@ class FileDirDict(SimplePersistentDict):
             raise ValueError("file_type must be either pkl or json")
         return result
 
-    def _save_to_file(self, file_name: str, value:Any):
+    def _save_to_file(self, file_name:str, value:Any) -> None:
         if self.file_type == "pkl":
             with open(file_name, 'wb') as f:
                 pickle.dump(value, f)
@@ -416,7 +420,7 @@ class FileDirDict(SimplePersistentDict):
                 "Can't modify an immutable item")
         self._save_to_file(filename, value)
 
-    def __delitem__(self, key:SimpleDictKey):
+    def __delitem__(self, key:SimpleDictKey) -> None:
         assert not self.immutable_items, "Can't delete immutable items"
         filename = self._build_full_path(key)
         if not os.path.isfile(filename):
@@ -428,14 +432,15 @@ class FileDirDict(SimplePersistentDict):
         walk_results = os.walk(self.base_dir)
         ext_len = len(self.file_type) + 1
 
-        def splitter(path: str):
+        def splitter(dir_path: str):
+            """Transform a dirname into a SimpleDictKey key"""
             result = []
-            if path == ".":
+            if dir_path == ".":
                 return result
             while True:
-                head, tail = os.path.split(path)
+                head, tail = os.path.split(dir_path)
                 result = [tail] + result
-                path = head
+                dir_path = head
                 if len(head) == 0:
                     break
             return tuple(result)
