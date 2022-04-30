@@ -1,21 +1,24 @@
 from typing import Union, Callable, Any
 import re, inspect, copy
 
-def _name_is_used_in_source(name: str, source: Union[Callable, str]) -> bool:
+def _name_is_used_in_source(
+        name:str
+        ,source: Union[Callable, str]
+        ) -> bool:
     """ Check if name is used within the source.
-
-    This is a naive implementation for now. Should be refactored later.
 
     Parameters
     ----------
-    name: an identifier which will be searched for in the source
+    name: str
+          an identifier which will be searched for in the source
 
-    source: either a function of a source code of a function.
+    source: Union[Callable, str]
+            either a function of a source code of a function.
 
     Returns
     ----------
-    search_result: whether the source contains a direct reference to the name
-
+    search_result: bool
+                   whether the source contains a direct reference to the name
     """
 
     assert isinstance(name, str)
@@ -33,20 +36,28 @@ def _name_is_used_in_source(name: str, source: Union[Callable, str]) -> bool:
     return search_result
 
 
-def _direct_dependencies_many_funcs(all_funcs: dict[str, Callable]) -> dict[str, set[str]]:
+def _direct_dependencies_many_funcs(
+        all_funcs: dict[str, Callable]
+        ) -> dict[str, set[str]]:
     """ Create sets of 1-st level (direct) dependencies for all analized functions.
 
     Each set always contains at least one element (the dependant function itself).
 
     Parameters
     ----------
-    all_funcs: a dictionary with keys containing function names, and values containing actual functions
+    all_funcs: dict[str, Callable]
+                a dictionary with keys containing function names, and values
+                containing actual functions
 
     Returns
     ----------
-    direct_dependencies: a dictionary with keys containing function names, and values containing sets of function names.
-        Each set direct_dependencies[some_name] contains names of oll functions from the original all_funcs,
-        that are directly referenced from within some_name's source code
+    direct_dependencies: dict[str, set[str]]
+                         a dictionary with keys containing function names,
+                         and values containing sets of function names.
+                         Each set direct_dependencies[some_name] contains
+                         names of oll functions from the original all_funcs,
+                         that are directly referenced from within
+                         some_name's source code
     """
 
     for fn_name in all_funcs:
@@ -63,21 +74,30 @@ def _direct_dependencies_many_funcs(all_funcs: dict[str, Callable]) -> dict[str,
     return direct_dependencies
 
 
-def _all_dependencies_one_func(the_function: str, all_funcs: dict[str, Callable]) -> set[str]:
-    """ Create a set of all dependencies (both direct and indirect) for one function.
+def _all_dependencies_one_func(
+        the_function:str
+        ,all_funcs: dict[str, Callable]
+        ) -> set[str]:
+    """ Create a set of all direct and indirect dependencies for one function.
 
-    Resulting set always contains at least one element: the_function (the dependant function itself).
+    Resulting set always contains at least one element: the_function
+    (the dependant function itself).
 
     Parameters
     ----------
-    all_funcs: a dictionary with keys containing function names, and values containing actual functions
+    all_funcs: all_funcs: dict[str, Callable]
+               a dictionary with keys containing function names,
+               and values containing actual functions
 
-    the_function: a name of a function for which we are discovering dependencies
+    the_function: str
+                  a name of a function for which we are discovering dependencies
 
     Returns
     ----------
-    all_dependencies_set: names of all the functions from all_funcs that are directly or indirectly
-        referenced from all_funcs's source code
+    all_dependencies_set: set[str]
+                          names of all the functions from all_funcs
+                          that are directly or indirectly
+                          referenced from all_funcs's source code
     """
 
     assert isinstance(the_function, str)
@@ -103,4 +123,3 @@ def _all_dependencies_one_func(the_function: str, all_funcs: dict[str, Callable]
             break
 
     return all_dependencies_set
-
