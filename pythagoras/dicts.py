@@ -326,6 +326,7 @@ class FileDirDict(SimplePersistentDict):
     A key is either a filename (without an extension),
     or a sequence of directory names that ends with a filename.
     A value can be any Python object, which is stored in a file.
+    Insertion order is not preserved.
 
     FileDirDict can store objects in binary files (as pickles)
     or in human-readable text files (using jsonpickles).
@@ -389,6 +390,8 @@ class FileDirDict(SimplePersistentDict):
                          , key:SimpleDictKey
                          , create_subdirs:bool=False
                          , is_file_path:bool=True) -> str:
+        """Convert a key into a filesystem path."""
+
         key = self._normalize_key(key)
         key = [self.base_dir] + list(key)
         dir_names = key[:-1] if is_file_path else key
@@ -417,6 +420,8 @@ class FileDirDict(SimplePersistentDict):
             , immutable_items= self.immutable_items)
 
     def _read_from_file(self, file_name:str) -> Any:
+        """Read a value from a file. """
+
         if self.file_type == "pkl":
             with open(file_name, 'rb') as f:
                 result = pickle.load(f)
@@ -428,6 +433,8 @@ class FileDirDict(SimplePersistentDict):
         return result
 
     def _save_to_file(self, file_name:str, value:Any) -> None:
+        """Save a value to a file. """
+
         if self.file_type == "pkl":
             with open(file_name, 'wb') as f:
                 pickle.dump(value, f)
@@ -438,10 +445,14 @@ class FileDirDict(SimplePersistentDict):
             raise ValueError("file_type must be either pkl or json")
 
     def __contains__(self, key:SimpleDictKey) -> bool:
+        """True if the dictionary has the specified key, else False. """
+
         filename = self._build_full_path(key)
         return os.path.isfile(filename)
 
     def __getitem__(self, key:SimpleDictKey) -> Any:
+        """ Implementation for x[y] syntax. """
+
         filename = self._build_full_path(key)
         if not os.path.isfile(filename):
             raise KeyError(f"File {filename} does not exist")
@@ -449,6 +460,8 @@ class FileDirDict(SimplePersistentDict):
         return result
 
     def __setitem__(self, key:SimpleDictKey, value:Any):
+        """Set self[key] to value."""
+
         filename = self._build_full_path(key, create_subdirs=True)
         if self.immutable_items:
             assert not os.path.exists(filename), (
@@ -456,6 +469,8 @@ class FileDirDict(SimplePersistentDict):
         self._save_to_file(filename, value)
 
     def __delitem__(self, key:SimpleDictKey) -> None:
+        """Delete self[key]."""
+
         assert not self.immutable_items, "Can't delete immutable items"
         filename = self._build_full_path(key)
         if not os.path.isfile(filename):
