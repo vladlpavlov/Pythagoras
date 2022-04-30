@@ -1,6 +1,5 @@
-# from __future__ import annotations
-# Above is temporarily commented to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do not support postponed evaluation
+from __future__ import annotations
+
 import datetime
 import logging as lg
 import math
@@ -47,13 +46,16 @@ def buid_context(file_path:str=None, time_zone=None):
     return result
 
 
-def replace_special_chars(a_str, replace_with = "_"):
-    """ Replace special characters with an allowed character (underscore by default)"""
-    result = "".join([(c if c in allowed_key_chars else replace_with) for c in a_str])
+def replace_unsafe_chars(a_str:str, replace_with:str) -> str :
+    """ Replace unsafe (special) characters with an allowed character."""
+
+    result = "".join(
+        [(c if c in allowed_key_chars else replace_with) for c in a_str])
     return result
 
-def get_long_infoname(x:Any, drop_special = True):
-    """  Build a string with extended information about an object and its type"""
+
+def get_long_infoname(x:Any, drop_special = True) -> str:
+    """Build a string with extended information about an object and its type"""
 
     name = str(type(x).__module__)
 
@@ -68,21 +70,9 @@ def get_long_infoname(x:Any, drop_special = True):
         name += "___" + str(x.__name__)
 
     if drop_special:
-        name = replace_special_chars(name)
+        name = replace_unsafe_chars(name, "_")
 
     return name
-
-
-def update_param_if_supported(
-        estimator: BaseEstimator
-        ,param_name:str
-        ,param_value:Any
-        ) -> BaseEstimator:
-    current_params = estimator.get_params()
-    if param_name in current_params:
-        new_params = {**current_params, param_name:param_value}
-        return type(estimator)(**new_params)
-    return type(estimator)(**current_params)
 
 
 class TempAttributeAssignmentIfNotNone:
@@ -239,10 +229,6 @@ def free_RAM(print_info:bool=True, collect_garbage:bool=True) -> int:
 
     return free_memory
 
-# Workaround to ensure compatibility with Python <= 3.6
-# Versions 3.6 and below do not support postponed evaluation
-class BasicStopwatch:
-    pass
 
 class BasicStopwatch:
     """Simple class to measure time durations."""
@@ -278,22 +264,6 @@ class BasicStopwatch:
 
     def __str__(self) -> str:
         return NeatStr.time_diff(self.get_float_repr())
-
-#
-# class AssertableObject:
-#     """An abstract base class for types that offer run-time sanity checks."""
-#
-#     EXTRA_SAFETY_FLAG:ClassVar[bool] = True
-#
-#     def __init__(self) -> None:
-#         assert type(self) != AssertableObject, (
-#             f"Class {type(self).__name__} can not be instantiated.")
-#         self.assert_sanity()
-#
-#     # V-V-V-V-V-V-V-V-V-V-V---Virtual-Method---V-V-V-V-V-V-V-V-V-V-V-V-V-V-V
-#     def assert_sanity(self) -> None:
-#         """Check self for structural consistency; halt if there are errors"""
-#         raise NotImplementedError
 
 
 ##########################################

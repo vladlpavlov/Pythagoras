@@ -16,7 +16,7 @@ from zoneinfo import ZoneInfo
 
 from pythagoras.p_hash_address import PValueAddress, PFuncOutputAddress, KwArgsDict
 from pythagoras.dicts import FileDirDict, SimplePersistentDict, SimpleDictKey
-from pythagoras.utils import get_long_infoname, replace_special_chars, buid_context
+from pythagoras.utils import get_long_infoname, replace_unsafe_chars, buid_context
 
 
 class ExceptionInfo:
@@ -209,7 +209,7 @@ class P_Cloud(ABC):
             self._event_counter = 1
         event_id += f"   CNTR={self._event_counter}"
         event_id += f"   RNMD={self._randomizer.uniform(0,1)}"
-        event_id = replace_special_chars(event_id)
+        event_id = replace_unsafe_chars(event_id,"_")
 
         if key is None:
             key = (event_id,)

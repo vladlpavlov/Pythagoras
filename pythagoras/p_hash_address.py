@@ -6,7 +6,7 @@ from typing import Any, Callable
 from joblib.hashing import NumpyHasher, Hasher
 
 from pythagoras.global_objects import allowed_key_chars
-from pythagoras.utils import get_long_infoname, buid_context
+from pythagoras.utils import get_long_infoname, buid_context, replace_unsafe_chars
 from pythagoras._dependency_discovery import _all_dependencies_one_func
 
 
@@ -37,8 +37,7 @@ class PHashAddress(ABC):
               and callable(x.__len__)):
             prfx += "_len_" + str(len(x))
 
-        clean_prfx = "".join(
-            [(c if c in allowed_key_chars else "_") for c in prfx])
+        clean_prfx = replace_unsafe_chars(prfx, "_")
 
         return clean_prfx
 
