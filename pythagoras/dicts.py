@@ -33,7 +33,7 @@ class SimplePersistentDict(ABC):
 
     The API for the class resembles the API of Python's built-in Dict
     (see https://docs.python.org/3/library/stdtypes.html#mapping-types-dict)
-    with a few changes.
+    with a few changes (e.g. insertion order is not preserved).
 
     Attributes
     ----------
@@ -53,11 +53,14 @@ class SimplePersistentDict(ABC):
                  (even if case-preserving) filesystems, such as MacOS HFS.
 
     """
-    # TODO: refactor to support variable length
+    # TODO: refactor to support variable length of digest_len
     digest_len:int
     immutable_items:bool
 
-    def __init__(self, immutable_items:bool, digest_len:int = 8, **kwargas):
+    def __init__(self
+                 , immutable_items:bool
+                 , digest_len:int = 8
+                 , **kwargas):
         assert digest_len >= 0
         self.digest_len = digest_len
         self.immutable_items = bool(immutable_items)
@@ -169,21 +172,25 @@ class SimplePersistentDict(ABC):
 
     @abstractmethod
     def __contains__(self, key:SimpleDictKey) -> bool:
+        """True if the dictionary has the specified key, else False."""
         raise NotImplementedError
 
 
     @abstractmethod
     def __getitem__(self, key:SimpleDictKey) -> Any:
+        """x.__getitem__(y) is equivalent to x[y]"""
         raise NotImplementedError
 
 
     def __setitem__(self, key:SimpleDictKey, value:Any):
+        """Set self[key] to value."""
         if self.immutable_items: # TODO: change to exceptions
             assert key not in self, "Can't modify an immutable key-value pair"
         raise NotImplementedError
 
 
     def __delitem__(self, key:SimpleDictKey):
+        """Delete self[key]."""
         if self.immutable_items: # TODO: change to exceptions
             assert False, "Can't delete an immutable key-value pair"
         raise NotImplementedError
@@ -191,6 +198,7 @@ class SimplePersistentDict(ABC):
 
     @abstractmethod
     def __len__(self) -> int:
+        """Return len(self)."""
         raise NotImplementedError
 
 
@@ -201,29 +209,39 @@ class SimplePersistentDict(ABC):
 
 
     def __iter__(self):
+        """Implement iter(self)."""
         return self._generic_iter("keys")
 
 
     def keys(self):
+        """D.keys() -> iterator object that provides access to D's keys"""
         return self._generic_iter("keys")
 
 
     def values(self):
+        """D.values() -> iterator object that provides access to D's values"""
         return self._generic_iter("values")
 
 
     def items(self):
+        """D.items() -> iterator object that provides access to D's items"""
         return self._generic_iter("items")
 
 
-    def get(self, key:SimpleDictKey, default:Any=None):
+    def get(self, key:SimpleDictKey, default:Any=None) -> Any:
+        """Return the value for key if it's in the dictionary, else default."""
         if key in self:
             return self[key]
         else:
             return default
 
 
-    def setdefault(self, key:SimpleDictKey, default:Any=None):
+    def setdefault(self, key:SimpleDictKey, default:Any=None) -> Any:
+        """Insert key with a value of default if key is not in the dictionary.
+
+        Return the value for key if key is in the dictionary, else default.
+        """
+
         if key in self:
             return self[key]
         else:
@@ -231,16 +249,30 @@ class SimplePersistentDict(ABC):
             return default
 
 
-    def pop(self, key:SimpleDictKey, default:Any):
+    def pop(self, key:SimpleDictKey, default:Any=None) -> Any:
+        """Remove specified key and return the corresponding value.
+
+        If key is not found, default is returned if given,
+        otherwise KeyError is raised.
+        """
+
         if key in self:
             result = self[key]
             del self[key]
             return result
         else:
-            return default
+            if default is not None:
+                return default
+            else:
+                raise KeyError(f"Key {key} not found in the dictionary.")
 
 
     def popitem(self) -> Any:
+        """Remove and return some (key, value) pair as a 2-tuple
+
+        KeyError will be raised if D is empty.
+        """
+
         key = next(iter(self))
         result = self[key]
         del self[key]
@@ -248,6 +280,7 @@ class SimplePersistentDict(ABC):
 
 
     def __eq__(self, other) -> bool:
+        """Return self==value. """
         try:
             if len(self) != len(other):
                 return False
@@ -260,10 +293,12 @@ class SimplePersistentDict(ABC):
 
 
     def __ne__(self, other) -> bool:
+        """Return self!=value. """
         return not (self == other)
 
 
-    def clear(self):
+    def clear(self) -> None:
+        """Remove all items from the dictionary. """
         for k in self.keys():
             del self[k]
 
