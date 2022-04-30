@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import sys
 from typing import Any, Callable
@@ -6,11 +8,6 @@ from joblib.hashing import NumpyHasher, Hasher
 from pythagoras.global_objects import allowed_key_chars
 from pythagoras.utils import get_long_infoname, buid_context
 from pythagoras._dependency_discovery import _all_dependencies_one_func
-
-
-class KwArgsDict:
-    """A dirty forward declaration. Actual KwArgsDict is redefined below."""
-    pass
 
 
 class PHashAddress(ABC):
@@ -22,6 +19,8 @@ class PHashAddress(ABC):
 
     @staticmethod
     def _build_prefix(x: Any) -> str:
+        """Create a short human-readable summary of an object."""
+
         prfx = get_long_infoname(x)
 
         if (hasattr(x, "shape")
@@ -44,6 +43,7 @@ class PHashAddress(ABC):
 
     @staticmethod
     def _build_hash_id(x: Any) -> str:
+        """Create a url-safe hashdigest for an object."""
         if 'numpy' in sys.modules:
             hasher = NumpyHasher(hash_name=PHashAddress._hash_type)
         else:
@@ -108,7 +108,7 @@ class PFuncSnapshotAddress(PHashAddress):
         PFuncSnapshotAddress is a universal global identifier of a function.
         It contains a hash value for the cloudized function's source code,
         combined with the source code of all other cloudized functions that
-        the function is using, as well as  its "requires" list
+        the function is using, as well as its "requires" list
         (a list of required modules with their versions).
         A change in the source code, or a change in the "requires" list
         results in the creation of a new hash, hence, a new address.
@@ -171,32 +171,6 @@ class PFuncSnapshotAddress(PHashAddress):
                + f" hash_id={self.hash_id} )")
 
 
-class PFuncOutputAddress(PHashAddress):
-    """A globally unique address of a function execution result.
-
-    PFuncOutputAddress is a universal global identifier of a value,
-    which was (or will be) an output of a cloudized function execution.
-    Assuming a function is pure, we only need function's PFuncSnapshotAddress
-    and arguments' values to build a "signature",
-    which serves as a unique key for the output object.
-    The hash component of an address is a hash of this unique key.
-
-    An address also includes a prefix, which makes it easy for humans
-    to interpret the address, and further decreases collision risk.
-    """
-
-    def __init__(self, f:Callable, arguments:KwArgsDict):
-        f_base_address =  PFuncSnapshotAddress(f)
-        assert isinstance(arguments, KwArgsDict)
-        self.prefix = f_base_address.prefix
-        self.hash_id = self._build_hash_id(
-            (f_base_address.hash_id, arguments.pack(cloud=f.p_cloud)))
-
-    def __repr__(self):
-        return (f"PFuncOutputAddress( prefix={self.prefix} ,"
-               + f" hash_id={self.hash_id} )")
-
-
 class KwArgsDict(dict):
     """ A class that encapsulates keyword arguments for a function call."""
 
@@ -231,3 +205,29 @@ class KwArgsDict(dict):
             else:
                 unpacked_copy[k] = v
         return unpacked_copy
+
+
+class PFuncOutputAddress(PHashAddress):
+    """A globally unique address of a function execution result.
+
+    PFuncOutputAddress is a universal global identifier of a value,
+    which was (or will be) an output of a cloudized function execution.
+    Assuming a function is pure, we only need function's PFuncSnapshotAddress
+    and arguments' values to build a "signature",
+    which serves as a unique key for the output object.
+    The hash component of an address is a hash of this unique key.
+
+    An address also includes a prefix, which makes it easy for humans
+    to interpret the address, and further decreases collision risk.
+    """
+
+    def __init__(self, f:Callable, arguments:KwArgsDict):
+        f_base_address =  PFuncSnapshotAddress(f)
+        assert isinstance(arguments, KwArgsDict)
+        self.prefix = f_base_address.prefix
+        self.hash_id = self._build_hash_id(
+            (f_base_address.hash_id, arguments.pack(cloud=f.p_cloud)))
+
+    def __repr__(self):
+        return (f"PFuncOutputAddress( prefix={self.prefix} ,"
+               + f" hash_id={self.hash_id} )")
