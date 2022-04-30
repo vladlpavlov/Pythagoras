@@ -173,17 +173,20 @@ class SimplePersistentDict(ABC):
     @abstractmethod
     def __contains__(self, key:SimpleDictKey) -> bool:
         """True if the dictionary has the specified key, else False."""
+
         raise NotImplementedError
 
 
     @abstractmethod
     def __getitem__(self, key:SimpleDictKey) -> Any:
-        """x.__getitem__(y) is equivalent to x[y]"""
+        """X.__getitem__(y) is an equivalent to X[y]"""
+
         raise NotImplementedError
 
 
     def __setitem__(self, key:SimpleDictKey, value:Any):
         """Set self[key] to value."""
+
         if self.immutable_items: # TODO: change to exceptions
             assert key not in self, "Can't modify an immutable key-value pair"
         raise NotImplementedError
@@ -191,6 +194,7 @@ class SimplePersistentDict(ABC):
 
     def __delitem__(self, key:SimpleDictKey):
         """Delete self[key]."""
+
         if self.immutable_items: # TODO: change to exceptions
             assert False, "Can't delete an immutable key-value pair"
         raise NotImplementedError
@@ -199,6 +203,7 @@ class SimplePersistentDict(ABC):
     @abstractmethod
     def __len__(self) -> int:
         """Return len(self)."""
+
         raise NotImplementedError
 
 
@@ -210,26 +215,31 @@ class SimplePersistentDict(ABC):
 
     def __iter__(self):
         """Implement iter(self)."""
+
         return self._generic_iter("keys")
 
 
     def keys(self):
         """D.keys() -> iterator object that provides access to D's keys"""
+
         return self._generic_iter("keys")
 
 
     def values(self):
         """D.values() -> iterator object that provides access to D's values"""
+
         return self._generic_iter("values")
 
 
     def items(self):
         """D.items() -> iterator object that provides access to D's items"""
+
         return self._generic_iter("items")
 
 
     def get(self, key:SimpleDictKey, default:Any=None) -> Any:
         """Return the value for key if it's in the dictionary, else default."""
+
         if key in self:
             return self[key]
         else:
@@ -520,13 +530,16 @@ class S3_Dict(SimplePersistentDict):
     """ A persistent Dict that stores key-value pairs as S3 objects.
 
         A new object is created for each key-value pair.
+
         A key is either an objectname (a 'filename' without an extension),
         or a sequence of folder names (object name prefixes) that ends
-        with an objectname. A value can be any Python object,
-        which is stored in an object.
+        with an objectname. A value can be an instance of any Python type,
+        and will be stored as an S3-object.
 
         S3_Dict can store objects in binary objects (as pickles)
         or in human-readable texts objects (using jsonpickles).
+
+        Unlike in native Python dictionaries, insertion order is not preserved.
         """
 
 
@@ -565,11 +578,14 @@ class S3_Dict(SimplePersistentDict):
         self.bucket_name = bucket_name
 
     def _build_full_objectname(self, key:SimpleDictKey) -> str:
+        """ Convert SimpleDictKey into an S3 objectname. """
+
         key = self._normalize_key(key)
         objectname =  "/".join(key)+ "." + self.file_type
         return objectname
 
     def __contains__(self, key:SimpleDictKey) -> bool:
+        """True if the dictionary has the specified key, else False. """
         if self.immutable_items:
             file_name = self.local_cache._build_full_path(
                 key, create_subdirs=True)
@@ -583,6 +599,8 @@ class S3_Dict(SimplePersistentDict):
             return False
 
     def __getitem__(self, key:SimpleDictKey) -> Any:
+        """X.__getitem__(y) is an equivalent to X[y]. """
+
         file_name = self.local_cache._build_full_path(key, create_subdirs=True)
 
         if self.immutable_items:
@@ -601,6 +619,8 @@ class S3_Dict(SimplePersistentDict):
         return result
 
     def __setitem__(self, key:SimpleDictKey, value:Any):
+        """Set self[key] to value. """
+
         file_name = self.local_cache._build_full_path(key, create_subdirs=True)
         obj_name = self._build_full_objectname(key)
 
@@ -624,6 +644,8 @@ class S3_Dict(SimplePersistentDict):
             os.remove(file_name)
 
     def __delitem__(self, key:SimpleDictKey):
+        """Delete self[key]. """
+
         assert not self.immutable_items, "Can't delete an immutable item"
         obj_name = self._build_full_objectname(key)
         self.s3_client.delete_object(Bucket = self.bucket_name, Key = obj_name)
@@ -632,6 +654,8 @@ class S3_Dict(SimplePersistentDict):
             os.remove(file_name)
 
     def __len__(self) -> int:
+        """Return len(self). """
+
         num_files = 0
         suffix = "." + self.file_type
 
