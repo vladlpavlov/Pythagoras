@@ -30,8 +30,8 @@ def _name_is_used_in_source(
     if callable(source):
         source = inspect.getsource(source)
 
-    searh_pattern = "[^a-zA-Z0-9_]" + name + "[^a-zA-Z0-9_]"
-    search_outcome = re.search(searh_pattern, source)
+    search_pattern = "[^a-zA-Z0-9_]" + name + "[^a-zA-Z0-9_]"
+    search_outcome = re.search(search_pattern, source)
     search_result = bool(search_outcome)
     return search_result
 
