@@ -28,22 +28,24 @@ class PHashAddress(ABC):
                 and callable(x.shape.__iter__)
                 and not callable(x.shape)):
 
-            prfx += "___shape_"
+            prfx += "_shape_"
             for n in x.shape:
                 prfx += str(n) + "_x_"
             prfx = prfx[:-3]
 
         elif (hasattr(x, "__len__")
               and callable(x.__len__)):
-            prfx += "___len_" + str(len(x))
+            prfx += "_len_" + str(len(x))
 
-        clean_prfx = "".join([(c if c in allowed_key_chars else "_") for c in prfx])
+        clean_prfx = "".join(
+            [(c if c in allowed_key_chars else "_") for c in prfx])
 
         return clean_prfx
 
     @staticmethod
     def _build_hash_id(x: Any) -> str:
-        """Create a url-safe hashdigest for an object."""
+        """Create a URL-safe hashdigest for an object."""
+
         if 'numpy' in sys.modules:
             hasher = NumpyHasher(hash_name=PHashAddress._hash_type)
         else:
@@ -90,11 +92,15 @@ class PValueAddress(PHashAddress):
     However, an address also includes a prefix. It makes it more easy
     for humans to interpret an address, and further decreases collision risk.
     """
+
     def __init__(self, x: Any):
         if isinstance(x, PValueAddress):
             self.prefix = x.prefix
             self.hash_id = x.hash_id
         else:
+            assert not isinstance(x,PHashAddress), (
+                "PValueAddress is the only PHashAddress which is allowed "
+                +"to be converted to PValueAddress")
             self.prefix = self._build_prefix(x)
             self.hash_id = self._build_hash_id(x)
 
