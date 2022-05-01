@@ -44,7 +44,7 @@ class SimplePersistentDict(ABC):
                       False means normal dict-like behaviour.
 
     digest_len : int
-                 Length of a hash signature index which SimplePersistentDict
+                 Length of a hash signature suffix which SimplePersistentDict
                  automatically adds to each string in a key
                  while mapping the key to an address of a value
                  in a persistent storage backend (e.g. a filename
