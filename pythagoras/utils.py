@@ -11,22 +11,21 @@ from getpass import getuser
 import numpy as np
 import inspect
 import numbers, time
-from typing import Any, ClassVar, Union
+from typing import Any, Dict
 from copy import deepcopy
 
 import pkg_resources
 import psutil
 import gc
-# import logging
-# import pandas as pd
 
 from scipy import stats
-from sklearn.base import BaseEstimator
 
 from pythagoras import allowed_key_chars
 
 
-def buid_context(file_path:str=None, time_zone=None):
+def buid_context(file_path:str=None, time_zone=None)-> Dict:
+    """Capture core information about execution environment. """
+
     result = dict(
         date_time = datetime.datetime.now(time_zone)
         ,hostname = socket.gethostname()
@@ -47,14 +46,14 @@ def buid_context(file_path:str=None, time_zone=None):
 
 
 def replace_unsafe_chars(a_str:str, replace_with:str) -> str :
-    """ Replace unsafe (special) characters with an allowed character."""
+    """ Replace unsafe (special) characters with allowed (safe) ones."""
 
     result = "".join(
         [(c if c in allowed_key_chars else replace_with) for c in a_str])
     return result
 
 
-def get_long_infoname(x:Any, drop_special = True) -> str:
+def get_long_infoname(x:Any, drop_special:bool = True) -> str:
     """Build a string with extended information about an object and its type"""
 
     name = str(type(x).__module__)
@@ -75,31 +74,6 @@ def get_long_infoname(x:Any, drop_special = True) -> str:
     return name
 
 
-class TempAttributeAssignmentIfNotNone:
-    """Context manager that temporarily changes a value of an object attribute
-
-    This class is designed to be used with a "with" statement, and it allows
-    to temporarily change an attribute of an object to a new value,
-    provided that the new value is not None.
-    """
-    def __init__(self, an_object:Any, attr_name:str, tmp_value:Any):
-        assert hasattr(an_object,attr_name), (
-            f"Object {NeatStr.object_info(an_object)} is required"
-            + f" to have an attribute {attr_name}")
-        self.an_object = an_object
-        self.attr_name = attr_name
-        self.tmp_value = tmp_value
-
-    def __enter__(self):
-        if self.tmp_value is not None:
-            self.old_value = getattr(self.an_object, self.attr_name)
-            setattr(self.an_object, self.attr_name, self.tmp_value)
-
-    def __exit__(self, *args, **kwargs):
-        if self.tmp_value is not None:
-            setattr(self.an_object, self.attr_name, self.old_value)
-
-
 class NeatStr:
     """Nice short human-readable str depictions of popular numeric values.
 
@@ -109,8 +83,9 @@ class NeatStr:
     """
 
     @staticmethod
-    def mem_size(size_in_B: int, div_ch: str = ' ') -> str:
+    def mem_size(size_in_B:int, div_ch:str = ' ') -> str:
         """Convert an integer number of bytes into a string like '7 Mb' """
+
         assert isinstance(size_in_B, numbers.Number)
         assert size_in_B >= 0
 
@@ -134,6 +109,7 @@ class NeatStr:
     @staticmethod
     def time_diff(time_in_seconds: float, div_ch: str = ' ') -> str:
         """Convert a float number of seconds into a string like '5 hours' """
+
         t = time_in_seconds
         t_str = ""
 
@@ -219,6 +195,8 @@ class NeatStr:
         return text_info
 
 def free_RAM(print_info:bool=True, collect_garbage:bool=True) -> int:
+    """ Force garbage collection and return/print size of fee memory. """
+
     if collect_garbage:
         gc.collect()
 
@@ -264,89 +242,3 @@ class BasicStopwatch:
 
     def __str__(self) -> str:
         return NeatStr.time_diff(self.get_float_repr())
-
-
-##########################################
-# 1-argument aggregators
-
-def percentile01(data):
-    return np.nanpercentile(data, 1)
-
-
-def percentile05(data):
-    return np.nanpercentile(data, 5)
-
-
-def percentile10(data):
-    return np.nanpercentile(data, 10)
-
-
-def percentile20(data):
-    return np.nanpercentile(data, 20)
-
-
-def percentile25(data):
-    return np.nanpercentile(data, 25)
-
-
-def percentile30(data):
-    return np.nanpercentile(data, 30)
-
-
-def percentile40(data):
-    return np.nanpercentile(data, 40)
-
-
-def percentile50(data):
-    return np.nanpercentile(data, 50)
-
-
-def percentile60(data):
-    return np.nanpercentile(data, 60)
-
-
-def percentile70(data):
-    return np.nanpercentile(data, 70)
-
-
-def percentile75(data):
-    return np.nanpercentile(data, 75)
-
-
-def percentile80(data):
-    return np.nanpercentile(data, 80)
-
-
-def percentile90(data):
-    return np.nanpercentile(data, 90)
-
-
-def percentile95(data):
-    return np.nanpercentile(data, 95)
-
-
-def percentile99(data):
-    return np.nanpercentile(data, 99)
-
-
-def minmode(data):
-    return min(stats.mode(data, nan_policy="omit")[0])
-
-
-def maxmode(data):
-    return -min(stats.mode(-data, nan_policy="omit")[0])
-
-def root_2(x):
-    return x**0.5
-
-def power_2(x):
-    return x*x
-
-def power_3(x):
-    return x*x*x
-
-def passthrough(x):
-    return deepcopy(x)
-
-def power_m1_1p(x):
-    return 1/(x+1)
