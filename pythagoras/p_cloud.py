@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from functools import wraps
 from getpass import getuser
-from pprint import pprint
 from random import Random
 from inspect import getsource
 import traceback
@@ -20,15 +19,19 @@ from pythagoras.utils import get_long_infoname, replace_unsafe_chars, buid_conte
 
 
 class ExceptionInfo:
-    """ Helper class for remote logging, encapsulates exception/environment info."""
+    """ Helper class for remote logging, encapsulates exception/environment info.
+
+    This class is used by P_Cloud objects to log information
+    in P_Cloud.exception persistent store.
+    """
 
     def __init__(self, exc_type, exc_value, trace_back, path, time_zone):
         assert isinstance(exc_value, BaseException)
         self.__name__ = get_long_infoname(exc_value)
         self.exception = exc_value
         self.exception_description = traceback.format_exception(
-            exc_type,exc_value, trace_back)
-        self.context = buid_context(path,time_zone)
+            exc_type, exc_value, trace_back)
+        self.context = buid_context(path, time_zone)
 
 def kw_args(**kwargs) -> KwArgsDict:
     """ Helper function to be used with .sync_parallel and similar methods
@@ -139,21 +142,44 @@ class P_Cloud(ABC):
         self._old_excepthook = sys.excepthook
 
         def cloud_excepthook(exc_type, exc_value, trace_back):
-            exc_event = ExceptionInfo(exc_type, exc_value, trace_back, self.base_dir, self.baseline_timezone)
-            self._post_event(event_store=self.exceptions, key=None, event=exc_event)
+
+            exc_event = ExceptionInfo(
+                exc_type, exc_value
+                , trace_back
+                , self.base_dir
+                , self.baseline_timezone)
+
+            self._post_event(
+                event_store=self.exceptions, key=None, event=exc_event)
+
             self._old_excepthook(exc_type, exc_value, trace_back)
             return
 
         sys.excepthook = cloud_excepthook
 
-        def cloud_excepthandler(other_self, exc_type, exc_value, trace_back, tb_offset=None):
-            exc_event = ExceptionInfo(exc_type, exc_value, trace_back, self.base_dir, self.baseline_timezone)
-            self._post_event(event_store=self.exceptions, key=None, event=exc_event)
+        def cloud_excepthandler(
+                other_self
+                , exc_type
+                , exc_value
+                , trace_back
+                , tb_offset=None):
+
+            exc_event = ExceptionInfo(
+                exc_type
+                , exc_value
+                , trace_back
+                , self.base_dir
+                , self.baseline_timezone)
+
+            self._post_event(
+                event_store=self.exceptions, key=None, event=exc_event)
+
             traceback.print_exception(exc_type, exc_value, trace_back)
             return
 
         try:  # if we are inside a notebook
-            get_ipython().set_custom_exc((BaseException,), cloud_excepthandler)
+            get_ipython().set_custom_exc(
+                (BaseException,), cloud_excepthandler)
             self._is_running_inside_IPython = True
         except:
             self._is_running_inside_IPython = False
@@ -191,13 +217,19 @@ class P_Cloud(ABC):
 
     def push_value(self, value:Any) -> PValueAddress:
         """ Add a value to value_store"""
+
         key = PValueAddress(value)
         if not key in self.value_store:
             self.value_store[key] = value
         return key
 
-    def _post_event(self, event_store: SimplePersistentDict, key:Optional[SimpleDictKey], event: Any):
-        """ Add an event to an event store """
+    def _post_event(self
+                    , event_store: SimplePersistentDict
+                    , key:Optional[SimpleDictKey]
+                    , event: Any
+                    ) -> None:
+        """ Add an event to an event store. """
+
         event_id = str(datetime.now(self.baseline_timezone)).replace(":", "-")
         event_id += f"   USER={getuser()}"
         event_id += f"   HOST={socket.gethostname()}"
@@ -220,6 +252,9 @@ class P_Cloud(ABC):
 
 
     def local_function_call(self, func_name:str, **kwargs) -> Any:
+        """ Perform a local synchronous call for a cloudized function. """
+
+        #TODO: See if we still need try/except here
         try:
             original_function = self.original_functions[func_name]
             cloudized_function = self.cloudized_functions[func_name]
@@ -258,10 +293,12 @@ class P_Cloud(ABC):
 
 
     def sync_remote_function_call(self, func_name:str, **kwargs) -> Any:
+        """ Perform a remote synchronous call for a cloudized function. """
         raise NotImplementedError
 
 
     def async_remote_function_call(self, func_name: str, **kwargs) -> Any:
+        """ Perform a remote asynchronous call for a cloudized function. """
         raise NotImplementedError
 
 
@@ -270,6 +307,7 @@ class P_Cloud(ABC):
                              , func_name: str
                              , **kwargs
                              ) -> Any:
+        """ Perform a remote  call for a cloudized function. """
         assert mode in {"sync", "async"}
         if mode == "sync":
             return self.sync_remote_function_call(func_name, **kwargs)
@@ -281,6 +319,8 @@ class P_Cloud(ABC):
                                     , func_name: str
                                     , all_kwargs:List[KwArgsDict]
                                     ) -> List[Any]:
+        """Synchronously execute multiple instances of a cloudized function. """
+
         raise NotImplementedError
 
 
@@ -288,6 +328,8 @@ class P_Cloud(ABC):
                                      , func_name: str
                                      , all_kwargs:List[KwArgsDict]
                                      ) -> List[Any]:
+        """Asynchronously execute multiple instances of a cloudized function."""
+
         raise NotImplementedError
 
 
@@ -295,6 +337,8 @@ class P_Cloud(ABC):
                                , func_name: str
                                , all_kwargs:List[KwArgsDict]
                                ) -> Any:
+        """Execute multiple instances of a cloudized function."""
+
         assert mode in {"sync", "async"}
         if mode == "sync":
             return self.sync_parallel_function_call(func_name, all_kwargs)
@@ -307,6 +351,7 @@ class P_Cloud(ABC):
                                        , **kwargs
                                        ) -> bool:
         """Check if function output for the arguments has already been cached"""
+
         cloudized_function = self.cloudized_functions[func_name]
         kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
         func_key = PFuncOutputAddress(cloudized_function, kwargs_packed)
@@ -335,16 +380,19 @@ class P_Cloud(ABC):
             return self.local_function_call(a_func.__name__, **kwargs)
 
         def sync_parallel(inpt):
-            """Enable parallel execution of multiple instances of function"""
+            """Enable synchronous execution of multiple instances of function"""
             return self.sync_parallel_function_call(a_func.__name__, inpt)
 
         def async_parallel(inpt):
+            """Enable asynchronous execution of multiple instances of function"""
             return self.async_parallel_function_call(a_func.__name__, inpt)
 
         def async_remote(**kwargs):
+            """Enable asynchronous remote execution of a function"""
             return self.async_remote_function_call(a_func.__name__, **kwargs)
 
         def sync_remote(**kwargs):
+            """Enable synchronous remote execution of a function"""
             return self.sync_remote_function_call(a_func.__name__, **kwargs)
 
         def is_stored(**kwargs):
@@ -443,13 +491,22 @@ class SharedStorage_P2P_Cloud(P_Cloud):
                                   , func_name: str
                                   , **kwargs
                                   ) -> Any:
+        """Emulate synchronous remote execution of a function.
+
+        Instead of actual remote execution, it performs local one.
+        """
+
         return self.local_function_call(func_name, **kwargs)
 
     def sync_parallel_function_call(self
                                     , func_name: str
                                     , all_kwargs:List[KwArgsDict]
                                     ) -> Any:
-        """Enable parallel execution of multiple instances of function"""
+        """Emulate parallel execution of multiple instances of function.
+
+        Instead of actual remote parallel execution,
+        it performs local sequential randomized execution .
+        """
 
         cloudized_function = self.cloudized_functions[func_name]
 
