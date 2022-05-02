@@ -1,3 +1,21 @@
+""" Global hash-based addresses and a supporting class.
+
+PHashAddress: a base class for hierarchy of addresses.
+It supports two-part addressed, containing a human-readable prefix
+and a hash ID.
+
+PValueAddress (inherited from PHashAddress): an address of an immutable value.
+
+PFuncSnapshotAddress (inherited from PHashAddress): an address of
+a function snapshot (version).
+
+PFuncOutputAddress (inherited from PHashAddress): an address of
+a function execution result.
+
+KwArgsDict (inherited from dict): s class that encapsulates
+keyword arguments for a function call.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -65,14 +83,17 @@ class PHashAddress(ABC):
         return step()
 
     def __eq__(self, other) -> bool:
+        """Return self==other. """
         return ( isinstance(other, self.__class__)
                 and self.prefix  == other.prefix
                 and self.hash_id == other.hash_id )
 
     def __ne__(self, other) -> bool:
+        """Return self!=other. """
         return not self.__eq__(other)
 
     def __len__(self) -> int:
+        """Return len(self), always equals to 2. """
         return 2
 
     @abstractmethod
