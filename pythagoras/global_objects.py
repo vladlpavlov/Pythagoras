@@ -1,3 +1,5 @@
+"""Global objects / variables / constants used by Pythagoras."""
+
 import string
 
 allowed_key_chars = set(string.ascii_letters + string.digits + "()_-~.=")
