@@ -192,20 +192,17 @@ class SimplePersistentDict(ABC):
     @abstractmethod
     def __contains__(self, key:SimpleDictKey) -> bool:
         """True if the dictionary has the specified key, else False."""
-
         raise NotImplementedError
 
 
     @abstractmethod
     def __getitem__(self, key:SimpleDictKey) -> Any:
         """X.__getitem__(y) is an equivalent to X[y]"""
-
         raise NotImplementedError
 
 
     def __setitem__(self, key:SimpleDictKey, value:Any):
         """Set self[key] to value."""
-
         if self.immutable_items: # TODO: change to exceptions
             assert key not in self, "Can't modify an immutable key-value pair"
         raise NotImplementedError
@@ -213,7 +210,6 @@ class SimplePersistentDict(ABC):
 
     def __delitem__(self, key:SimpleDictKey):
         """Delete self[key]."""
-
         if self.immutable_items: # TODO: change to exceptions
             assert False, "Can't delete an immutable key-value pair"
         raise NotImplementedError
@@ -222,7 +218,6 @@ class SimplePersistentDict(ABC):
     @abstractmethod
     def __len__(self) -> int:
         """Return len(self)."""
-
         raise NotImplementedError
 
 
@@ -234,31 +229,26 @@ class SimplePersistentDict(ABC):
 
     def __iter__(self):
         """Implement iter(self)."""
-
         return self._generic_iter("keys")
 
 
     def keys(self):
         """D.keys() -> iterator object that provides access to D's keys"""
-
         return self._generic_iter("keys")
 
 
     def values(self):
         """D.values() -> iterator object that provides access to D's values"""
-
         return self._generic_iter("values")
 
 
     def items(self):
         """D.items() -> iterator object that provides access to D's items"""
-
         return self._generic_iter("items")
 
 
     def get(self, key:SimpleDictKey, default:Any=None) -> Any:
         """Return the value for key if it's in the dictionary, else default."""
-
         if key in self:
             return self[key]
         else:
@@ -309,7 +299,7 @@ class SimplePersistentDict(ABC):
 
 
     def __eq__(self, other) -> bool:
-        """Return self==value. """
+        """Return self==other. """
         try:
             if len(self) != len(other):
                 return False
