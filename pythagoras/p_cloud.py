@@ -1,3 +1,9 @@
+""" Main Pythagoras classes that provide cloud-access functionality.
+
+P_Cloud: base class for Pythagoras clouds.
+SharedStorage_P2P_Cloud (inherited from P_Cloud): DIY P2P cloud.
+"""
+
 import os
 import platform
 import socket
@@ -137,7 +143,8 @@ class P_Cloud(ABC):
         self._register_exception_handlers()
 
 
-    def _register_exception_handlers(self):
+    def _register_exception_handlers(self) -> None:
+        """ Intersept & redirect unhandled exceptions to self.exceptions """
 
         self._old_excepthook = sys.excepthook
 
@@ -252,7 +259,12 @@ class P_Cloud(ABC):
 
 
     def local_function_call(self, func_name:str, **kwargs) -> Any:
-        """ Perform a local synchronous call for a cloudized function. """
+        """ Perform a local synchronous call for a cloudized function.
+
+        This method should not be called directly. Instead,
+        use the traditional syntax below while caling a cloudized function:
+        func_name(**kwargs)
+        """
 
         #TODO: See if we still need try/except here
         try:
@@ -293,12 +305,22 @@ class P_Cloud(ABC):
 
 
     def sync_remote_function_call(self, func_name:str, **kwargs) -> Any:
-        """ Perform a remote synchronous call for a cloudized function. """
+        """ Perform a remote synchronous call for a cloudized function.
+
+        This method should not be called directly. Instead, use the syntax
+        below (requires a functions first to be added to a cloud):
+        func_name.sync_remote(**kwargs)
+        """
         raise NotImplementedError
 
 
     def async_remote_function_call(self, func_name: str, **kwargs) -> Any:
-        """ Perform a remote asynchronous call for a cloudized function. """
+        """ Perform a remote asynchronous call for a cloudized function.
+
+        This method should not be called directly. Instead, use the syntax
+        below (requires a functions first to be added to a cloud):
+        func_name.async_remote(**kwargs)
+        """
         raise NotImplementedError
 
 
@@ -319,7 +341,12 @@ class P_Cloud(ABC):
                                     , func_name: str
                                     , all_kwargs:List[KwArgsDict]
                                     ) -> List[Any]:
-        """Synchronously execute multiple instances of a cloudized function. """
+        """Synchronously execute multiple instances of a cloudized function.
+
+        This method should not be called directly. Instead, use the syntax
+        below (requires a functions first to be added to a cloud):
+        func_name.sync_parallel( kw_args(..) for .. in .. )
+        """
 
         raise NotImplementedError
 
@@ -328,8 +355,12 @@ class P_Cloud(ABC):
                                      , func_name: str
                                      , all_kwargs:List[KwArgsDict]
                                      ) -> List[Any]:
-        """Asynchronously execute multiple instances of a cloudized function."""
+        """Asynchronously execute multiple instances of a cloudized function.
 
+        This function should not be called directly. Instead, use the syntax
+        below (requires a functions first to be added to a cloud):
+        func_name.async_parallel( kw_args(..) for .. in .. )
+        """
         raise NotImplementedError
 
 
@@ -350,8 +381,12 @@ class P_Cloud(ABC):
                                        , func_name: str
                                        , **kwargs
                                        ) -> bool:
-        """Check if function output for the arguments has already been cached"""
+        """Check if function output for the arguments has already been cached.
 
+        This function should not be called directly. Instead, use the syntax
+        below (requires a functions first to be added to a cloud):
+        func_name.is_stored(**kwargs)
+        """
         cloudized_function = self.cloudized_functions[func_name]
         kwargs_packed = KwArgsDict(kwargs).pack(cloud=self)
         func_key = PFuncOutputAddress(cloudized_function, kwargs_packed)
