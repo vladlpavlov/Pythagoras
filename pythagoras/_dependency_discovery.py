@@ -1,3 +1,9 @@
+""" Tools to build dependency graph for cloudized functions.
+
+They are not a part of Pythagoras public API. Function dependency graphs are
+required to calculate hash addresses for function snapshots.
+"""
+
 from typing import Union, Callable, Any
 import re, inspect, copy
 
