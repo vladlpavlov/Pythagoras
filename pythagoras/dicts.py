@@ -1,3 +1,21 @@
+""" Persistent dictionaries that store key-value pairs on local disks or AWS S3.
+
+The module offers 3 main classes:
+
+SimplePersistentDict: base class in the hierarchy, defines unified interface
+of all persistent dictionaries.
+
+FileDirDict (inherited from SimplePersistentDict) : a dictionary that
+stores key-value pairs as files on a local
+hard-drive. A key is used to compose a filename, while a value is stored
+as a pickle or a json object in the file.
+
+S3_Dict (inherited from SimplePersistentDict): a dictionary that
+stores key-value pairs on AWS S3.
+A key is used to compose an objectname, while a value is stored
+as a pickle or a json S3 object.
+"""
+
 import base64
 import hashlib
 import os
@@ -38,9 +56,10 @@ class SimplePersistentDict(ABC):
     Attributes
     ----------
     immutable_items : bool
-                      True means items are not allowed to be modified or deleted
-                      from a dictionary. It allows for various distributed cache
-                      optimizations for remote storage.
+                      True means an append-only dictionary: items are
+                      not allowed to be modified or deleted from a dictionary.
+                      It enables various distributed cache optimizations
+                      for remote storage.
                       False means normal dict-like behaviour.
 
     digest_len : int
