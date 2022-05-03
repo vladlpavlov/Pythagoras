@@ -5,11 +5,11 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.3.60"
+    ,version="0.3.61"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description= "Simple and inexpensive way to create, deploy and run " 
-                  "cloud-scale algorithms from within local Python scripts and notebooks."
+        "cloud-scale algorithms from within local Python scripts and notebooks."
     ,long_description=long_description
     ,long_description_content_type="text/markdown"
     ,url="https://github.com/vladlpavlov/pythagoras"
@@ -27,7 +27,8 @@ setuptools.setup(
         , "Topic :: Software Development :: Libraries"
         , "Topic :: Software Development :: Libraries :: Python Modules"
     ]
-    ,keywords='cloud, ML, AI, serverless, distributed, parallel, machine-learning, deep-learning, pythagoras'
+    ,keywords='cloud, ML, AI, serverless, distributed, parallel'
+              ', machine-learning, deep-learning, pythagoras'
     ,python_requires='>=3.9'
     ,install_requires=[
         'numpy'
