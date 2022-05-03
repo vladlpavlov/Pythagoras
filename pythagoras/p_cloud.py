@@ -61,41 +61,62 @@ class P_Cloud(ABC):
     Attributes
     ----------
     value_store : SimplePersistentDict
-                  An abstract property: a persistent dict-like object that
-                  stores all the values ever created within any running instance
-                  of your cloudized functions. It's a key-value store, where
-                  the key (the object's address) is composed using
-                  the object's hash. Under the hood, these hash-based addresses
-                  are used by Pythagoras the same way as RAM-based addresses
-                  are used (via pointers and references) in C and C++ programs.
+            An abstract property: a persistent dict-like object that
+            stores all the values ever created within any running instance
+            of your cloudized functions. It's a key-value store, where
+            the key (the object's address) is composed using
+            the object's hash. Under the hood, these hash-based addresses
+            are used by Pythagoras the same way as RAM-based addresses
+            are used (via pointers and references) in C and C++ programs.
 
     func_output_store : SimplePersistentDict
-                        An abstract property: a persistent dict-like object that
-                        caches all results of all cloudized function executions
-                        that ever happened in the system. Enables distributed
-                        memoization functionality ("calculate once, reuse
-                        forever").
+            An abstract property: a persistent dict-like object that
+            caches all results of all cloudized function executions
+            that ever happened in the system. Enables distributed
+            memoization functionality ("calculate once, reuse
+            forever").
+
+    exception_log: SimplePersistentDict
+            An abstract property: a persistent dict-like object that
+            stores a complete history of all the exceptions
+            (catastrophic events) that terminated execution of any of
+            the scripts/notebooks that had instantiated the P_Cloud class.
+            The log is stored in human-readable json format.
+            The main purpose of the property is to improve
+            transparency/debuggability of the code that uses P_Cloud.
+            This property is not intended to be used as a messaging tool
+            that enables automated response to detected exceptions.
+
+    event_log: SimplePersistentDict
+            An abstract property: a persistent dict-like object that
+            serves as a log of various non-catastrophic events, recorded by any
+            of the scripts/notebooks that had instantiated the P_Cloud class.
+            The log is stored in human-readable json format.
+            The main purpose of the property is to
+            improve transparency/debuggability of the code that uses P_Cloud.
+            This property is not intended to be used as a messaging tool
+            that enables communication between various components of the code.
 
     p_purity_checks : float
-                      Probability of stochastic purity checks. If a functions
-                      output has been stored on a cache, when the function is
-                      called with the same arguments next time, it will re-use
-                      cached output with probability (1-p_purity_checks).
-                      With probability p_purity_checks the function will be
-                      executed once again, and its output will be compared with
-                      the cached one: if they differ, purity check will fail.
+            Probability of stochastic purity checks. If a functions
+            output has been stored on a cache, when the function is
+            called with the same arguments next time, it will re-use
+            cached output with probability (1-p_purity_checks).
+            With probability p_purity_checks the function will be
+            executed once again, and its output will be compared with
+            the cached one: if they differ, purity check will fail.
 
     original_functions : dict[str, Callable]
-                         A dictionary with original (before application of the
-                         @add_pure_function decorator) versions of all cloudized
-                         functions in P_Cloud. Keys are the names of the
-                         functions.
+            A dictionary with original (before application of the
+            @add_pure_function decorator) versions of all cloudized
+            functions in P_Cloud. Keys are the names of the
+            functions.
 
     cloudized_functions : dict[str, Callable]
-                          A dictionary with modified (as a result of  applying
-                          the @add_pure_function decorator) versions of all
-                          cloudized functions in P_Cloud. Keys are the names
-                          of the functions.
+            A dictionary with modified (as a result of  applying
+            the @add_pure_function decorator) versions of all
+            cloudized functions in P_Cloud. Keys are the names
+            of the functions.
     """
     p_cloud_single_instance = None
 
@@ -157,7 +178,7 @@ class P_Cloud(ABC):
                 , self.baseline_timezone)
 
             self._post_event(
-                event_store=self.exceptions, key=None, event=exc_event)
+                event_store=self.exception_log, key=None, event=exc_event)
 
             self._old_excepthook(exc_type, exc_value, trace_back)
             return
@@ -179,7 +200,7 @@ class P_Cloud(ABC):
                 , self.baseline_timezone)
 
             self._post_event(
-                event_store=self.exceptions, key=None, event=exc_event)
+                event_store=self.exception_log, key=None, event=exc_event)
 
             traceback.print_exception(exc_type, exc_value, trace_back)
             return
@@ -206,7 +227,7 @@ class P_Cloud(ABC):
 
     @property
     @abstractmethod
-    def exceptions(self) -> SimplePersistentDict:
+    def exception_log(self) -> SimplePersistentDict:
         raise NotImplementedError
 
 
@@ -218,7 +239,7 @@ class P_Cloud(ABC):
 
     @property
     @abstractmethod
-    def events(self) -> SimplePersistentDict:
+    def event_log(self) -> SimplePersistentDict:
         raise NotImplementedError
 
 
@@ -298,7 +319,7 @@ class P_Cloud(ABC):
                     self.func_output_store[func_key] = result_key
 
         except BaseException as ex:
-            self._post_event(event_store=self.exceptions, key=None, event=ex)
+            self._post_event(event_store=self.exception_log, key=None, event=ex)
             raise
 
         return result
@@ -322,19 +343,6 @@ class P_Cloud(ABC):
         func_name.async_remote(**kwargs)
         """
         raise NotImplementedError
-
-
-    def remote_function_call(self
-                             , mode:str
-                             , func_name: str
-                             , **kwargs
-                             ) -> Any:
-        """ Perform a remote  call for a cloudized function. """
-        assert mode in {"sync", "async"}
-        if mode == "sync":
-            return self.sync_remote_function_call(func_name, **kwargs)
-        else:
-            return self.async_remote_function_call(func_name, **kwargs)
 
 
     def sync_parallel_function_call(self
@@ -364,19 +372,6 @@ class P_Cloud(ABC):
         raise NotImplementedError
 
 
-    def parallel_function_call(self, mode:str
-                               , func_name: str
-                               , all_kwargs:List[KwArgsDict]
-                               ) -> Any:
-        """Execute multiple instances of a cloudized function."""
-
-        assert mode in {"sync", "async"}
-        if mode == "sync":
-            return self.sync_parallel_function_call(func_name, all_kwargs)
-        else:
-            return self.async_parallel_function_call(func_name, all_kwargs)
-
-
     def check_if_func_output_is_stored(self
                                        , func_name: str
                                        , **kwargs
@@ -394,6 +389,7 @@ class P_Cloud(ABC):
 
 
     def add_pure_function(self, a_func):
+        """Decorator which 'cloudizes' user-provided functions. """
         assert callable(a_func)
         assert not hasattr(a_func, "p_cloud"), (
             "A function is not allowed to be added to the cloud twice")
@@ -411,23 +407,23 @@ class P_Cloud(ABC):
 
         @wraps(a_func)
         def wrapped_function(**kwargs):
-            """compose memoized/cloudized version of a function"""
+            """Run memoized/cloudized version of a function"""
             return self.local_function_call(a_func.__name__, **kwargs)
 
         def sync_parallel(inpt):
-            """Enable synchronous execution of multiple instances of function"""
+            """Synchronously run multiple instances of function"""
             return self.sync_parallel_function_call(a_func.__name__, inpt)
 
         def async_parallel(inpt):
-            """Enable asynchronous execution of multiple instances of function"""
+            """Asynchronously run multiple instances of function"""
             return self.async_parallel_function_call(a_func.__name__, inpt)
 
         def async_remote(**kwargs):
-            """Enable asynchronous remote execution of a function"""
+            """Perform asynchronous remote execution of a function"""
             return self.async_remote_function_call(a_func.__name__, **kwargs)
 
         def sync_remote(**kwargs):
-            """Enable synchronous remote execution of a function"""
+            """Perform synchronous remote execution of a function"""
             return self.sync_remote_function_call(a_func.__name__, **kwargs)
 
         def is_stored(**kwargs):
@@ -485,16 +481,16 @@ class SharedStorage_P2P_Cloud(P_Cloud):
             dir_name=os.path.join(self.base_dir, "func_output_store")
             ,file_type="pkl")
 
-        self._exceptions = FileDirDict(
-            dir_name=os.path.join(self.base_dir, "exceptions")
+        self._exception_log = FileDirDict(
+            dir_name=os.path.join(self.base_dir, "exception_log")
             ,file_type="json")
 
         self._func_snapshots = FileDirDict(
             dir_name=os.path.join(self.base_dir, "func_snapshots")
             ,file_type="json")
 
-        self._events = FileDirDict(
-            dir_name=os.path.join(self.base_dir, "events")
+        self._event_log = FileDirDict(
+            dir_name=os.path.join(self.base_dir, "event_log")
             ,file_type="json")
 
 
@@ -509,8 +505,8 @@ class SharedStorage_P2P_Cloud(P_Cloud):
 
 
     @property
-    def exceptions(self) -> SimplePersistentDict:
-        return self._exceptions
+    def exception_log(self) -> SimplePersistentDict:
+        return self._exception_log
 
 
     @property
@@ -519,8 +515,8 @@ class SharedStorage_P2P_Cloud(P_Cloud):
 
 
     @property
-    def events(self) -> SimplePersistentDict:
-        return self._events
+    def event_log(self) -> SimplePersistentDict:
+        return self._event_log
 
     def sync_remote_function_call(self
                                   , func_name: str
