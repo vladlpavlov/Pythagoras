@@ -1,24 +1,20 @@
+"""Miscellaneous supporting classes and functions."""
+
 from __future__ import annotations
 
 import datetime
-import logging as lg
 import math
 import os
 import platform
 import socket
 from getpass import getuser
-
-import numpy as np
 import inspect
 import numbers, time
 from typing import Any, Dict
-from copy import deepcopy
-
 import pkg_resources
 import psutil
 import gc
 
-from scipy import stats
 
 from pythagoras import allowed_key_chars
 
