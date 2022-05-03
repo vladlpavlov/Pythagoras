@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import abc
 import datetime
 import math
 import os
@@ -15,8 +16,14 @@ import pkg_resources
 import psutil
 import gc
 
-
 from pythagoras import allowed_key_chars
+
+class ABC_PostInitializable(abc.ABCMeta):
+    """ Metaclass that enables __post__init__() method for abstract classes. """
+    def __call__(cls, *args, **kwargs):
+        obj = abc.ABCMeta.__call__(cls, *args, **kwargs)
+        obj.__post__init__(*args, **kwargs)
+        return obj
 
 
 def buid_context(file_path:str=None, time_zone=None)-> Dict:
