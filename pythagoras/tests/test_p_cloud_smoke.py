@@ -1,4 +1,7 @@
+import gc
+
 from pythagoras import *
+import pytest
 from moto import mock_s3
 
 def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
@@ -31,6 +34,7 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
     for i in range(4):
         assert ggg.sync_parallel(kw_args(a=i) for i in range(10)) == [i*i for i in range(10)]
 
+    P_Cloud._instance_counter = 0  # dirty hack
 
 def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
     my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
@@ -47,6 +51,7 @@ def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
     assert hihihi.is_stored(x=1, y=2)
     assert not hihihi.is_stored(x=-1, y=-2)
 
+    P_Cloud._instance_counter = 0 # dirty hack
 
 def test_SharedStorage_P2P_Cloud_func3args(tmpdir):
     my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
@@ -64,3 +69,18 @@ def test_SharedStorage_P2P_Cloud_func3args(tmpdir):
 
     assert lyslyslya.is_stored(y=2, x=1, z=3)
     assert not lyslyslya.is_stored(y=2000, x=1, z=3)
+
+    P_Cloud._instance_counter = 0 # dirty hack
+
+
+def test_multiple_clouds(tmpdir):
+    my_cloud = SharedStorage_P2P_Cloud(
+        base_dir=tmpdir, p_purity_checks=0.5)
+    second_cloud = SharedStorage_P2P_Cloud(
+        base_dir=tmpdir, p_purity_checks=0.5)
+    assert second_cloud._instance_counter == 2
+    with pytest.raises(BaseException):
+        third_cloud = SharedStorage_P2P_Cloud(
+            base_dir=tmpdir, p_purity_checks=0.25)
+
+    P_Cloud._instance_counter = 0 # dirty hack

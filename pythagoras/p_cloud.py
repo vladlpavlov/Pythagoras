@@ -21,7 +21,8 @@ from zoneinfo import ZoneInfo
 
 from pythagoras.p_hash_address import PValueAddress, PFuncOutputAddress, KwArgsDict
 from pythagoras.dicts import FileDirDict, SimplePersistentDict, SimpleDictKey
-from pythagoras.utils import get_long_infoname, replace_unsafe_chars, buid_context
+from pythagoras.utils import get_long_infoname, replace_unsafe_chars
+from pythagoras.utils import buid_context, ABC_PostInitializable
 
 
 class ExceptionInfo:
@@ -51,7 +52,7 @@ def kw_args(**kwargs) -> KwArgsDict:
     return KwArgsDict(**kwargs)
 
 
-class P_Cloud(ABC):
+class P_Cloud(metaclass=ABC_PostInitializable):
     """ A base class for all Pythagoras clouds.
 
     It is a base class for all objects that are implementing
@@ -142,6 +143,9 @@ class P_Cloud(ABC):
 
     _event_counter:int = 0
 
+    _instance_counter:int = 0
+    _init_signature_hash_address = None
+
     def __init__(self
                  , install_requires:str = ""
                  , python_requires = ""
@@ -163,6 +167,19 @@ class P_Cloud(ABC):
 
         self._register_exception_handlers()
 
+    def __post__init__(self, *args, **kwargs) -> None:
+        """ Enforce arguments-based singleton pattern. """
+        P_Cloud._instance_counter += 1
+        if P_Cloud._instance_counter == 1:
+            init_signature  = (type(self),args,kwargs)
+            P_Cloud._init_signature_hash_address = PValueAddress(
+                init_signature)
+        else:
+            new_init_signature = (type(self),args,kwargs)
+            new_init_sign_hash = PValueAddress(new_init_signature)
+            assert new_init_sign_hash == P_Cloud._init_signature_hash_address, (
+                "You can't have several P_Cloud instances with different "
+                "types and/or initialization arguments.")
 
     def _register_exception_handlers(self) -> None:
         """ Intersept & redirect unhandled exceptions to self.exceptions """
