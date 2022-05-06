@@ -578,6 +578,8 @@ class SharedStorage_P2P_Cloud(P_Cloud):
         return result
 
 class MLProjectWorkspace:
+    """Simple shared workspace for small teams working on ML projects."""
+
     base_cloud: P_Cloud
 
     def __init__(self, base: Union[str, P_Cloud]):
