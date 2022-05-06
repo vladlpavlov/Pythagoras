@@ -15,7 +15,7 @@ from getpass import getuser
 from random import Random
 from inspect import getsource
 import traceback
-from typing import Any, Optional, Callable, List
+from typing import Any, Optional, Callable, List, Union
 from zoneinfo import ZoneInfo
 
 
@@ -578,7 +578,7 @@ class SharedStorage_P2P_Cloud(P_Cloud):
         return result
 
 class MLProjectWorkspace:
-    cloud: P_Cloud
+    base_cloud: P_Cloud
 
     def __init__(self, base: Union[str, P_Cloud]):
         if isinstance(base, str):
