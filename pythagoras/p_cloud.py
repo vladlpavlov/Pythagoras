@@ -184,7 +184,7 @@ class P_Cloud(metaclass=ABC_PostInitializable):
     def _register_exception_handlers(self) -> None:
         """ Intersept & redirect unhandled exceptions to self.exceptions """
 
-        self._old_excepthook = sys.excepthook
+        P_Cloud._old_excepthook = sys.excepthook
 
         def cloud_excepthook(exc_type, exc_value, trace_back):
 
@@ -197,7 +197,7 @@ class P_Cloud(metaclass=ABC_PostInitializable):
             self._post_event(
                 event_store=self.exception_log, key=None, event=exc_event)
 
-            self._old_excepthook(exc_type, exc_value, trace_back)
+            P_Cloud._old_excepthook(exc_type, exc_value, trace_back)
             return
 
         sys.excepthook = cloud_excepthook
