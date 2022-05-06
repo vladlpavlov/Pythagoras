@@ -576,3 +576,15 @@ class SharedStorage_P2P_Cloud(P_Cloud):
         result = [e[1] for e in result]
 
         return result
+
+class MLProjectWorkspace:
+    cloud: P_Cloud
+
+    def __init__(self, base: Union[str, P_Cloud]):
+        if isinstance(base, str):
+            self.base_cloud = SharedStorage_P2P_Cloud(base_dir=base)
+        elif isinstance(base, P_Cloud):
+            self.base_cloud = base
+        else:
+            assert False, "base must be either str or P_Cloud"
+            # TODO: chaneg to exception
