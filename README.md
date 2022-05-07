@@ -105,8 +105,9 @@ Binary installers for the latest released version are available at the Python pa
 
 ## (6) Key Contacts
 
-* [Volodymyr (Vlad) Pavlov](https://www.linkedin.com/in/vlpavlov/): algorithm design and core development 
-* [Kai Zhao](https://www.linkedin.com/in/kaimzhao/): quality assurance
+* [Volodymyr (Vlad) Pavlov](https://www.linkedin.com/in/vlpavlov/) 
+* [Illia Shestakov](https://www.linkedin.com/in/illia-shestakov-88716a21b/) 
+* [Kai Zhao](https://www.linkedin.com/in/kaimzhao/)
 
 ## (7) What Do The Name And Logo Mean?
 
