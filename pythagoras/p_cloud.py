@@ -578,7 +578,12 @@ class SharedStorage_P2P_Cloud(P_Cloud):
         return result
 
 class MLProjectWorkspace:
-    """Simple shared workspace for small teams working on ML projects."""
+    """Simple shared workspace for small teams working on ML projects.
+
+    Objects of this class enable faster experimentation and
+    more efficient collaboration for small teams working on ML projects,
+    e.g. teams participating in Kaggle competitions.
+    """
 
     base_cloud: P_Cloud
 
