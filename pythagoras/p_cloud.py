@@ -64,7 +64,7 @@ class P_Cloud(metaclass=ABC_PostInitializable):
     value_store : SimplePersistentDict
             An abstract property: a persistent dict-like object that
             stores all the values ever created within any running instance
-            of your cloudized functions. It's a key-value store, where
+            of cloudized functions. It's a key-value store, where
             the key (the object's address) is composed using
             the object's hash. Under the hood, these hash-based addresses
             are used by Pythagoras the same way as RAM-based addresses
@@ -233,18 +233,42 @@ class P_Cloud(metaclass=ABC_PostInitializable):
     @property
     @abstractmethod
     def value_store(self) -> SimplePersistentDict:
+        """ A persistent dict-like object that stores all ever created values.
+
+        It's a key-value store, where the key (the object's address)
+        is composed using the object's hash. Under the hood, these
+        hash-based addresses are used by Pythagoras the same way
+        as RAM-based addresses are used (via pointers and references)
+        in C and C++ programs.
+        """
         raise NotImplementedError
 
 
     @property
     @abstractmethod
     def func_output_store(self) -> SimplePersistentDict:
+        """Persistent cache that keeps execution results for cloudized functions.
+
+        It's a dict-like store that enables persistent / distributed
+        memoization functionality ("calculate once, reuse forever").
+        """
         raise NotImplementedError
 
 
     @property
     @abstractmethod
     def exception_log(self) -> SimplePersistentDict:
+        """Persistent store that keeps history of all catastrophic events.
+
+        A catastrophic event is defined as an exception that
+        terminated execution of any of the scripts/notebooks which
+        had instantiated the P_Cloud class.
+        The log is stored in human-readable json format.
+        The main purpose of the property is to improve
+        transparency/debuggability of the code that uses P_Cloud.
+        This property is not intended to be used as a messaging tool
+        that enables automated response to detected exceptions.
+        """
         raise NotImplementedError
 
 
@@ -257,6 +281,16 @@ class P_Cloud(metaclass=ABC_PostInitializable):
     @property
     @abstractmethod
     def event_log(self) -> SimplePersistentDict:
+        """ A log of various non-catastrophic events.
+
+        The events can be recorded by any of the scripts/notebooks
+        that had instantiated the P_Cloud class.
+        The log is stored in human-readable json format.
+        The main purpose of the property is to
+        improve transparency/debuggability of the code that uses P_Cloud.
+        This property is not intended to be used as a messaging tool
+        that enables communication between various components of the code.
+        """
         raise NotImplementedError
 
 
@@ -513,16 +547,40 @@ class SharedStorage_P2P_Cloud(P_Cloud):
 
     @property
     def value_store(self) -> SimplePersistentDict:
+        """ A persistent dict-like object that stores all ever created values.
+
+        It's a key-value store, where the key (the object's address)
+        is composed using the object's hash. Under the hood, these
+        hash-based addresses are used by Pythagoras the same way
+        as RAM-based addresses are used (via pointers and references)
+        in C and C++ programs.
+        """
         return self._value_store
 
 
     @property
     def func_output_store(self) -> SimplePersistentDict:
+        """Persistent cache that keeps execution results for cloudized functions.
+
+        It's a dict-like store that enables persistent / distributed
+        memoization functionality ("calculate once, reuse forever").
+        """
         return self._func_output_store
 
 
     @property
     def exception_log(self) -> SimplePersistentDict:
+        """Persistent store that keeps history of all catastrophic events.
+
+        A catastrophic event is defined as an exception that
+        terminated execution of any of the scripts/notebooks which
+        had instantiated the P_Cloud class.
+        The log is stored in human-readable json format.
+        The main purpose of the property is to improve
+        transparency/debuggability of the code that uses P_Cloud.
+        This property is not intended to be used as a messaging tool
+        that enables automated response to detected exceptions.
+        """
         return self._exception_log
 
 
@@ -533,6 +591,16 @@ class SharedStorage_P2P_Cloud(P_Cloud):
 
     @property
     def event_log(self) -> SimplePersistentDict:
+        """ A log of various non-catastrophic events.
+
+        The events can be recorded by any of the scripts/notebooks
+        that had instantiated the P_Cloud class.
+        The log is stored in human-readable json format.
+        The main purpose of the property is to
+        improve transparency/debuggability of the code that uses P_Cloud.
+        This property is not intended to be used as a messaging tool
+        that enables communication between various components of the code.
+        """
         return self._event_log
 
     def sync_remote_function_call(self
@@ -583,6 +651,9 @@ class MLProjectWorkspace:
     Objects of this class enable faster experimentation and
     more efficient collaboration for small teams working on ML projects,
     e.g. teams participating in Kaggle competitions.
+
+    MLProjectWorkspace also provides API similar to P_Cloud objects,
+    even though MLProjectWorkspace does not inherit from P_Cloud
     """
 
     base_cloud: P_Cloud
@@ -595,3 +666,75 @@ class MLProjectWorkspace:
         else:
             assert False, "base must be either str or P_Cloud"
             # TODO: chaneg to exception
+
+    @property
+    def value_store(self) -> SimplePersistentDict:
+        """ A persistent dict-like object that stores all ever created values.
+
+        It's a key-value store, where the key (the object's address)
+        is composed using the object's hash. Under the hood, these
+        hash-based addresses are used by Pythagoras the same way
+        as RAM-based addresses are used (via pointers and references)
+        in C and C++ programs.
+        """
+        return self.base_cloud.value_store
+
+
+    @property
+    def func_output_store(self) -> SimplePersistentDict:
+        """Persistent cache that keeps execution results for cloudized functions.
+
+        It's a dict-like store that enables persistent / distributed
+        memoization functionality ("calculate once, reuse forever").
+        """
+        return self.base_cloud.func_output_store
+
+
+    @property
+    def exception_log(self) -> SimplePersistentDict:
+        """Persistent store that keeps history of all catastrophic events.
+
+        A catastrophic event is defined as an exception that
+        terminated execution of any of the scripts/notebooks which
+        had instantiated the P_Cloud class.
+        The log is stored in human-readable json format.
+        The main purpose of the property is to improve
+        transparency/debuggability of the code that uses P_Cloud.
+        This property is not intended to be used as a messaging tool
+        that enables automated response to detected exceptions.
+        """
+        return self.base_cloud.exception_log
+
+
+    @property
+    def func_snapshots(self) -> SimplePersistentDict:
+        return self.base_cloud.func_snapshots
+
+
+    @property
+    def event_log(self) -> SimplePersistentDict:
+        """ A log of various non-catastrophic events.
+
+        The events can be recorded by any of the scripts/notebooks
+        that had instantiated the P_Cloud class.
+        The log is stored in human-readable json format.
+        The main purpose of the property is to
+        improve transparency/debuggability of the code that uses P_Cloud.
+        This property is not intended to be used as a messaging tool
+        that enables communication between various components of the code.
+        """
+        return self.base_cloud.event_log
+
+
+    @property
+    def p_purity_checks(self) -> float:
+        """ Probability of stochastic purity checks.
+
+        If a functions output has been stored on a cache, when the function is
+        called with the same arguments next time, it will re-use
+        cached output with probability (1-p_purity_checks).
+        With probability p_purity_checks the function will be
+        executed once again, and its output will be compared with
+        the cached one: if they differ, purity check will fail.
+        """
+        return self.base_cloud.p_purity_checks
