@@ -738,3 +738,7 @@ class MLProjectWorkspace:
         the cached one: if they differ, purity check will fail.
         """
         return self.base_cloud.p_purity_checks
+
+    def add_pure_function(self, a_func):
+        """Decorator which 'cloudizes' user-provided functions. """
+        return self.base_cloud.add_pure_function(a_func)
