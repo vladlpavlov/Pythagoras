@@ -6,8 +6,8 @@ SimplePersistentDict: base class in the hierarchy, defines unified interface
 of all persistent dictionaries.
 
 FileDirDict (inherited from SimplePersistentDict) : a dictionary that
-stores key-value pairs as files on a local
-hard-drive. A key is used to compose a filename, while a value is stored
+stores key-value pairs as files on a local hard-drive.
+A key is used to compose a filename, while a value is stored
 as a pickle or a json object in the file.
 
 S3_Dict (inherited from SimplePersistentDict): a dictionary that
@@ -15,43 +15,47 @@ stores key-value pairs on AWS S3.
 A key is used to compose an objectname, while a value is stored
 as a pickle or a json S3 object.
 """
+from __future__ import annotations
 
 import base64
 import hashlib
 import os
 import pickle
 from abc import *
-from typing import Set, Any, Tuple, Union, Sequence
+from typing import Any, Tuple, Union, Sequence
 import boto3
-from pythagoras.p_hash_address import PHashAddress
-
-from pythagoras.global_objects import *
 
 import jsonpickle
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import jsonpickle.ext.pandas as jsonpickle_pandas
 
+from pythagoras.utils import get_safe_chars
+
+from collections.abc import MutableMapping
+
 jsonpickle_numpy.register_handlers()
 jsonpickle_pandas.register_handlers()
 
 
-SimpleDictKey = Union[ str, Sequence[str], PHashAddress ]
+SimpleDictKey = Union[ str, Sequence[str]]
 """ A value which can be used as a key for SimplePersistentDict. 
 
 SimpleDictKey must be a string or a sequence of strings.
 The characters within strings are restricted to allowed_key_chars set.
 """
 
-class SimplePersistentDict(ABC):
+safe_chars = get_safe_chars()
+
+class SimplePersistentDict(MutableMapping):
     """Dict-like durable store that accepts sequences of strings as keys.
 
     An abstract base class for key-value stores. It accepts keys in a form of
-    either a single sting or a sequence (tuple, list) of strings.
+    either a single sting or a sequence (tuple, list, etc.) of strings.
     It imposes no restrictions on types of values in the key-value pairs.
 
     The API for the class resembles the API of Python's built-in Dict
     (see https://docs.python.org/3/library/stdtypes.html#mapping-types-dict)
-    with a few changes (e.g. insertion order is not preserved).
+    with a few variations (e.g. insertion order is not preserved).
 
     Attributes
     ----------
@@ -62,7 +66,7 @@ class SimplePersistentDict(ABC):
                       for remote storage.
                       False means normal dict-like behaviour.
 
-    digest_len : int
+    min_digest_len : int
                  Length of a hash signature suffix which SimplePersistentDict
                  automatically adds to each string in a key
                  while mapping the key to an address of a value
@@ -72,24 +76,25 @@ class SimplePersistentDict(ABC):
                  (even if case-preserving) filesystems, such as MacOS HFS.
 
     """
-    # TODO: refactor to support variable length of digest_len
-    digest_len:int
+    # TODO: refactor to support variable length of min_digest_len
+    min_digest_len:int
     immutable_items:bool
 
     def __init__(self
                  , immutable_items:bool
-                 , digest_len:int = 8
+                 , min_digest_len:int = 8
                  , **kwargas):
-        assert digest_len >= 0
-        self.digest_len = digest_len
+        assert min_digest_len >= 0
+        self.min_digest_len = min_digest_len
         self.immutable_items = bool(immutable_items)
+
 
     def _create_suffix(self, input_str:str) -> str:
         """ Create a hash signature suffix for a string."""
 
         assert isinstance(input_str, str)
 
-        if self.digest_len == 0:
+        if self.min_digest_len == 0:
             return ""
 
         input_b = input_str.encode()
@@ -97,7 +102,7 @@ class SimplePersistentDict(ABC):
         full_digest_str = base64.b32encode(hash_object.digest()).decode()
             # TODO: decide how to deal with leading spaces
             # (which are not allowed on FAT32)
-        suffix = "_" + full_digest_str[:self.digest_len]
+        suffix = "_" + full_digest_str[:self.min_digest_len]
 
         return suffix
 
@@ -107,12 +112,12 @@ class SimplePersistentDict(ABC):
 
         assert isinstance(input_str, str)
 
-        if self.digest_len == 0:
+        if self.min_digest_len == 0:
             return input_str
 
-        if len(input_str) > self.digest_len + 1:
+        if len(input_str) > self.min_digest_len + 1:
             possibly_already_present_suffix = self._create_suffix(
-                input_str[:-1-self.digest_len])
+                input_str[:-1-self.min_digest_len])
             if input_str.endswith(possibly_already_present_suffix):
                 return input_str
 
@@ -124,14 +129,14 @@ class SimplePersistentDict(ABC):
 
         assert isinstance(input_str, str)
 
-        if self.digest_len == 0:
+        if self.min_digest_len == 0:
             return input_str
 
-        if len(input_str) > self.digest_len + 1:
+        if len(input_str) > self.min_digest_len + 1:
             possibly_already_present_suffix = self._create_suffix(
-                input_str[:-1-self.digest_len])
+                input_str[:-1-self.min_digest_len])
             if input_str.endswith(possibly_already_present_suffix):
-                return input_str[:-1-self.digest_len]
+                return input_str[:-1-self.min_digest_len]
 
         return input_str
 
@@ -139,7 +144,7 @@ class SimplePersistentDict(ABC):
     def _remove_all_suffixes_if_present(self, key:SimpleDictKey) -> SimpleDictKey:
         """ Remove hash signature suffixes from all strings in a key."""
 
-        if self.digest_len == 0:
+        if self.min_digest_len == 0:
             return key
 
         new_key = []
@@ -174,10 +179,10 @@ class SimplePersistentDict(ABC):
         for s in key:
             assert isinstance(s,str), (
                     "Key must be a string or a sequence of strings.")
-            assert len(set(s) - allowed_key_chars) == 0, (
-                f"Invalid characters in the key: {(set(s)-allowed_key_chars)}"
+            assert len(set(s) - safe_chars) == 0, (
+                f"Invalid characters in the key: {(set(s) - safe_chars)}"
                 + "\nOnly the following chars are allowed in a key:"
-                + "".join(list(allowed_key_chars)))
+                + "".join(list(safe_chars)))
             assert len(s), "Only non-empty strings are allowed in a key"
 
         new_key = []
@@ -223,6 +228,7 @@ class SimplePersistentDict(ABC):
 
     @abstractmethod
     def _generic_iter(self, iter_type: str):
+        """Underlying implementation for .items()/.keys()/.values() iterators"""
         assert iter_type in {"keys", "values", "items"}
         raise NotImplementedError
 
@@ -247,55 +253,17 @@ class SimplePersistentDict(ABC):
         return self._generic_iter("items")
 
 
-    def get(self, key:SimpleDictKey, default:Any=None) -> Any:
-        """Return the value for key if it's in the dictionary, else default."""
-        if key in self:
-            return self[key]
-        else:
-            return default
-
-
     def setdefault(self, key:SimpleDictKey, default:Any=None) -> Any:
         """Insert key with a value of default if key is not in the dictionary.
 
         Return the value for key if key is in the dictionary, else default.
         """
-
+        # TODO: check age cases to ensure the same semantics as standard dicts
         if key in self:
             return self[key]
         else:
             self[key] = default
             return default
-
-
-    def pop(self, key:SimpleDictKey, default:Any=None) -> Any:
-        """Remove specified key and return the corresponding value.
-
-        If key is not found, default is returned if given,
-        otherwise KeyError is raised.
-        """
-
-        if key in self:
-            result = self[key]
-            del self[key]
-            return result
-        else:
-            if default is not None:
-                return default
-            else:
-                raise KeyError(f"Key {key} not found in the dictionary.")
-
-
-    def popitem(self) -> Any:
-        """Remove and return some (key, value) pair as a 2-tuple
-
-        KeyError will be raised if D is empty.
-        """
-
-        key = next(iter(self))
-        result = self[key]
-        del self[key]
-        return result
 
 
     def __eq__(self, other) -> bool:
@@ -336,6 +304,10 @@ class SimplePersistentDict(ABC):
             self.__delitem__(key)
         except:
             pass
+
+    def get_subdict(self, prefix_key:SimpleDictKey) -> SimplePersistentDict:
+        """Get a subdictionary containing items with the same prefix_key."""
+        raise NotImplementedError
 
 
 class FileDirDict(SimplePersistentDict):
@@ -431,6 +403,7 @@ class FileDirDict(SimplePersistentDict):
 
     # TODO: add this method to the entire hierarchy of persistent dict classes
     def get_subdict(self, key:SimpleDictKey):
+        """Get a subdictionary containing items with the same prefix_key."""
         full_dir_path = self._build_full_path(
             key, create_subdirs = True, is_file_path = False)
         return FileDirDict(

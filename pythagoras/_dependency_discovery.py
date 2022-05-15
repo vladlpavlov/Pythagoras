@@ -1,7 +1,9 @@
 """ Tools to build dependency graph for cloudized functions.
 
-They are not a part of Pythagoras public API. Function dependency graphs are
-required to calculate hash addresses for function snapshots.
+These tools are not a part of Pythagoras public API.
+
+Function dependency graphs are required to
+calculate hash addresses for function snapshots.
 """
 
 from typing import Union, Callable, Any
@@ -11,7 +13,7 @@ def _name_is_used_in_source(
         name:str
         ,source: Union[Callable, str]
         ) -> bool:
-    """ Check if name is used within the source.
+    """ Check if the name is used within the source.
 
     Parameters
     ----------
@@ -33,7 +35,9 @@ def _name_is_used_in_source(
 
     if callable(source) and hasattr(source, "__wrapped__"):
         source = inspect.unwrap(source)
-    if callable(source):
+    elif callable(source) and hasattr(source, "original_source"):
+        source = source.original_source
+    elif callable(source):
         source = inspect.getsource(source)
 
     search_pattern = "[^a-zA-Z0-9_]" + name + "[^a-zA-Z0-9_]"

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import abc
+from abc import ABCMeta
 import datetime
 import math
 import os
@@ -15,13 +15,31 @@ from typing import Any, Dict
 import pkg_resources
 import psutil
 import gc
+import string
 
-from pythagoras import allowed_key_chars
 
-class ABC_PostInitializable(abc.ABCMeta):
+def get_safe_chars():
+    """ Get set of URL/filename-safe characters.
+
+     A set of characters allowed in Persistent Dict keys,
+     filenames / S3 object names, and hash addresses.
+     """
+    chars = set(string.ascii_letters + string.digits + "()_-~.=")
+    return chars
+
+
+def replace_unsafe_chars(a_str:str, replace_with:str) -> str :
+    """ Replace unsafe (special) characters with allowed (safe) ones."""
+    safe_chars = get_safe_chars()
+    result_list = [(c if c in safe_chars else replace_with) for c in a_str]
+    result_str = "".join(result_list)
+    return result_str
+
+
+class ABC_PostInitializable(ABCMeta):
     """ Metaclass that enables __post__init__() method for abstract classes. """
     def __call__(cls, *args, **kwargs):
-        obj = abc.ABCMeta.__call__(cls, *args, **kwargs)
+        obj = ABCMeta.__call__(cls, *args, **kwargs)
         obj.__post__init__(*args, **kwargs)
         return obj
 
@@ -48,15 +66,7 @@ def buid_context(file_path:str=None, time_zone=None)-> Dict:
     return result
 
 
-def replace_unsafe_chars(a_str:str, replace_with:str) -> str :
-    """ Replace unsafe (special) characters with allowed (safe) ones."""
-
-    result = "".join(
-        [(c if c in allowed_key_chars else replace_with) for c in a_str])
-    return result
-
-
-def get_long_infoname(x:Any, drop_special:bool = True) -> str:
+def get_long_infoname(x:Any, drop_unsafe_chars:bool = True) -> str:
     """Build a string with extended information about an object and its type"""
 
     name = str(type(x).__module__)
@@ -71,7 +81,7 @@ def get_long_infoname(x:Any, drop_special:bool = True) -> str:
     elif hasattr(x, "__name__"):
         name += "___" + str(x.__name__)
 
-    if drop_special:
+    if drop_unsafe_chars:
         name = replace_unsafe_chars(name, "_")
 
     return name

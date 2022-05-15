@@ -1,11 +1,11 @@
 import os
 from tempfile import TemporaryDirectory
-from pythagoras import FileDirDict
-from pythagoras import allowed_key_chars
+from pythagoras.persistent_dicts import FileDirDict, safe_chars
+
 from hypothesis import given, strategies as st
 import pytest
 
-dict_key = st.text(alphabet=allowed_key_chars, min_size=1)
+dict_key = st.text(alphabet=safe_chars, min_size=1)
 
 MUTABLE_DICT_PARAMS = [
     (FileDirDict, {"dir_name": "__TMPDIR__", "file_type": "pkl"}),
