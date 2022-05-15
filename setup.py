@@ -8,7 +8,7 @@ setuptools.setup(
     ,version="0.4.0"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
-    ,description= "Simple and inexpensive way to create, deploy and run " 
+    ,description= "Simple and inexpensive way to create, deploy and run "
         "cloud-scale algorithms from within local Python scripts and notebooks."
     ,long_description=long_description
     ,long_description_content_type="text/markdown"
@@ -41,5 +41,6 @@ setuptools.setup(
         , 'moto'
         , 'pytest'
         , 'hypothesis'
+        , 'libcst'
     ]
 )
