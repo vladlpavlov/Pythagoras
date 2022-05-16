@@ -1,7 +1,4 @@
-""" Main Pythagoras classes that provide cloud-access functionality.
-
-P_Cloud: base class for Pythagoras clouds.
-SharedStorage_P2P_Cloud (inherited from P_Cloud): DIY P2P cloud.
+""" Core Pythagoras classes that provide cloud-access functionality.
 """
 from __future__ import annotations
 
@@ -45,19 +42,14 @@ class PCloudizedFunction:
     """ An API for various execution modes for cloudized functions."""
 
     original_name:str
-    cloud:P_Cloud_Implementation
     original_function:Callable
     original_annotations:Dict
     original_source:str
     func_snapshot_address:Optional[PFuncSnapshotAddress]
     _original_source_with_dependencies:Optional[str]
 
-    def __init__(
-            self
-            , cloud:P_Cloud_Implementation
-            , function_name:str
-            ):
-        self.cloud = cloud
+    def __init__(self, function_name:str):
+        cloud = P_Cloud_Implementation._single_instance
         self.original_name = self.__name__ = function_name
         original_function = cloud.original_functions[function_name]
         original_annotations = dict()
@@ -69,31 +61,30 @@ class PCloudizedFunction:
         self.original_source = getsource(original_function)
         self.func_snapshot_address = None
         self._original_source_with_dependencies = None
-        # self.__call__.__annotations__ = deepcopy(original_annotations)
-        # self.sync_remote.__annotations__ = deepcopy(original_annotations)
-        # self.async_remote.__annotations__ = deepcopy(original_annotations)
-        # self.async_remote.__annotations__['return'] = PFuncOutputAddress
         self.__doc__ = original_function.__doc__
-        #TODO: fully mimic functools.update_wrapper for all 5 execution methods
+        #TODO: mimic functools.update_wrapper for all 5 execution methods
 
 
     def __call__(self,**kwargs) -> Any:
         """Locally run memoized/cloudized version of a function"""
-        address = self.cloud.local_function_call(
+        cloud = P_Cloud_Implementation._single_instance
+        address = cloud.local_function_call(
             self.__name__, KwArgsDict(**kwargs))
-        return self.cloud.get_func_output(address)
+        return cloud.get_func_output(address)
 
 
     def sync_remote(self, **kwargs) -> Any:
         """Perform synchronous remote execution of a function"""
-        address = self.cloud.sync_remote_function_call(
+        cloud = P_Cloud_Implementation._single_instance
+        address = cloud.sync_remote_function_call(
             self.__name__, KwArgsDict(**kwargs))
-        return self.cloud.get_func_output(address)
+        return cloud.get_func_output(address)
 
 
     def async_remote(self, **kwargs) -> PFuncOutputAddress:
         """Perform asynchronous remote execution of a function"""
-        address = self.cloud.async_remote_function_call(
+        cloud = P_Cloud_Implementation._single_instance
+        address = cloud.async_remote_function_call(
             self.__name__, KwArgsDict(**kwargs))
         return address
 
@@ -102,23 +93,26 @@ class PCloudizedFunction:
                       ,argslist:List[KwArgsDict]
                       ) -> List[Any]:
         """Synchronously run multiple instances of function"""
-        addresses = self.cloud.sync_parallel_function_call(
+        cloud = P_Cloud_Implementation._single_instance
+        addresses = cloud.sync_parallel_function_call(
             self.__name__, argslist)
-        return [self.cloud.get_func_output(a) for a in addresses]
+        return [cloud.get_func_output(a) for a in addresses]
 
 
     def async_parallel(self
                        ,argslist:List[KwArgsDict]
                        ) -> List[PFuncOutputAddress]:
         """Asynchronously run multiple instances of function"""
-        addresses = self.cloud.sync_parallel_function_call(
+        cloud = P_Cloud_Implementation._single_instance
+        addresses = cloud.sync_parallel_function_call(
             self.__name__, argslist)
         return addresses
 
 
     def is_output_available(self, **kwargs):
         """Check if function output for the arguments has already been cached"""
-        return self.cloud.check_if_func_output_is_available(
+        cloud = P_Cloud_Implementation._single_instance
+        return cloud.check_if_func_output_is_available(
             self.__name__, KwArgsDict(**kwargs))
 
 
@@ -132,17 +126,18 @@ class PCloudizedFunction:
 
          Returned functions are sorted in alphabetical order by their names.
          """
+        cloud = P_Cloud_Implementation._single_instance
         if self._original_source_with_dependencies is not None:
             return self._original_source_with_dependencies
 
         dependencies = _all_dependencies_one_func(
-            self.__name__, self.cloud.cloudized_functions)
+            self.__name__, cloud.cloudized_functions)
         dependencies = sorted(dependencies)
         self._original_source_with_dependencies = ""
 
         for f in dependencies:
             self._original_source_with_dependencies += (
-                    self.cloud.cloudized_functions[f].original_source + "\n\n")
+                    cloud.cloudized_functions[f].original_source + "\n\n")
 
         return self._original_source_with_dependencies
 
@@ -158,9 +153,10 @@ class PCloudizedFunctionSnapshot:
 
     def __init__(self, f:PCloudizedFunction):
         assert isinstance(f,PCloudizedFunction)
+        cloud = P_Cloud_Implementation._single_instance
         self.__name__ = f.__name__
-        self.install_requires = f.cloud.install_requires
-        self.python_requires = f.cloud.python_requires
+        self.install_requires = cloud.install_requires
+        self.python_requires = cloud.python_requires
         self.source = f.original_source
         self.source_with_dependencies = f.original_source_with_dependencies
 
@@ -297,14 +293,15 @@ class PFuncSnapshotAddress(PHashAddress):
             self.hash_id = f.hash_id
             return
         assert isinstance(f,PCloudizedFunction)
-        assert f.__name__ in f.cloud.cloudized_functions
+        cloud = P_Cloud_Implementation._single_instance
+        assert f.__name__ in cloud.cloudized_functions
         if f.func_snapshot_address is not None:
             self.prefix = f.func_snapshot_address.prefix
             self.hash_id = f.func_snapshot_address.hash_id
             return
         self.prefix = self._build_prefix(f)
         snapshot = PCloudizedFunctionSnapshot(f)
-        snapshot_address = f.cloud.push_value(snapshot)
+        snapshot_address = cloud.push_value(snapshot)
         self.hash_id = snapshot_address.hash_id
         # if self not in f.cloud.func_snapshots:
         #     f.cloud.func_snapshots[self] = snapshot_address
@@ -324,7 +321,7 @@ class KwArgsDict(dict):
     def __init__(self,*args, **kargs): # TODO: check if we need *args here
         super().__init__(*args, **kargs)
 
-    def pack(self, *, cloud:P_Cloud) -> KwArgsDict:
+    def pack(self) -> KwArgsDict:
         """ Replace values in a dict with their hash addresses.
 
         This function also "normalizes" the dictionary by sorting keys
@@ -337,15 +334,17 @@ class KwArgsDict(dict):
             if isinstance(value,PValueAddress):
                 packed_copy[k] = value
             else:
+                cloud = P_Cloud_Implementation._single_instance
                 key = cloud.push_value(value)
                 packed_copy[k] = key
         return packed_copy
 
-    def unpack(self,*,cloud:P_Cloud) -> KwArgsDict:
+    def unpack(self) -> KwArgsDict:
         """ Restore values based on their hash addresses."""
         unpacked_copy = KwArgsDict()
         for k,v in self.items():
             if isinstance(v, PValueAddress):
+                cloud = P_Cloud_Implementation._single_instance
                 unpacked_copy[k] = cloud.value_store[v]
             else:
                 unpacked_copy[k] = v
@@ -372,7 +371,7 @@ class PFuncOutputAddress(PHashAddress):
         f_base_address =  PFuncSnapshotAddress(f)
         self.prefix = f_base_address.prefix
         self.hash_id = self._build_hash_id(
-            (f_base_address.hash_id, arguments.pack(cloud=f.cloud)))
+            (f_base_address.hash_id, arguments.pack()))
 
 
     def __repr__(self):
@@ -728,7 +727,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
             cloudized functions in P_Cloud. Keys are the names
             of the functions.
     """
-    _p_cloud_single_instance = None
+    _single_instance:P_Cloud_Implementation = None
     _install_requires: Optional[str] = None
     _python_requires: Optional[str] = None
 
@@ -784,6 +783,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
             init_signature  = (type(self),args,kw_args(**kwargs))
             P_Cloud_Implementation._init_signature_hash_address = PValueAddress(
                 init_signature)
+            P_Cloud_Implementation._single_instance = self
         else:
             new_init_signature = (type(self),args,kw_args(**kwargs))
             new_init_sign_hash = PValueAddress(new_init_signature)
@@ -943,7 +943,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         original_function = self.original_functions[func_name]
         cloudized_function = self.cloudized_functions[func_name]
 
-        kwargs_packed = func_kwargs.pack(cloud=self)
+        kwargs_packed = func_kwargs.pack()
         func_key = PFuncOutputAddress(cloudized_function, kwargs_packed)
 
         if self.p_purity_checks == 0:
@@ -958,7 +958,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
             result_key = self.func_output_store[func_key]
             # result = self.value_store[result_key]
         else:
-            kwargs_unpacked = func_kwargs.unpack(cloud=self)
+            kwargs_unpacked = func_kwargs.unpack()
             result = original_function(**kwargs_unpacked)
             result_key = self.push_value(result)
 
@@ -1058,7 +1058,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
 
         self.original_functions[a_func.__name__] = a_func
 
-        wrapped_function = PCloudizedFunction(self,a_func.__name__)
+        wrapped_function = PCloudizedFunction(a_func.__name__)
 
         # TODO: change to custom exception
         assert wrapped_function.__name__ not in self.cloudized_functions, (
