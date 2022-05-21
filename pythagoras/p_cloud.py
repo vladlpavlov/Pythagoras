@@ -6,8 +6,9 @@ import os
 import platform
 import socket
 import sys
+import time
 import uuid
-from abc import ABC, abstractmethod, ABCMeta
+from abc import abstractmethod, ABCMeta
 from collections.abc import Sequence
 from copy import deepcopy
 from datetime import datetime
@@ -109,10 +110,10 @@ class PCloudizedFunction:
         return addresses
 
 
-    def is_output_available(self, **kwargs):
+    def ready(self, **kwargs):
         """Check if function output for the arguments has already been cached"""
         cloud = P_Cloud_Implementation._single_instance
-        return cloud.check_if_func_output_is_available(
+        return cloud.check_if_ready(
             self.__name__, KwArgsDict(**kwargs))
 
 
@@ -202,6 +203,16 @@ class PHashAddress(Sequence):
             hasher = Hasher(hash_name=PHashAddress._hash_type)
         return hasher.hash(x) #TODO: switch to Base32
 
+    @abstractmethod
+    def ready(self) -> bool:
+        """Check if address points to a value that is ready to be retrieved."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(self, timeout:Optional[int] = None) -> Any:
+        """Retrieve value, referenced by the address"""
+        raise NotImplementedError
+
 
     def __eq__(self, other) -> bool:
         """Return self==other. """
@@ -246,16 +257,35 @@ class PValueAddress(PHashAddress):
     for humans to interpret an address, and further decreases collision risk.
     """
 
-    def __init__(self, x: Any):
-        if isinstance(x, PValueAddress):
-            self.prefix = x.prefix
-            self.hash_id = x.hash_id
-        else:
-            assert not isinstance(x,PHashAddress), (
-                "PValueAddress is the only PHashAddress which is allowed "
-                +"to be converted to PValueAddress")
-            self.prefix = self._build_prefix(x)
-            self.hash_id = self._build_hash_id(x)
+    def __init__(self, data: Any, puch_to_cloud:bool=True):
+        if isinstance(data, PValueAddress):
+            self.prefix = data.prefix
+            self.hash_id = data.hash_id
+            return
+
+        assert not isinstance(data,PHashAddress), (
+            "PValueAddress is the only PHashAddress which is allowed "
+            +"to be converted to PValueAddress")
+
+        self.prefix = self._build_prefix(data)
+        self.hash_id = self._build_hash_id(data)
+
+        if puch_to_cloud:
+            cloud = P_Cloud_Implementation._single_instance
+            cloud.value_store[self] = data
+
+
+    def ready(self):
+        """Check if address points to a value that is ready to be retrieved."""
+        cloud = P_Cloud_Implementation._single_instance
+        return self in cloud.value_store
+
+
+    def get(self, timeout:Optional[int] = None) -> Any:
+        """Retrieve value, reference by the address"""
+        cloud = P_Cloud_Implementation._single_instance
+        return cloud.value_store[self]
+
 
     def __repr__(self):
         return f"ValueAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
@@ -281,7 +311,9 @@ class PFuncSnapshotAddress(PHashAddress):
     it writes a new entry to P_Cloud.function_snapshots store.
     """
 
-    def __init__(self, f:Union[PCloudizedFunction,PFuncSnapshotAddress]):
+    def __init__(self
+                 ,f:Union[PCloudizedFunction,PFuncSnapshotAddress]
+                 ,push_to_cloud = True):
         """Persist a cloudized function's snapshot, create its address.
 
         Actual calculation happens only the first time the constructor
@@ -299,16 +331,23 @@ class PFuncSnapshotAddress(PHashAddress):
             self.prefix = f.func_snapshot_address.prefix
             self.hash_id = f.func_snapshot_address.hash_id
             return
-        self.prefix = self._build_prefix(f)
         snapshot = PCloudizedFunctionSnapshot(f)
-        snapshot_address = cloud.push_value(snapshot)
+        snapshot_address = PValueAddress(snapshot,push_to_cloud)
+        self.prefix = snapshot_address.prefix
         self.hash_id = snapshot_address.hash_id
-        # if self not in f.cloud.func_snapshots:
-        #     f.cloud.func_snapshots[self] = snapshot_address
-        #     f.cloud.post_log_entry(
-        #         prefix_key="func_snapshot_first_usage"
-        #         ,log_entry = snapshot
-        #         ,add_context_info = True)
+
+
+    def ready(self):
+        """Check if address points to a value that is ready to be retrieved."""
+        cloud = P_Cloud_Implementation._single_instance
+        return self in cloud.value_store
+
+
+    def get(self, timeout:Optional[int]=None) -> Any:
+        """Retrieve value, reference by the address"""
+        cloud = P_Cloud_Implementation._single_instance
+        return cloud.value_store[self]
+
 
     def __repr__(self):
         return (f"PFuncSnapshotAddress( prefix={self.prefix} ,"
@@ -372,6 +411,34 @@ class PFuncOutputAddress(PHashAddress):
         self.prefix = f_base_address.prefix
         self.hash_id = self._build_hash_id(
             (f_base_address.hash_id, arguments.pack()))
+
+    def ready(self):
+        """Check if address points to a value that is ready to be retrieved."""
+        cloud = P_Cloud_Implementation._single_instance
+        return self in cloud.func_output_store
+
+
+    def get(self, timeout:Optional[int]=None) -> Any:
+        """Retrieve value, reference by the address"""
+        cloud = P_Cloud_Implementation._single_instance
+        start_time = time.time()
+        stop_time = (start_time+timeout) if timeout else None
+        backoff_in_seconds = 1
+        while True:
+            try:
+                address = cloud.func_output_store[self]
+                return cloud.value_store[address]
+            except:
+                time.sleep(backoff_in_seconds)
+                backoff_in_seconds *= 2
+                backoff_in_seconds += cloud._randomizer.uniform(-0.5, 0.5)
+                if stop_time:
+                    current_time = time.time()
+                    if current_time + backoff_in_seconds > stop_time:
+                        backoff_in_seconds = stop_time - current_time
+                    if current_time > stop_time:
+                        raise TimeoutError
+                backoff_in_seconds = max(0.0, backoff_in_seconds)
 
 
     def __repr__(self):
@@ -782,11 +849,12 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         if P_Cloud_Implementation._instance_counter == 1:
             init_signature  = (type(self),args,kw_args(**kwargs))
             P_Cloud_Implementation._init_signature_hash_address = PValueAddress(
-                init_signature)
+                data=init_signature, puch_to_cloud=False)
             P_Cloud_Implementation._single_instance = self
         else:
             new_init_signature = (type(self),args,kw_args(**kwargs))
-            new_init_sign_hash = PValueAddress(new_init_signature)
+            new_init_sign_hash = PValueAddress(
+                data=new_init_signature, puch_to_cloud=False)
             assert new_init_sign_hash == (
                 P_Cloud_Implementation._init_signature_hash_address), (
                 "You can't have several P_Cloud instances with different "
@@ -1025,7 +1093,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         raise NotImplementedError
 
 
-    def check_if_func_output_is_available(
+    def check_if_ready(
             self
             ,func_name: str
             ,func_kwargs: KwArgsDict

@@ -55,8 +55,8 @@ def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
     assert len(my_cloud.value_store) == 4
     assert len(my_cloud.func_output_store) == 1
 
-    assert hihihi.is_output_available(x=1, y=2)
-    assert not hihihi.is_output_available(x=-1, y=-2)
+    assert hihihi.ready(x=1, y=2)
+    assert not hihihi.ready(x=-1, y=-2)
     assert len(my_cloud.value_store) == 6
 
     P_Cloud_Implementation._instance_counter = 0 # dirty hack
@@ -75,8 +75,8 @@ def test_SharedStorage_P2P_Cloud_func3args(tmpdir):
     assert len(my_cloud.value_store) == 5
     assert len(my_cloud.func_output_store) == 1
 
-    assert lyslyslya.is_output_available(y=2, x=1, z=3)
-    assert not lyslyslya.is_output_available(y=2000, x=1, z=3)
+    assert lyslyslya.ready(y=2, x=1, z=3)
+    assert not lyslyslya.ready(y=2000, x=1, z=3)
 
     P_Cloud_Implementation._instance_counter = 0 # dirty hack
 
