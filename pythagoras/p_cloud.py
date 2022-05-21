@@ -203,10 +203,12 @@ class PHashAddress(Sequence):
             hasher = Hasher(hash_name=PHashAddress._hash_type)
         return hasher.hash(x) #TODO: switch to Base32
 
+
     @abstractmethod
     def ready(self) -> bool:
         """Check if address points to a value that is ready to be retrieved."""
         raise NotImplementedError
+
 
     @abstractmethod
     def get(self, timeout:Optional[int] = None) -> Any:
@@ -368,12 +370,12 @@ class KwArgsDict(dict):
         for the same lists of arguments.
         """
         packed_copy = KwArgsDict()
+        cloud = P_Cloud_Implementation._single_instance
         for k in sorted(self.keys()):
             value = self[k]
             if isinstance(value,PValueAddress):
                 packed_copy[k] = value
             else:
-                cloud = P_Cloud_Implementation._single_instance
                 key = cloud.push_value(value)
                 packed_copy[k] = key
         return packed_copy
@@ -381,9 +383,9 @@ class KwArgsDict(dict):
     def unpack(self) -> KwArgsDict:
         """ Restore values based on their hash addresses."""
         unpacked_copy = KwArgsDict()
+        cloud = P_Cloud_Implementation._single_instance
         for k,v in self.items():
             if isinstance(v, PValueAddress):
-                cloud = P_Cloud_Implementation._single_instance
                 unpacked_copy[k] = cloud.value_store[v]
             else:
                 unpacked_copy[k] = v
@@ -419,26 +421,30 @@ class PFuncOutputAddress(PHashAddress):
 
 
     def get(self, timeout:Optional[int]=None) -> Any:
-        """Retrieve value, reference by the address"""
+        """Retrieve value, reference by the address.
+
+        If the value is not immediately available, backoff exponentially
+        till timeout is exceeded. If timeout is None, keep trying forever.
+        """
         cloud = P_Cloud_Implementation._single_instance
-        start_time = time.time()
+        start_time, backoff_period = time.time(), 1
         stop_time = (start_time+timeout) if timeout else None
-        backoff_in_seconds = 1
+        # start_time, stop_time and backoff_period are in seconds
         while True:
             try:
                 address = cloud.func_output_store[self]
                 return cloud.value_store[address]
             except:
-                time.sleep(backoff_in_seconds)
-                backoff_in_seconds *= 2
-                backoff_in_seconds += cloud._randomizer.uniform(-0.5, 0.5)
+                time.sleep(backoff_period)
+                backoff_period *= 2
+                backoff_period += cloud._randomizer.uniform(-0.5, 0.5)
                 if stop_time:
                     current_time = time.time()
-                    if current_time + backoff_in_seconds > stop_time:
-                        backoff_in_seconds = stop_time - current_time
+                    if current_time + backoff_period > stop_time:
+                        backoff_period = stop_time - current_time
                     if current_time > stop_time:
                         raise TimeoutError
-                backoff_in_seconds = max(0.0, backoff_in_seconds)
+                backoff_period = max(0.0, backoff_period)
 
 
     def __repr__(self):
