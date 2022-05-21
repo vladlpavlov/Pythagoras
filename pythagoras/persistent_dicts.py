@@ -55,7 +55,9 @@ class SimplePersistentDict(MutableMapping):
 
     The API for the class resembles the API of Python's built-in Dict
     (see https://docs.python.org/3/library/stdtypes.html#mapping-types-dict)
-    with a few variations (e.g. insertion order is not preserved).
+    with a few variations (e.g. insertion order is not preserved) and
+    a few additional methods(e.g. .mtimestamp(key), which returns last
+    modification time for a key).
 
     Attributes
     ----------
@@ -284,6 +286,12 @@ class SimplePersistentDict(MutableMapping):
         return not (self == other)
 
 
+    @abstractmethod
+    def mtimestamp(self,key:SimpleDictKey) -> float:
+        """Get last modification time (in seconds, Unix time)."""
+        raise NotImplementedError
+
+
     def clear(self) -> None:
         """Remove all items from the dictionary. """
         for k in self.keys():
@@ -304,6 +312,7 @@ class SimplePersistentDict(MutableMapping):
             self.__delitem__(key)
         except:
             pass
+
 
     def get_subdict(self, prefix_key:SimpleDictKey) -> SimplePersistentDict:
         """Get a subdictionary containing items with the same prefix_key."""
@@ -508,6 +517,13 @@ class FileDirDict(SimplePersistentDict):
         return step()
 
 
+    def mtimestamp(self,key:SimpleDictKey) -> float:
+        """Get last modification time (in seconds, Unix time)."""
+        filename = self._build_full_path(key)
+        return os.path.getmtime(filename)
+
+
+
 class S3_Dict(SimplePersistentDict):
     """ A persistent Dict that stores key-value pairs as S3 objects.
 
@@ -527,6 +543,7 @@ class S3_Dict(SimplePersistentDict):
 
     def __init__(self, bucket_name:str
                  , region:str = None
+                 , root_prefix:str = ""
                  , dir_name:str = "S3_Dict"
                  , file_type:str = "pkl"
                  , immutable_items:bool = False):
@@ -544,13 +561,14 @@ class S3_Dict(SimplePersistentDict):
         """
 
         super().__init__(immutable_items = immutable_items, digest_len = 0)
-
         self.file_type = file_type
+
         self.local_cache = FileDirDict(
             dir_name = dir_name
             , file_type = file_type
             , immutable_items = immutable_items)
 
+        self.region = region
         if region is None:
             self.s3_client = boto3.client('s3')
         else:
@@ -559,12 +577,18 @@ class S3_Dict(SimplePersistentDict):
         self.bucket = self.s3_client.create_bucket(Bucket=bucket_name)
         self.bucket_name = bucket_name
 
+        self.root_prefix=root_prefix
+        if len(self.root_prefix) and self.root_prefix[-1] != "/":
+            self.root_prefix += "/"
+
+
     def _build_full_objectname(self, key:SimpleDictKey) -> str:
         """ Convert SimpleDictKey into an S3 objectname. """
 
         key = self._normalize_key(key)
-        objectname =  "/".join(key)+ "." + self.file_type
+        objectname = self.root_prefix +  "/".join(key)+ "." + self.file_type
         return objectname
+
 
     def __contains__(self, key:SimpleDictKey) -> bool:
         """True if the dictionary has the specified key, else False. """
@@ -579,6 +603,7 @@ class S3_Dict(SimplePersistentDict):
             return True
         except:
             return False
+
 
     def __getitem__(self, key:SimpleDictKey) -> Any:
         """X.__getitem__(y) is an equivalent to X[y]. """
@@ -599,6 +624,7 @@ class S3_Dict(SimplePersistentDict):
             os.remove(file_name)
 
         return result
+
 
     def __setitem__(self, key:SimpleDictKey, value:Any):
         """Set self[key] to value. """
@@ -625,6 +651,7 @@ class S3_Dict(SimplePersistentDict):
         if not self.immutable_items:
             os.remove(file_name)
 
+
     def __delitem__(self, key:SimpleDictKey):
         """Delete self[key]. """
 
@@ -635,6 +662,7 @@ class S3_Dict(SimplePersistentDict):
         if os.path.isfile(file_name):
             os.remove(file_name)
 
+
     def __len__(self) -> int:
         """Return len(self). """
 
@@ -642,7 +670,8 @@ class S3_Dict(SimplePersistentDict):
         suffix = "." + self.file_type
 
         paginator = self.s3_client.get_paginator("list_objects")
-        page_iterator = paginator.paginate(Bucket=self.bucket_name)
+        page_iterator = paginator.paginate(
+            Bucket=self.bucket_name, Prefix = self.root_prefix)
 
         for page in page_iterator:
             if "Contents" in page:
@@ -653,20 +682,23 @@ class S3_Dict(SimplePersistentDict):
 
         return num_files
 
+
     def _generic_iter(self, iter_type: str):
         assert iter_type in {"keys", "values", "items"}
         suffix = "." + self.file_type
-
         ext_len = len(self.file_type) + 1
+        prefix_len = len(self.root_prefix)
 
         def splitter(full_name: str):
-            result = full_name.split(sep="/")
-            result[-1] = result[-1][:-ext_len]
+            assert full_name.startswith(self.root_prefix)
+            result = full_name[prefix_len:-ext_len].split(sep="/")
             return tuple(result)
 
         def step():
             paginator = self.s3_client.get_paginator("list_objects")
-            page_iterator = paginator.paginate(Bucket=self.bucket_name)
+            page_iterator = paginator.paginate(
+                Bucket=self.bucket_name, Prefix = self.root_prefix)
+
             for page in page_iterator:
                 if "Contents" in page:
                     for key in page["Contents"]:
@@ -683,3 +715,31 @@ class S3_Dict(SimplePersistentDict):
                                    , self[obj_key])
 
         return step()
+
+
+    def get_subdict(self, key:SimpleDictKey) -> S3_Dict:
+        """Get a subdictionary containing items with the same prefix_key."""
+        if len(key):
+            key = self._normalize_key(key)
+            full_root_prefix = self.root_prefix +  "/".join(key)
+        else:
+            full_root_prefix = self.root_prefix
+
+        new_dir_path = self.local_cache._build_full_path(
+            key, create_subdirs = True, is_file_path = False)
+
+        return S3_Dict(
+            bucket_name = self.bucket_name
+            , region = self.region
+            , root_prefix = full_root_prefix
+            , dir_name = new_dir_path
+            , file_type = self.file_type
+            , immutable_items = self.immutable_items)
+
+
+    def mtimestamp(self,key:SimpleDictKey) -> float:
+        """Get last modification time (in seconds, Unix time)."""
+        #TODO: check work with timezones
+        obj_name = self._build_full_objectname(key)
+        response = self.s3_client.head_object(Bucket=self.bucket_name, Key=obj_name)
+        return response["LastModified"].timestamp()
