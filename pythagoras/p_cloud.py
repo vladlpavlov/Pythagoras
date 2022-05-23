@@ -71,7 +71,7 @@ class PCloudizedFunction:
         cloud = P_Cloud_Implementation._single_instance
         address = cloud.local_function_call(
             self.__name__, KwArgsDict(**kwargs))
-        return cloud.get_func_output(address)
+        return address.get()
 
 
     def sync_remote(self, **kwargs) -> Any:
@@ -79,7 +79,7 @@ class PCloudizedFunction:
         cloud = P_Cloud_Implementation._single_instance
         address = cloud.sync_remote_function_call(
             self.__name__, KwArgsDict(**kwargs))
-        return cloud.get_func_output(address)
+        return address.get()
 
 
     def async_remote(self, **kwargs) -> PFuncOutputAddress:
@@ -97,7 +97,7 @@ class PCloudizedFunction:
         cloud = P_Cloud_Implementation._single_instance
         addresses = cloud.sync_parallel_function_call(
             self.__name__, argslist)
-        return [cloud.get_func_output(a) for a in addresses]
+        return [a.get() for a in addresses]
 
 
     def async_parallel(self
@@ -482,10 +482,6 @@ class P_Cloud(metaclass=ABCMeta):
             are used by Pythagoras the same way as RAM-based addresses
             are used (via pointers and references) in C and C++ programs.
 
-    func_snapshots: SimplePersistentDict
-            Persistent store that keeps all version of all cloudized functions.
-            It's a dict-like store that provides access to all versions of
-            all functions ever created within the same P_Cloud.
 
     func_output_store: SimplePersistentDict
             An abstract property: a persistent dict-like object that
@@ -493,6 +489,7 @@ class P_Cloud(metaclass=ABCMeta):
             that ever happened in the system. Enables distributed
             memoization functionality ("calculate once, reuse
             forever").
+
 
     crash_history: SimplePersistentDict
             An abstract property: a persistent dict-like object that
@@ -504,6 +501,7 @@ class P_Cloud(metaclass=ABCMeta):
             transparency/debuggability of the code that uses P_Cloud.
             This property is not intended to be used as a messaging tool
             that enables automated response to detected exceptions.
+
 
     event_log: SimplePersistentDict
             An abstract property: a persistent dict-like object that
@@ -526,6 +524,7 @@ class P_Cloud(metaclass=ABCMeta):
             p_purity_checks==1 means 'never re-use cached values'.
             p_purity_checks==0 means 'always re-use cached values when possible'.
 
+
     baseline_timezone: ZoneInfo
             An abstract property: a timezone used by all instances
             of cloudized functions. Different instances of cloudized
@@ -534,10 +533,12 @@ class P_Cloud(metaclass=ABCMeta):
             all of them are required to use their P_Cloud's timezone,
             not their server's timezone.
 
+
     python_requires: str
             An abstract property: version specifier for Python.
             Defines which Python versions are supported by a P_Loud instance
             to run. Its format follows setuptools' python_requires format.
+
 
     install_requires: str | List[str]
             An abstract property: minimally required dependencies.
@@ -561,17 +562,6 @@ class P_Cloud(metaclass=ABCMeta):
         in C and C++ programs.
         """
         raise NotImplementedError
-
-
-    # @property
-    # @abstractmethod
-    # def func_snapshots(self) -> SimplePersistentDict:
-    #     """Persistent store that keeps all version of all cloudized functions.
-    #
-    #     It's a dict-like store that provides access to all version of
-    #     all functions ever created within the same P_Cloud.
-    #     """
-    #     raise NotImplementedError
 
 
     @property
@@ -669,6 +659,18 @@ class P_Cloud(metaclass=ABCMeta):
         raise NotImplementedError
 
 
+    @property
+    @abstractmethod
+    def shared_import_statements(self) -> str:
+        """Import statements that are shared accross all instances of P_Cloud.
+
+        The format of the property is a sequence of Python import statements.
+        These import statements will be executed
+        before running cloudized functions.
+        """
+        raise NotImplementedError
+
+
     def push_value(self, value:Any) -> PValueAddress:
         """ Add a value to value_store"""
         key = PValueAddress(value)
@@ -677,9 +679,9 @@ class P_Cloud(metaclass=ABCMeta):
         return key
 
 
-    def get_func_output(self, address:PFuncOutputAddress) -> Any:
-        key = self.func_output_store[address]
-        return self.value_store[key]
+    # def get_func_output(self, address:PFuncOutputAddress) -> Any:
+    #     key = self.func_output_store[address]
+    #     return self.value_store[key]
 
 
     @abstractmethod
@@ -689,10 +691,9 @@ class P_Cloud(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def post_log_entry(
-            self
-            ,log_entry:Any
+    def post_log_entry(self, *
             ,prefix_key:Optional[SimpleDictKey]=None
+            ,log_entry: Any
             ,add_context_info:bool=True
             ) -> SimpleDictKey:
         """Post a new entry into the event_log store.
@@ -803,6 +804,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
     _single_instance:P_Cloud_Implementation = None
     _install_requires: Optional[str] = None
     _python_requires: Optional[str] = None
+    _shared_import_statements:str = None
 
     original_functions: dict[str, Callable] = dict()
     cloudized_functions: dict[str, PCloudizedFunction] = dict()
@@ -831,12 +833,17 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
     def __init__(self
                  , install_requires:str = ""
                  , python_requires = ""
+                 , shared_import_statements = ""
                  , base_dir = "P_Cloud"
                  , p_purity_checks = 0.1
                  , **kwargs):
         super().__init__(**kwargs)
         self._install_requires = install_requires  # TODO: polish later
         self._python_requires = python_requires  # TODO: polish later
+
+        imports = self._pre_process_import_statements(shared_import_statements)
+        P_Cloud_Implementation._shared_import_statements = imports
+        self._process_import_statements(imports)
 
         assert not os.path.isfile(base_dir)
         if not os.path.isdir(base_dir):
@@ -919,6 +926,36 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
 
     def python_requires(self) -> str:
         return self._python_requires
+
+
+    @staticmethod
+    def _pre_process_import_statements(import_statements:str) -> str:
+        import_statements_list = import_statements.split("\n")
+        for i,import_line in enumerate(import_statements_list):
+            import_line = import_line.strip()
+            import_statements_list[i] = import_line
+            if len(import_line) == 0:
+                continue
+            assert "import" in import_line
+            assert import_line.startswith(("import", "from"))
+        import_statements_list = sorted(import_statements_list)
+        result = "\n".join(import_statements_list)
+        return result
+
+
+    @staticmethod
+    def _process_import_statements(import_statements: str) -> None:
+        exec(import_statements, globals())
+
+
+    def shared_import_statements(self) -> str:
+        """Import statements that are shared across all instances of P_Cloud.
+
+        The format of the property is a sequence of Python import statements.
+        These import statements will be executed
+        before running any cloudized function.
+        """
+        return P_Cloud_Implementation._shared_import_statements
 
 
     def post_log_entry(
@@ -1369,10 +1406,6 @@ class MLProjectWorkspace(P_Cloud):
         """
         return self.base_cloud.crash_history
 
-    #
-    # def func_snapshots(self) -> SimplePersistentDict:
-    #     return self.base_cloud.func_snapshots
-
 
     def event_log(self) -> SimplePersistentDict:
         """ A log of various non-catastrophic events.
@@ -1403,3 +1436,15 @@ class MLProjectWorkspace(P_Cloud):
     def add_pure_function(self, a_func):
         """Decorator which 'cloudizes' user-provided functions. """
         return self.base_cloud.add_pure_function(a_func)
+
+
+    def install_requires(self) -> Optional[Union[str,List[str]]]:
+        return self.base_cloud.install_requires
+
+
+    def python_requires(self) -> str:
+        return self.base_cloud.python_requires
+
+
+    def shared_import_statements(self) -> str:
+        return self.base_cloud.shared_import_statements
