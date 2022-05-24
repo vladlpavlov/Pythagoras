@@ -41,7 +41,7 @@ SimpleDictKey = Union[ str, Sequence[str]]
 """ A value which can be used as a key for SimplePersistentDict. 
 
 SimpleDictKey must be a string or a sequence of strings.
-The characters within strings are restricted to allowed_key_chars set.
+The characters within strings are restricted to safe_chars set.
 """
 
 safe_chars = get_safe_chars()
