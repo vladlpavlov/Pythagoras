@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import platform
 import socket
+import subprocess
 import sys
 import time
 import uuid
@@ -47,7 +48,7 @@ class PCloudizedFunction:
     original_annotations:Dict
     original_source:str
     func_snapshot_address:Optional[PFuncSnapshotAddress]
-    _original_source_with_dependencies:Optional[str]
+    _original_source_with_dependencies:Optional[Dict[str,str]]
 
     def __init__(self, function_name:str):
         cloud = P_Cloud_Implementation._single_instance
@@ -68,18 +69,31 @@ class PCloudizedFunction:
 
     def __call__(self,**kwargs) -> Any:
         """Locally run memoized/cloudized version of a function"""
+        return self.sync_inprocess(**kwargs)
+
+
+    def sync_inprocess(self, **kwargs) -> PFuncOutputAddress:
+        """Perform synchronous local inprocess execution of a function"""
         cloud = P_Cloud_Implementation._single_instance
-        address = cloud.local_function_call(
+        address = cloud.sync_local_inprocess_function_call(
             self.__name__, KwArgsDict(**kwargs))
         return address.get()
 
 
-    def sync_remote(self, **kwargs) -> Any:
-        """Perform synchronous remote execution of a function"""
+    def sync_subprocess(self, **kwargs) -> PFuncOutputAddress:
+        """Perform synchronous local execution of a function in a subprocess"""
         cloud = P_Cloud_Implementation._single_instance
-        address = cloud.sync_remote_function_call(
+        address = cloud.sync_local_subprocess_function_call(
             self.__name__, KwArgsDict(**kwargs))
         return address.get()
+
+
+    def async_subprocess(self, **kwargs) -> PFuncOutputAddress:
+        """Perform asynchronous local execution of a function in a subprocess"""
+        cloud = P_Cloud_Implementation._single_instance
+        address = cloud.async_local_subprocess_function_call(
+            self.__name__, KwArgsDict(**kwargs))
+        return address
 
 
     def async_remote(self, **kwargs) -> PFuncOutputAddress:
@@ -118,7 +132,7 @@ class PCloudizedFunction:
 
 
     @property
-    def original_source_with_dependencies(self) -> str:
+    def original_source_with_dependencies(self) -> Dict[str,str]:
         """Lazily construct a list of function dependencies within a cloud.
 
          Returns a string containing source code for the cloudized function
@@ -129,18 +143,19 @@ class PCloudizedFunction:
          """
         cloud = P_Cloud_Implementation._single_instance
         if self._original_source_with_dependencies is not None:
+            #TODO: should we add asserts / checks here?
             return self._original_source_with_dependencies
 
         dependencies = _all_dependencies_one_func(
             self.__name__, cloud.cloudized_functions)
         dependencies = sorted(dependencies)
-        self._original_source_with_dependencies = ""
 
-        for f in dependencies:
-            self._original_source_with_dependencies += (
-                    cloud.cloudized_functions[f].original_source + "\n\n")
+        result = {f:cloud.cloudized_functions[f].original_source
+                  for f in dependencies}
 
-        return self._original_source_with_dependencies
+        self._original_source_with_dependencies = result
+
+        return result
 
 
 class PCloudizedFunctionSnapshot:
@@ -154,12 +169,22 @@ class PCloudizedFunctionSnapshot:
 
     def __init__(self, f:PCloudizedFunction):
         assert isinstance(f,PCloudizedFunction)
-        cloud = P_Cloud_Implementation._single_instance
-        self.__name__ = f.__name__
-        self.install_requires = cloud.install_requires
-        self.python_requires = cloud.python_requires
+        p_cloud = P_Cloud_Implementation._single_instance
+        self.__name__ = self.name = f.__name__
+        self.install_requires = p_cloud.install_requires
+        self.python_requires = p_cloud.python_requires
+        self.shared_import_statements = p_cloud.shared_import_statements
         self.source = f.original_source
         self.source_with_dependencies = f.original_source_with_dependencies
+
+
+class PFunctionCallSignature:
+    def __init__(self, f:PCloudizedFunction, a:KwArgsDict):
+        assert isinstance(f, PCloudizedFunction)
+        assert isinstance(a, KwArgsDict)
+        self.__name__ = f.__name__
+        self.function_addr = PFuncSnapshotAddress(f)
+        self.args_addr = PValueAddress(a)
 
 
 class PHashAddress(Sequence):
@@ -260,6 +285,7 @@ class PValueAddress(PHashAddress):
     """
 
     def __init__(self, data: Any, puch_to_cloud:bool=True):
+
         if isinstance(data, PValueAddress):
             self.prefix = data.prefix
             self.hash_id = data.hash_id
@@ -268,6 +294,9 @@ class PValueAddress(PHashAddress):
         assert not isinstance(data,PHashAddress), (
             "PValueAddress is the only PHashAddress which is allowed "
             +"to be converted to PValueAddress")
+
+        if isinstance(data, KwArgsDict):
+            data = data.pack()
 
         self.prefix = self._build_prefix(data)
         self.hash_id = self._build_hash_id(data)
@@ -337,6 +366,7 @@ class PFuncSnapshotAddress(PHashAddress):
         snapshot_address = PValueAddress(snapshot,push_to_cloud)
         self.prefix = snapshot_address.prefix
         self.hash_id = snapshot_address.hash_id
+        f.func_snapshot_address = self
 
 
     def ready(self):
@@ -409,10 +439,10 @@ class PFuncOutputAddress(PHashAddress):
     def __init__(self, f:PCloudizedFunction, arguments:KwArgsDict):
         assert isinstance(f,PCloudizedFunction)
         assert isinstance(arguments, KwArgsDict)
-        f_base_address =  PFuncSnapshotAddress(f)
-        self.prefix = f_base_address.prefix
-        self.hash_id = self._build_hash_id(
-            (f_base_address.hash_id, arguments.pack()))
+        result = PValueAddress(PFunctionCallSignature(f,arguments))
+        self.prefix = result.prefix
+        self.hash_id = result.hash_id
+
 
     def ready(self):
         """Check if address points to a value that is ready to be retrieved."""
@@ -427,7 +457,7 @@ class PFuncOutputAddress(PHashAddress):
         till timeout is exceeded. If timeout is None, keep trying forever.
         """
         cloud = P_Cloud_Implementation._single_instance
-        start_time, backoff_period = time.time(), 1
+        start_time, backoff_period = time.time(), 1.0
         stop_time = (start_time+timeout) if timeout else None
         # start_time, stop_time and backoff_period are in seconds
         while True:
@@ -436,7 +466,7 @@ class PFuncOutputAddress(PHashAddress):
                 return cloud.value_store[address]
             except:
                 time.sleep(backoff_period)
-                backoff_period *= 2
+                backoff_period *= 2.0
                 backoff_period += cloud._randomizer.uniform(-0.5, 0.5)
                 if stop_time:
                     current_time = time.time()
@@ -444,7 +474,7 @@ class PFuncOutputAddress(PHashAddress):
                         backoff_period = stop_time - current_time
                     if current_time > stop_time:
                         raise TimeoutError
-                backoff_period = max(0.0, backoff_period)
+                backoff_period = max(1.0, backoff_period)
 
 
     def __repr__(self):
@@ -1039,7 +1069,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         return self._p_purity_checks
 
 
-    def local_function_call(
+    def sync_local_inprocess_function_call(
             self
             ,func_name:str
             ,func_kwargs:KwArgsDict
@@ -1047,7 +1077,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         """ Perform a local synchronous call for a cloudized function.
 
         This method should not be called directly. Instead,
-        use the traditional syntax below while caling a cloudized function:
+        use the traditional syntax below while calling a cloudized function:
         func_name(**kwargs)
         """
 
@@ -1083,15 +1113,28 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         return func_key
 
 
-    def sync_remote_function_call(self
+    def async_local_subprocess_function_call(self
                                   ,func_name:str
                                   ,func_kwargs:KwArgsDict
                                   ) -> PFuncOutputAddress:
-        """ Perform a remote synchronous call for a cloudized function.
+        """ Perform an asynchronous subprocess call for a cloudized function.
 
         This method should not be called directly. Instead, use the syntax
         below (requires a functions first to be added to a cloud):
-        func_name.sync_remote(**kwargs)
+        func_name.async_subprocess(**kwargs)
+        """
+        raise NotImplementedError
+
+
+    def sync_local_subprocess_function_call(self
+                                  ,func_name:str
+                                  ,func_kwargs:KwArgsDict
+                                  ) -> PFuncOutputAddress:
+        """ Perform a synchronous subprocess call for a cloudized function.
+
+        This method should not be called directly. Instead, use the syntax
+        below (requires a functions first to be added to a cloud):
+        func_name.sync_subprocess(**kwargs)
         """
         raise NotImplementedError
 
@@ -1281,17 +1324,6 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         return self._event_log
 
 
-    def sync_remote_function_call(self
-                                  , func_name: str
-                                  , func_kwargs: KwArgsDict
-                                  ) -> PFuncOutputAddress:
-        """Emulate synchronous remote execution of a function.
-
-        Instead of actual remote execution, it performs local one.
-        """
-
-        return self.local_function_call(func_name, func_kwargs)
-
     def async_remote_function_call(self
                                   , func_name: str
                                   , func_kwargs: KwArgsDict
@@ -1302,7 +1334,53 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         it performs local synchronous one.
         """
 
-        return self.local_function_call(func_name, func_kwargs)
+        return self.sync_local_inprocess_function_call(func_name, func_kwargs)
+
+
+
+    def async_local_subprocess_function_call(self
+                                  ,func_name:str
+                                  ,func_kwargs:KwArgsDict
+                                  ) -> PFuncOutputAddress:
+        """ Perform an asynchronous subprocess call for a cloudized function.
+
+        This method should not be called directly. Instead, use the syntax
+        below (requires a functions first to be added to a cloud):
+        func_name.async_subprocess(**kwargs)
+        """
+
+        # TODO: this is an emulation. Needs actual implementation.
+
+        result = self.sync_local_subprocess_function_call(func_name, func_kwargs)
+
+        return result
+
+
+    def sync_local_subprocess_function_call(self
+                                  ,func_name:str
+                                  ,func_kwargs:KwArgsDict
+                                  ) -> PFuncOutputAddress:
+        """ Perform a synchronous subprocess call for a cloudized function.
+
+        This method should not be called directly. Instead, use the syntax
+        below (requires a functions first to be added to a cloud):
+        func_name.sync_subprocess(**kwargs)
+        """
+        cloudized_function = self.cloudized_functions[func_name]
+        func_key = PFuncOutputAddress(cloudized_function, func_kwargs)
+
+        subprocess_command = ["pythagoras_oneoff_sharedstorage_worker"
+            , self.base_dir
+            , func_key.prefix
+            , func_key.hash_id]
+
+        subprocess_results = subprocess.run(
+            subprocess_command
+            , capture_output=True)
+
+        print(f"{subprocess_results=}")
+
+        return func_key
 
     def sync_parallel_function_call(self
                                     , func_name: str
@@ -1324,7 +1402,7 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         result = []
         for e in shuffled_input_list:
             func_call_arguments = e[1]
-            func_call_output = self.local_function_call(
+            func_call_output = self.sync_local_inprocess_function_call(
                 func_name,func_call_arguments)
             result_item = (e[0], func_call_output)
             result.append(result_item)
@@ -1448,3 +1526,5 @@ class MLProjectWorkspace(P_Cloud):
 
     def shared_import_statements(self) -> str:
         return self.base_cloud.shared_import_statements
+
+

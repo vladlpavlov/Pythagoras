@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.4.1"
+    ,version="0.4.6"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description= "Simple and inexpensive way to create, deploy and run " 
@@ -42,4 +42,11 @@ setuptools.setup(
         , 'pytest'
         , 'hypothesis'
     ]
+    ,entry_points = {
+        'console_scripts': [
+            'pythagoras_oneoff_sharedstorage_worker ' 
+            ' = pythagoras:oneoff_subprocess_sharedstorage_worker'
+        ]
+    }
+
 )
