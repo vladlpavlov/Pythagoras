@@ -228,6 +228,14 @@ class PHashAddress(Sequence):
             hasher = Hasher(hash_name=PHashAddress._hash_type)
         return hasher.hash(x) #TODO: switch to Base32
 
+    @classmethod
+    def from_strings(cls, prefix:str, hash_id:str) -> PHashAddress:
+        """(Re)construct address from text representations of prefix and hash"""
+        address = cls.__new__(cls)
+        super(cls, address).__init__()
+        address.prefix = prefix
+        address.hash_id = hash_id
+        return address
 
     @abstractmethod
     def ready(self) -> bool:
@@ -831,7 +839,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
             cloudized functions in P_Cloud. Keys are the names
             of the functions.
     """
-    _single_instance:P_Cloud_Implementation = None
+    _single_instance:Optional[P_Cloud_Implementation] = None
     _install_requires: Optional[str] = None
     _python_requires: Optional[str] = None
     _shared_import_statements:str = None

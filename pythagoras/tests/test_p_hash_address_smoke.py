@@ -1,3 +1,5 @@
+from pythagoras.p_cloud import SharedStorage_P2P_Cloud, PFuncOutputAddress
+
 from pythagoras import PValueAddress
 import pandas as pd
 import numpy as np
@@ -21,7 +23,8 @@ simple_cases = [
 ]
 
 
-def test_PHashAddress():
+def test_PHashAddress(tmpdir):
+    cloud = SharedStorage_P2P_Cloud(tmpdir)
     all_hash_ids = set()
     for case in simple_cases:
         address = PValueAddress(case["obj"])
@@ -42,3 +45,24 @@ def test_PHashAddress():
         assert len(set(hash_id_str)) <= 16
         assert hash_id_str not in all_hash_ids
         all_hash_ids.add(hash_id_str)
+
+
+
+def test_constructors(tmpdir):
+    cloud = SharedStorage_P2P_Cloud(tmpdir)
+    val = dict(a=1,b=2)
+    address = PValueAddress(val)
+    new_address = PValueAddress.from_strings(address.prefix, address.hash_id)
+    assert address == new_address
+
+    @cloud.add_pure_function
+    def myau(n:int):
+        return n+1
+
+    f_address = myau.async_remote(n=100)
+    new_f_address = PFuncOutputAddress.from_strings(
+        f_address.prefix, f_address.hash_id)
+    assert f_address == new_f_address
+
+
+
