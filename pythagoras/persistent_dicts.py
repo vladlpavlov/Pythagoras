@@ -288,7 +288,10 @@ class SimplePersistentDict(MutableMapping):
 
     @abstractmethod
     def mtimestamp(self,key:SimpleDictKey) -> float:
-        """Get last modification time (in seconds, Unix time)."""
+        """Get last modification time (in seconds, Unix epoch time).
+
+        This method is absent in the original dict API.
+        """
         raise NotImplementedError
 
 
@@ -315,7 +318,10 @@ class SimplePersistentDict(MutableMapping):
 
 
     def get_subdict(self, prefix_key:SimpleDictKey) -> SimplePersistentDict:
-        """Get a subdictionary containing items with the same prefix_key."""
+        """Get a subdictionary containing items with the same prefix_key.
+
+        This method is absent in the original dict API.
+        """
         raise NotImplementedError
 
 
@@ -410,9 +416,12 @@ class FileDirDict(SimplePersistentDict):
         else:
             return os.path.join(*dir_names)
 
-    # TODO: add this method to the entire hierarchy of persistent dict classes
+
     def get_subdict(self, key:SimpleDictKey):
-        """Get a subdictionary containing items with the same prefix_key."""
+        """Get a subdictionary containing items with the same prefix_key.
+
+        This method is absent in the original dict API.
+        """
         full_dir_path = self._build_full_path(
             key, create_subdirs = True, is_file_path = False)
         return FileDirDict(
@@ -479,6 +488,7 @@ class FileDirDict(SimplePersistentDict):
         os.remove(filename)
 
     def _generic_iter(self, iter_type: str):
+        """Underlying implementation for .items()/.keys()/.values() iterators"""
         assert iter_type in {"keys", "values", "items"}
         walk_results = os.walk(self.base_dir)
         ext_len = len(self.file_type) + 1
@@ -518,7 +528,10 @@ class FileDirDict(SimplePersistentDict):
 
 
     def mtimestamp(self,key:SimpleDictKey) -> float:
-        """Get last modification time (in seconds, Unix time)."""
+        """Get last modification time (in seconds, Unix epoch time).
+
+        This method is absent in the original dict API.
+        """
         filename = self._build_full_path(key)
         return os.path.getmtime(filename)
 
@@ -527,18 +540,18 @@ class FileDirDict(SimplePersistentDict):
 class S3_Dict(SimplePersistentDict):
     """ A persistent Dict that stores key-value pairs as S3 objects.
 
-        A new object is created for each key-value pair.
+    A new object is created for each key-value pair.
 
-        A key is either an objectname (a 'filename' without an extension),
-        or a sequence of folder names (object name prefixes) that ends
-        with an objectname. A value can be an instance of any Python type,
-        and will be stored as an S3-object.
+    A key is either an objectname (a 'filename' without an extension),
+    or a sequence of folder names (object name prefixes) that ends
+    with an objectname. A value can be an instance of any Python type,
+    and will be stored as an S3-object.
 
-        S3_Dict can store objects in binary objects (as pickles)
-        or in human-readable texts objects (using jsonpickles).
+    S3_Dict can store objects in binary objects (as pickles)
+    or in human-readable texts objects (using jsonpickles).
 
-        Unlike in native Python dictionaries, insertion order is not preserved.
-        """
+    Unlike in native Python dictionaries, insertion order is not preserved.
+    """
 
 
     def __init__(self, bucket_name:str
@@ -552,6 +565,8 @@ class S3_Dict(SimplePersistentDict):
         bucket_name and region define an S3 location of the storage
         that will contain all the objects in the S3_Dict.
         If the bucket does not exist, it will be created.
+
+        root_prefix is a common prefix for all objectnames in a dictionary.
 
         dir_name is a local directory that will be used to store tmp files.
 
@@ -684,6 +699,7 @@ class S3_Dict(SimplePersistentDict):
 
 
     def _generic_iter(self, iter_type: str):
+        """Underlying implementation for .items()/.keys()/.values() iterators"""
         assert iter_type in {"keys", "values", "items"}
         suffix = "." + self.file_type
         ext_len = len(self.file_type) + 1
@@ -718,7 +734,10 @@ class S3_Dict(SimplePersistentDict):
 
 
     def get_subdict(self, key:SimpleDictKey) -> S3_Dict:
-        """Get a subdictionary containing items with the same prefix_key."""
+        """Get a subdictionary containing items with the same prefix_key.
+
+        This method is absent in the original dict API.
+        """
         if len(key):
             key = self._normalize_key(key)
             full_root_prefix = self.root_prefix +  "/".join(key)
@@ -738,7 +757,10 @@ class S3_Dict(SimplePersistentDict):
 
 
     def mtimestamp(self,key:SimpleDictKey) -> float:
-        """Get last modification time (in seconds, Unix time)."""
+        """Get last modification time (in seconds, Unix epoch time).
+
+        This method is absent in the original dict API.
+        """
         #TODO: check work with timezones
         obj_name = self._build_full_objectname(key)
         response = self.s3_client.head_object(Bucket=self.bucket_name, Key=obj_name)
