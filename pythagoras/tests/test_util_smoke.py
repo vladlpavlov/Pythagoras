@@ -17,3 +17,54 @@ def test_get_long_infoname():
     self_name = get_long_infoname(get_long_infoname)
     assert "function" in self_name
     assert "get_long_infoname" in self_name
+
+
+def test_get_normalized_function_source():
+    def fff():
+        pass
+
+    fff_source_1 = get_normalized_function_source(fff)
+
+    def fff():
+        #some comment
+
+        pass #another comment
+
+    fff_source_2 = get_normalized_function_source(fff)
+
+    assert fff_source_1 == fff_source_2
+
+    def fff():
+        return
+
+    fff_source_3 = get_normalized_function_source(fff)
+
+    assert fff_source_3 != fff_source_2
+
+    def ggg(a):
+        for i in range(10):pass
+        return a * a
+
+    ggg_source_1 = get_normalized_function_source(ggg)
+
+    def ggg(a):
+        for i in range(10):
+            pass ###########
+        return a*a # qwerty
+
+    ggg_source_2 = get_normalized_function_source(ggg)
+
+    assert ggg_source_1==ggg_source_2
+
+    def ggg(a):
+        for i in range(10):pass
+        return a ** 2
+
+    ggg_source_3 = get_normalized_function_source(ggg)
+
+    assert ggg_source_3 != ggg_source_2
+
+
+
+
+

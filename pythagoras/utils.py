@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from abc import ABCMeta
 import datetime
 import math
@@ -11,11 +12,12 @@ import socket
 from getpass import getuser
 import inspect
 import numbers, time
-from typing import Any, Dict
+from typing import Any, Dict, Callable
 import pkg_resources
 import psutil
 import gc
 import string
+from ast import Module, FunctionDef
 
 
 def get_safe_chars():
@@ -255,3 +257,46 @@ class BasicStopwatch:
 
     def __str__(self) -> str:
         return NeatStr.time_diff(self.get_float_repr())
+
+
+def get_normalized_function_source(a_func:Callable) -> str:
+    """Return function's source code in a 'canonical' form.
+
+    Remove all decorators, comments and empty lines;
+    standardize code formatting.
+    """
+
+    assert callable(a_func)
+
+    code = inspect.getsource(a_func)
+    code_lines = code.split("\n")
+
+    code_no_empty_lines = []
+    for line in code_lines:
+        if set(line)<=set(" \t"):
+            continue
+        code_no_empty_lines.append(line)
+
+    first_line_no_indent = code_no_empty_lines[0].lstrip()
+    n_chars_to_remove = len(code_no_empty_lines[0]) - len(first_line_no_indent)
+    chars_to_remove = code_no_empty_lines[0][:n_chars_to_remove]
+
+    code_clean_version = []
+    for line in code_no_empty_lines:
+        assert line.startswith(chars_to_remove)
+        code_clean_version.append(line[n_chars_to_remove:])
+
+    code_clean_version = "\n".join(code_clean_version)
+    code_ast = ast.parse(code_clean_version)
+
+    assert isinstance(code_ast, Module)
+    assert isinstance(code_ast.body[0], FunctionDef)
+    #TODO: add support for multiple decorators
+    assert len(code_ast.body[0].decorator_list) <= 1, (
+        "Currently cloudized functions can not have multiple decorators")
+    code_ast.body[0].decorator_list = []
+
+    #TODO: add removal of a function's docstring
+    #TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    return ast.unparse(code_ast)
