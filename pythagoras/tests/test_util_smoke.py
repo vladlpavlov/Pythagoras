@@ -65,6 +65,24 @@ def test_get_normalized_function_source():
     assert ggg_source_3 != ggg_source_2
 
 
+def test_get_all_global_namespaces():
+    spaces = get_all_global_namespaces(test_get_all_global_namespaces)
+    assert len(spaces) == 2
+    x=12345
+    spaces = get_all_global_namespaces(x)
+    assert len(spaces) == 1
+
+    class HiHi:
+        def __init__(self, id_str: str):
+            spaces = get_all_global_namespaces(self)
+            assert len(spaces) == 1
+            for s in spaces:
+                s[id_str] = 50
+            assert weird_var == 50
+
+    x = HiHi("weird_var")
+    assert "weird_var" in globals()
+    assert weird_var == 50
 
 
 
