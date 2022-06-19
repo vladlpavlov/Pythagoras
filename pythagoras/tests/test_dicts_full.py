@@ -1,6 +1,7 @@
 import os
 from tempfile import TemporaryDirectory
 from pythagoras.persistent_dicts import FileDirDict, safe_chars
+from pythagoras.dicts.lww_file_dict import LWWFileDirDict
 
 from hypothesis import given, strategies as st
 import pytest
@@ -10,8 +11,9 @@ dict_key = st.text(alphabet=safe_chars, min_size=1)
 MUTABLE_DICT_PARAMS = [
     (FileDirDict, {"dir_name": "__TMPDIR__", "file_type": "pkl"}),
     (FileDirDict, {"dir_name": "__TMPDIR__", "file_type": "json"}),
+    (LWWFileDirDict, {"dir_name": "__TMPDIR__", "file_type": "pkl"}),
+    (LWWFileDirDict, {"dir_name": "__TMPDIR__", "file_type": "json"}),
 ]
-
 
 
 class DictGenerator():
