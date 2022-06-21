@@ -301,28 +301,3 @@ def get_normalized_function_source(a_func:Callable) -> str:
 
     return ast.unparse(code_ast)
 
-
-def get_all_global_namespaces(an_object):
-    """Find global namespaces from all outer frames that reference an object.
-    """
-    obj_id = id(an_object)
-    hits = {} # all namespaces that reference the object
-    misses = {} # all namespaces that do not reference the object
-    results = {} # all global namespaces from frames that reference the object
-    for stack_item in inspect.stack()[1:]:
-        global_namespace = stack_item.frame.f_globals
-        local_namespace = stack_item.frame.f_locals
-        for namespace in [local_namespace, global_namespace]:
-            if id(namespace) in results or id(namespace) in misses:
-                continue
-            if id(namespace) in hits:
-                results[id(global_namespace)] = global_namespace
-                continue
-            for val in namespace.values():
-                if id(val) == obj_id:
-                    hits[id(namespace)] = namespace
-                    results[id(global_namespace)] = global_namespace
-                    break
-            else:
-                misses[id(namespace)] = namespace
-    return results.values()
