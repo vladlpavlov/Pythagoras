@@ -2,11 +2,17 @@
 """
 from __future__ import annotations
 
+import ast
+import base64
+import hashlib
+import inspect
 import os
 import platform
+import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import uuid
 from abc import abstractmethod, ABCMeta
@@ -24,7 +30,8 @@ from joblib.hashing import NumpyHasher, Hasher
 
 from pythagoras._dependency_discovery import _all_dependencies_one_func
 from pythagoras.persistent_dicts import FileDirDict, SimplePersistentDict, SimpleDictKey
-from pythagoras.utils import get_long_infoname, replace_unsafe_chars
+from pythagoras.utils import get_long_infoname, replace_unsafe_chars, \
+    get_normalized_function_source
 from pythagoras.utils import buid_context, ABC_PostInitializable
 
 
@@ -60,7 +67,7 @@ class PCloudizedFunction:
         if "self" in original_annotations:
             #TODO: Should we issue a warning here? Or raise an exception?
             del original_annotations["self"]
-        self.original_source = getsource(original_function)
+        self.original_source = get_normalized_function_source(original_function)
         self.func_snapshot_address = None
         self._original_source_with_dependencies = None
         self.__doc__ = original_function.__doc__
@@ -176,6 +183,8 @@ class PCloudizedFunctionSnapshot:
         self.shared_import_statements = p_cloud.shared_import_statements
         self.source = f.original_source
         self.source_with_dependencies = f.original_source_with_dependencies
+        assert self.source == self.source_with_dependencies[self.name]
+        #TODO: refactor to drop self.source
 
 
 class PFunctionCallSignature:
@@ -218,6 +227,7 @@ class PHashAddress(Sequence):
 
         return clean_prfx
 
+
     @staticmethod
     def _build_hash_id(x: Any) -> str:
         """Create a URL-safe hashdigest for an object."""
@@ -228,14 +238,23 @@ class PHashAddress(Sequence):
             hasher = Hasher(hash_name=PHashAddress._hash_type)
         return hasher.hash(x) #TODO: switch to Base32
 
+
     @classmethod
-    def from_strings(cls, prefix:str, hash_id:str) -> PHashAddress:
+    def from_strings(cls
+                     , prefix:str
+                     , hash_id:str
+                     , check_value_store:bool=True
+                     ) -> PHashAddress:
         """(Re)construct address from text representations of prefix and hash"""
         address = cls.__new__(cls)
         super(cls, address).__init__()
         address.prefix = prefix
         address.hash_id = hash_id
+        if check_value_store:
+            p_cloud = P_Cloud_Implementation._single_instance
+            assert address in p_cloud.value_store
         return address
+
 
     @abstractmethod
     def ready(self) -> bool:
@@ -254,6 +273,7 @@ class PHashAddress(Sequence):
         return ( isinstance(other, self.__class__)
                 and self.prefix  == other.prefix
                 and self.hash_id == other.hash_id )
+
 
     def __ne__(self, other) -> bool:
         """Return self!=other. """
@@ -578,7 +598,7 @@ class P_Cloud(metaclass=ABCMeta):
             to run. Its format follows setuptools' python_requires format.
 
 
-    install_requires: str | List[str]
+    install_requires: Optional[str]
             An abstract property: minimally required dependencies.
             The list of packages that a P_Cloud instance minimally needs
             to run. Its format follows setuptools' install_requires format.
@@ -586,6 +606,7 @@ class P_Cloud(metaclass=ABCMeta):
 
     def __init__(self,*args,**kwargs):
         pass
+
 
 
     @property
@@ -689,7 +710,7 @@ class P_Cloud(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def install_requires(self) -> Optional[Union[str,List[str]]]:
+    def install_requires(self) -> Optional[str]:
         """Packages that a P_Cloud instance minimally needs to run.
 
         The property's format follows setuptools' install_requires format.
@@ -723,7 +744,7 @@ class P_Cloud(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def add_pure_function(self, a_func:Callable) -> PCloudizedFunction:
+    def publish(self, a_func:Callable) -> PCloudizedFunction:
         """Decorator which 'cloudizes' user-provided functions. """
         raise NotImplementedError
 
@@ -842,7 +863,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
     _single_instance:Optional[P_Cloud_Implementation] = None
     _install_requires: Optional[str] = None
     _python_requires: Optional[str] = None
-    _shared_import_statements:str = None
+    _shared_import_statements:Optional[str] = None
 
     original_functions: dict[str, Callable] = dict()
     cloudized_functions: dict[str, PCloudizedFunction] = dict()
@@ -869,11 +890,11 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
     _init_signature_hash_address = None
 
     def __init__(self
-                 , install_requires:str = ""
-                 , python_requires = ""
-                 , shared_import_statements = ""
-                 , base_dir = "P_Cloud"
-                 , p_purity_checks = 0.1
+                 , install_requires:Optional[str] = ""
+                 , python_requires:Optional[str] = ""
+                 , shared_import_statements:Optional[str] = ""
+                 , base_dir:str = "P_Cloud"
+                 , p_purity_checks:float = 0.1
                  , **kwargs):
         super().__init__(**kwargs)
         self._install_requires = install_requires  # TODO: polish later
@@ -889,6 +910,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         assert os.path.isdir(base_dir)
         self.base_dir = os.path.abspath(base_dir)
 
+        #TODO: add support for forbiden purity checks (p_purity_checks == None)
         assert 0 <= p_purity_checks <= 1
         self._p_purity_checks = p_purity_checks
 
@@ -910,6 +932,17 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
                 P_Cloud_Implementation._init_signature_hash_address), (
                 "You can't have several P_Cloud instances with different "
                 "types and/or initialization arguments.")
+
+
+    @staticmethod
+    def _reset() -> None:
+        """Cleanup all data for P_Cloud_Implementation. Never use this method."""
+        P_Cloud_Implementation._instance_counter = 0
+        P_Cloud_Implementation._init_signature_hash_address = None
+        P_Cloud_Implementation._single_instance = None
+        P_Cloud_Implementation.original_functions = dict()
+        P_Cloud_Implementation.cloudized_functions = dict()
+
 
     def _register_exception_handlers(self) -> None:
         """ Intersept & redirect unhandled exceptions to self.exceptions """
@@ -957,36 +990,35 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         except:
             self._is_running_inside_IPython = False
 
-
-    def install_requires(self) -> Optional[Union[str,List[str]]]:
+    @property
+    def install_requires(self) -> Optional[str]:
         return self._install_requires
 
-
-    def python_requires(self) -> str:
+    @property
+    def python_requires(self) -> Optional[str]:
         return self._python_requires
 
 
-    @staticmethod
-    def _pre_process_import_statements(import_statements:str) -> str:
-        import_statements_list = import_statements.split("\n")
-        for i,import_line in enumerate(import_statements_list):
-            import_line = import_line.strip()
-            import_statements_list[i] = import_line
-            if len(import_line) == 0:
-                continue
-            assert "import" in import_line
-            assert import_line.startswith(("import", "from"))
-        import_statements_list = sorted(import_statements_list)
-        result = "\n".join(import_statements_list)
-        return result
+    def _pre_process_import_statements(self
+            ,import_statements:Optional[str]
+            ) -> Optional[str]:
+        #TODO: add some basic checks
+        if import_statements is not None and len(import_statements):
+            import_statements = ast.unparse(ast.parse(import_statements))
+        return import_statements
 
 
-    @staticmethod
-    def _process_import_statements(import_statements: str) -> None:
-        exec(import_statements, globals())
+    def _process_import_statements(self
+            ,import_statements: Optional[str]) -> None:
+        if import_statements is None:
+            return
+        # TODO: find if there is a less polluting way of doing this
+        for frame_info in inspect.stack():
+            exec(import_statements, frame_info.frame.f_globals)
 
 
-    def shared_import_statements(self) -> str:
+    @property
+    def shared_import_statements(self) -> Optional[str]:
         """Import statements that are shared across all instances of P_Cloud.
 
         The format of the property is a sequence of Python import statements.
@@ -1203,7 +1235,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         return func_key in self.func_output_store
 
 
-    def add_pure_function(self, a_func:Callable) -> PCloudizedFunction:
+    def publish(self, a_func:Callable) -> PCloudizedFunction:
         """Decorator which 'cloudizes' user-provided functions. """
         assert callable(a_func)
         assert not isinstance(a_func, PCloudizedFunction), (
@@ -1212,6 +1244,11 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
             "Nameless functions can not be cloudized")
         assert a_func.__name__ != "<lambda>", (
             "Lambda functions can not be cloudized")
+        assert a_func.__closure__ is None, (
+            "Closures can not be cloudized")
+        assert "<locals>" not in a_func.__qualname__ , (
+            "Closures can not be cloudized")
+
 
         # TODO: change to custom exception
         assert a_func.__name__ not in self.original_functions, (
@@ -1246,14 +1283,17 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
     """
 
     def __init__(self
-                 , install_requires:str=""
-                 , python_requires = ""
-                 , base_dir = "SharedStorage_P2P_Cloud"
-                 , p_purity_checks=0.1
-                 , *kwargs
+                 , install_requires:Optional[str]=""
+                 , python_requires:str = ""
+                 , shared_import_statements:Optional[str] = ""
+                 , base_dir:str = "SharedStorage_P2P_Cloud"
+                 , p_purity_checks:float=0.1
+                 , restore_from:Optional[PFuncOutputAddress]=None
+                 , **kwargs
                  ):
         super().__init__(install_requires = install_requires
                          , python_requires = python_requires
+                         , shared_import_statements = shared_import_statements
                          , base_dir = base_dir
                          , p_purity_checks = p_purity_checks)
 
@@ -1269,13 +1309,72 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
             dir_name=os.path.join(self.base_dir, "exception_log")
             ,file_type="json")
 
-        # self._func_snapshots = FileDirDict(
-        #     dir_name=os.path.join(self.base_dir, "func_snapshots")
-        #     ,file_type="json")
-
         self._event_log = FileDirDict(
             dir_name=os.path.join(self.base_dir, "event_log")
             ,file_type="json")
+
+        self._temp_dir = None
+
+        if restore_from is None:
+            return
+
+        assert install_requires == "" or install_requires is None
+        assert python_requires == "" or python_requires is None
+        assert shared_import_statements == "" or shared_import_statements is None
+
+        if P_Cloud_Implementation._single_instance is None:
+            P_Cloud_Implementation._single_instance = self
+
+        func_call_signature_addr = PValueAddress.from_strings(
+            prefix = restore_from.prefix
+            , hash_id = restore_from.hash_id)
+
+        func_call_signature = func_call_signature_addr.get()
+        assert isinstance(func_call_signature,PFunctionCallSignature)
+        func_snapshot = func_call_signature.function_addr.get()
+        assert isinstance(func_snapshot, PCloudizedFunctionSnapshot)
+
+        super().__init__(install_requires=func_snapshot.install_requires
+                         , python_requires=func_snapshot.python_requires
+                         , shared_import_statements = func_snapshot.shared_import_statements
+                         , base_dir=base_dir
+                         , p_purity_checks=p_purity_checks)
+
+
+        all_functions = func_snapshot.shared_import_statements
+        all_functions += "\nfrom pythagoras import P_Cloud_Implementation\n"
+
+        for f_name in func_snapshot.source_with_dependencies:
+            all_functions += "\n\n"
+            all_functions +="@P_Cloud_Implementation._single_instance.publish\n"
+            all_functions += func_snapshot.source_with_dependencies[f_name]
+
+        self._temp_dir = tempfile.mkdtemp()
+
+        all_functions_b = all_functions.encode()
+        hash_object = hashlib.md5(all_functions_b)
+        full_digest_str = base64.b32encode(hash_object.digest()).decode()
+        temp_package_name = "pythagoras_cloud_funcs_" +full_digest_str[:20]
+        temp_filename = temp_package_name +".py"
+        full_temp_filename = os.path.join(self._temp_dir,temp_filename)
+
+
+        with open(full_temp_filename, "w") as temp_file:
+            temp_file.write(all_functions)
+
+        sys.path.append(self._temp_dir)
+
+        # TODO: find if there is a less polluting way of doing this
+        for f_name in func_snapshot.source_with_dependencies:
+            for frame_info in inspect.stack():
+                    f_n_code = f"from {temp_package_name} import {f_name}"
+                    f_globals = frame_info.frame.f_globals
+                    exec(f_n_code, f_globals)
+
+
+    def __del__(self):
+        if self._temp_dir is not None:
+            shutil.rmtree(self._temp_dir, ignore_errors=True)
 
 
     @property
@@ -1524,7 +1623,7 @@ class MLProjectWorkspace(P_Cloud):
         return self.base_cloud.add_pure_function(a_func)
 
 
-    def install_requires(self) -> Optional[Union[str,List[str]]]:
+    def install_requires(self) -> Optional[str]:
         return self.base_cloud.install_requires
 
 
