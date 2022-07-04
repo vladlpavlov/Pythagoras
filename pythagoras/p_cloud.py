@@ -520,7 +520,7 @@ class P_Cloud(metaclass=ABCMeta):
 
     Methods:
     ----------
-    add_pure_function(a_func:Callable) -> Callable
+    publish(a_func:Callable) -> Callable
             Decorator that 'cloudizes' user-provided functions.
 
     push_value(value:Any) -> PValueAddress
@@ -791,7 +791,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
 
     Methods:
     ----------
-    add_pure_function(a_func:Callable) -> Callable
+    publish(a_func:Callable) -> Callable
             Decorator that 'cloudizes' user-provided functions.
 
     push_value(value:Any) -> PValueAddress
@@ -850,13 +850,13 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
 
     original_functions : dict[str, Callable]
             A dictionary with original (before application of the
-            @add_pure_function decorator) versions of all cloudized
+            @publish decorator) versions of all cloudized
             functions in P_Cloud. Keys are the names of the
             functions.
 
     cloudized_functions: dict[str, Callable]
             A dictionary with modified (as a result of  applying
-            the @add_pure_function decorator) versions of all
+            the @publish decorator) versions of all
             cloudized functions in P_Cloud. Keys are the names
             of the functions.
     """
@@ -1456,11 +1456,21 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         func_name.async_subprocess(**kwargs)
         """
 
-        # TODO: this is an emulation. Needs actual implementation.
+        cloudized_function = self.cloudized_functions[func_name]
+        func_key = PFuncOutputAddress(cloudized_function, func_kwargs)
 
-        result = self.sync_local_subprocess_function_call(func_name, func_kwargs)
+        subprocess_command = ["python3"
+            , "-m"
+            , "pythagoras"
+            , type(self).__name__
+            , self.base_dir
+            , func_key.prefix
+            , func_key.hash_id]
 
-        return result
+        subprocess_results = subprocess.Popen(
+            subprocess_command)
+
+        return func_key
 
 
     def sync_local_subprocess_function_call(self
@@ -1476,7 +1486,10 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         cloudized_function = self.cloudized_functions[func_name]
         func_key = PFuncOutputAddress(cloudized_function, func_kwargs)
 
-        subprocess_command = ["pythagoras_oneoff_sharedstorage_worker"
+        subprocess_command = ["python3"
+            , "-m"
+            , "pythagoras"
+            , type(self).__name__
             , self.base_dir
             , func_key.prefix
             , func_key.hash_id]
@@ -1485,7 +1498,8 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
             subprocess_command
             , capture_output=True)
 
-        print(f"{subprocess_results=}")
+        assert func_key.ready(), (
+            f"Subprocess was not able to complete successfully: {subprocess_results.stderr.decode()}")
 
         return func_key
 
@@ -1618,9 +1632,9 @@ class MLProjectWorkspace(P_Cloud):
         """
         return self.base_cloud.p_purity_checks
 
-    def add_pure_function(self, a_func):
+    def publish(self, a_func):
         """Decorator which 'cloudizes' user-provided functions. """
-        return self.base_cloud.add_pure_function(a_func)
+        return self.base_cloud.publish(a_func)
 
 
     def install_requires(self) -> Optional[str]:

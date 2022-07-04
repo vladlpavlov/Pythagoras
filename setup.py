@@ -42,11 +42,5 @@ setuptools.setup(
         , 'pytest'
         , 'hypothesis'
     ]
-    ,entry_points = {
-        'console_scripts': [
-            'pythagoras_oneoff_sharedstorage_worker ' 
-            ' = pythagoras:oneoff_subprocess_sharedstorage_worker'
-        ]
-    }
 
 )

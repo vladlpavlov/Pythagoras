@@ -3,15 +3,60 @@ import gc
 from functools import cache
 from pprint import pprint
 
+
 from pythagoras import *
 import pytest
 from moto import mock_s3
+from time import sleep
+
+def ggg_sp(a:int):
+    from time import sleep
+    sleep(3)
+    return int(a*a)
+
+def ggg2_sp(x:int,y:float):
+    from time import sleep
+    sleep(3)
+    return int(x*x*y)
+
+def test_SharedStorage_P2P_Cloud_func1args_sp(tmpdir):
+    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
+
+    global ggg_sp
+    ggg_sp = my_cloud.publish(ggg_sp)
+    assert ggg_sp.sync_subprocess(a=5) == 25
+
+    global ggg2_sp
+    ggg2_sp = my_cloud.publish(ggg2_sp)
+    assert ggg2_sp.sync_subprocess(x=2,y=3) == 12
+
+    P_Cloud_Implementation._reset()
+
+def ooo_asp(a:int):
+    from time import sleep
+    sleep(10)
+    return int(a*a)
+
+def test_SharedStorage_P2P_Cloud_func1args_asp(tmpdir):
+    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
+
+    global ooo_asp
+    ooo_asp = my_cloud.publish(ooo_asp)
+
+    print(time.time())
+    addr =  ooo_asp.async_subprocess(a=7)
+    print(time.time())
+    print(addr.get(timeout=40))
+    print(time.time())
+
+    P_Cloud_Implementation._reset()
 
 
 def fff():
     return int(1)
 
 def ggg(a:int):
+    from time import sleep
     return int(a*a)
 
 def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
@@ -28,8 +73,6 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
 
     global ggg
     ggg = my_cloud.publish(ggg)
-
-    print(f'{("ggg" in locals())=}')
 
     assert len(my_cloud.original_functions) == 2
     assert len(my_cloud.cloudized_functions) == 2
@@ -139,5 +182,14 @@ def test_multiple_clouds(tmpdir):
 
 
 
-def test_experiment():
+def qwerty():
     pass
+
+def test_experiment():
+    my_cloud = SharedStorage_P2P_Cloud(
+        base_dir=str("."), p_purity_checks=0)
+
+    global qwerty
+    qwerty = my_cloud.publish(qwerty)
+
+    my_cloud.sync_local_subprocess_function_call("qwerty", KwArgsDict(dict()))
