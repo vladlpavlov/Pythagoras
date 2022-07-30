@@ -193,3 +193,5 @@ def test_experiment():
     qwerty = my_cloud.publish(qwerty)
 
     my_cloud.sync_local_subprocess_function_call("qwerty", KwArgsDict(dict()))
+
+    P_Cloud_Implementation._reset()
