@@ -197,10 +197,15 @@ class PFunctionCallSignature:
 
 
 class PHashAddress(Sequence):
-    """A globally unique address, includes a human-readable prefix and a hash."""
+    """A globally unique hash-based adderess.
+
+     Consists of 2 or 3 strings. Includes
+     a human-readable prefix, an optional descriptor, and a hash.
+     """
 
     prefix: str
-    hash_id: str
+    descriptor: Optional[str]
+    hash_value: str
     _hash_type: str = "sha256"
 
     @staticmethod
@@ -209,27 +214,42 @@ class PHashAddress(Sequence):
 
         prfx = get_long_infoname(x)
 
-        if (hasattr(x, "shape")
-                and hasattr(x.shape, "__iter__")
-                and callable(x.shape.__iter__)
-                and not callable(x.shape)):
-
-            prfx += "_shape_"
-            for n in x.shape:
-                prfx += str(n) + "_x_"
-            prfx = prfx[:-3]
-
-        elif (hasattr(x, "__len__")
-              and callable(x.__len__)):
-            prfx += "_len_" + str(len(x))
-
         clean_prfx = replace_unsafe_chars(prfx, "_")
 
         return clean_prfx
 
+    @staticmethod
+    def _build_descriptor(x: Any) -> Optional[str]:
+        """Create a short summary of object's length/shape."""
+
+        dscrptr = None
+
+        if isinstance(x,PFunctionCallSignature):
+            # TODO: replace with proper OOP approach
+            dscrptr = "snpsht_"+x.function_addr.hash_value[:10]
+
+        elif (hasattr(x, "shape")
+            and hasattr(x.shape, "__iter__")
+            and callable(x.shape.__iter__)
+            and not callable(x.shape)):
+
+            dscrptr = "shape_"
+            for n in x.shape:
+                dscrptr += str(n) + "_x_"
+            dscrptr = dscrptr[:-3]
+
+        elif (hasattr(x, "__len__")
+              and callable(x.__len__)):
+            dscrptr = "len_" + str(len(x))
+
+        if dscrptr:
+            return replace_unsafe_chars(dscrptr, "_")
+        else:
+            return None
+
 
     @staticmethod
-    def _build_hash_id(x: Any) -> str:
+    def _build_hash_value(x: Any) -> str:
         """Create a URL-safe hashdigest for an object."""
 
         if 'numpy' in sys.modules:
@@ -240,16 +260,24 @@ class PHashAddress(Sequence):
 
 
     @classmethod
-    def from_strings(cls
+    def from_strings(cls, *
                      , prefix:str
-                     , hash_id:str
+                     , hash_value:str
+                     , descriptor: Optional[str]=None
                      , check_value_store:bool=True
                      ) -> PHashAddress:
         """(Re)construct address from text representations of prefix and hash"""
+
+        assert prefix, "prefix must be a non-empty string"
+        assert hash_value, "hash_value must be a non-empty string"
+        if descriptor is not None:
+            assert descriptor, "descriptor must be None or a non-empty string"
+
         address = cls.__new__(cls)
         super(cls, address).__init__()
         address.prefix = prefix
-        address.hash_id = hash_id
+        address.descriptor = descriptor
+        address.hash_value = hash_value
         if check_value_store:
             p_cloud = P_Cloud_Implementation._single_instance
             assert address in p_cloud.value_store
@@ -259,6 +287,7 @@ class PHashAddress(Sequence):
     @abstractmethod
     def ready(self) -> bool:
         """Check if address points to a value that is ready to be retrieved."""
+        # TODO: decide whether we need .ready() at the base class
         raise NotImplementedError
 
 
@@ -270,9 +299,10 @@ class PHashAddress(Sequence):
 
     def __eq__(self, other) -> bool:
         """Return self==other. """
-        return ( isinstance(other, self.__class__)
-                and self.prefix  == other.prefix
-                and self.hash_id == other.hash_id )
+        return (isinstance(other, self.__class__)
+                and self.prefix == other.prefix
+                and self.descriptor == other.descriptor
+                and self.hash_value == other.hash_value)
 
 
     def __ne__(self, other) -> bool:
@@ -281,18 +311,23 @@ class PHashAddress(Sequence):
 
 
     def __len__(self) -> int:
-        """Return len(self), always equals to 2. """
-        return 2
+        """Return len(self), always equals to 2 or 3. """
+        return 3 if self.descriptor else 2
 
 
     def __getitem__(self, item):
         """""X.__getitem__(y) is an equivalent to X[y]"""
+
         if item == 0:
             return self.prefix
-        elif item == 1:
-            return self.hash_id
-        else:
-            raise IndexError("PHashAddress only has 2 items.")
+
+        if item == 1:
+            return self.descriptor if self.descriptor else self.hash_value
+
+        if item == 2 and self.descriptor:
+            return self.hash_value
+
+        raise IndexError(f"PHashAddress only has {len(self)} items.")
 
 
     @abstractmethod
@@ -301,22 +336,24 @@ class PHashAddress(Sequence):
 
 
 class PValueAddress(PHashAddress):
-    """A globally unique address of an immutable value: a prefix + a hash code.
+    """A globally unique address of an immutable value.
 
     PValueAddress is a universal global identifier of any (constant) value.
     Using only the value's hash should (theoretically) be enough to
     uniquely address all possible data objects that the humanity  will create
     in the foreseeable future (see, for example ipfs.io).
 
-    However, an address also includes a prefix. It makes it more easy
-    for humans to interpret an address, and further decreases collision risk.
+    However, an address also includes a prefix and an optional descriptor.
+    It makes it easier for humans to interpret an address,
+    and further decreases collision risk.
     """
 
-    def __init__(self, data: Any, puch_to_cloud:bool=True):
+    def __init__(self, data: Any, push_to_cloud:bool=True):
 
         if isinstance(data, PValueAddress):
             self.prefix = data.prefix
-            self.hash_id = data.hash_id
+            self.descriptor = data.descriptor
+            self.hash_value = data.hash_value
             return
 
         assert not isinstance(data,PHashAddress), (
@@ -327,9 +364,10 @@ class PValueAddress(PHashAddress):
             data = data.pack()
 
         self.prefix = self._build_prefix(data)
-        self.hash_id = self._build_hash_id(data)
+        self.descriptor = self._build_descriptor(data)
+        self.hash_value = self._build_hash_value(data)
 
-        if puch_to_cloud:
+        if push_to_cloud:
             cloud = P_Cloud_Implementation._single_instance
             cloud.value_store[self] = data
 
@@ -347,7 +385,11 @@ class PValueAddress(PHashAddress):
 
 
     def __repr__(self):
-        return f"ValueAddress( prefix={self.prefix} , hash_id={self.hash_id} )"
+        str_repr =  f"ValueAddress( prefix={self.prefix} "
+        if self.descriptor:
+            str_repr += f", descriptor={self.descriptor} "
+        str_repr += f", hash_value={self.hash_value} )"
+        return str_repr
 
 
 class PFuncSnapshotAddress(PHashAddress):
@@ -362,8 +404,8 @@ class PFuncSnapshotAddress(PHashAddress):
     (python_requires or install_requires) results in the
     creation of a new hash (hence, a new address).
 
-    An address also includes a prefix, which makes it more simple
-    for humans to interpret an address,
+    An address also includes a prefix, which makes it
+    more simple for humans to interpret an address,
     and further decreases collision risk.
 
     The first time a new PFuncSnapshotAddress is created,
@@ -381,19 +423,22 @@ class PFuncSnapshotAddress(PHashAddress):
         """
         if isinstance(f, PFuncSnapshotAddress):
             self.prefix = f.prefix
-            self.hash_id = f.hash_id
+            self.descriptor = f.descriptor
+            self.hash_value = f.hash_value
             return
         assert isinstance(f,PCloudizedFunction)
         cloud = P_Cloud_Implementation._single_instance
         assert f.__name__ in cloud.cloudized_functions
         if f.func_snapshot_address is not None:
             self.prefix = f.func_snapshot_address.prefix
-            self.hash_id = f.func_snapshot_address.hash_id
+            self.descriptor = f.func_snapshot_address.descriptor
+            self.hash_value = f.func_snapshot_address.hash_value
             return
         snapshot = PCloudizedFunctionSnapshot(f)
         snapshot_address = PValueAddress(snapshot,push_to_cloud)
         self.prefix = snapshot_address.prefix
-        self.hash_id = snapshot_address.hash_id
+        self.descriptor = snapshot_address.descriptor
+        self.hash_value = snapshot_address.hash_value
         f.func_snapshot_address = self
 
 
@@ -410,8 +455,11 @@ class PFuncSnapshotAddress(PHashAddress):
 
 
     def __repr__(self):
-        return (f"PFuncSnapshotAddress( prefix={self.prefix} ,"
-               + f" hash_id={self.hash_id} )")
+        str_repr = f"PFuncSnapshotAddress( prefix={self.prefix} "
+        if self.descriptor:
+            str_repr += f", descriptor={self.descriptor} "
+        str_repr += f", hash_value={self.hash_value} )"
+        return str_repr
 
 
 class KwArgsDict(dict):
@@ -467,9 +515,11 @@ class PFuncOutputAddress(PHashAddress):
     def __init__(self, f:PCloudizedFunction, arguments:KwArgsDict):
         assert isinstance(f,PCloudizedFunction)
         assert isinstance(arguments, KwArgsDict)
-        result = PValueAddress(PFunctionCallSignature(f,arguments))
+        f_o_signature = PFunctionCallSignature(f,arguments)
+        result = PValueAddress(f_o_signature)
         self.prefix = result.prefix
-        self.hash_id = result.hash_id
+        self.descriptor = result.descriptor
+        self.hash_value = result.hash_value
 
 
     def ready(self):
@@ -506,8 +556,11 @@ class PFuncOutputAddress(PHashAddress):
 
 
     def __repr__(self):
-        return (f"PFuncOutputAddress( prefix={self.prefix} ,"
-               + f" hash_id={self.hash_id} )")
+        str_repr = f"PFuncOutputAddress( prefix={self.prefix} "
+        if self.descriptor:
+            str_repr += f", descriptor={self.descriptor} "
+        str_repr += f", hash_value={self.hash_value} )"
+        return str_repr
 
 
 
@@ -922,12 +975,12 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         if P_Cloud_Implementation._instance_counter == 1:
             init_signature  = (type(self),args,kw_args(**kwargs))
             P_Cloud_Implementation._init_signature_hash_address = PValueAddress(
-                data=init_signature, puch_to_cloud=False)
+                data=init_signature, push_to_cloud=False)
             P_Cloud_Implementation._single_instance = self
         else:
             new_init_signature = (type(self),args,kw_args(**kwargs))
             new_init_sign_hash = PValueAddress(
-                data=new_init_signature, puch_to_cloud=False)
+                data=new_init_signature, push_to_cloud=False)
             assert new_init_sign_hash == (
                 P_Cloud_Implementation._init_signature_hash_address), (
                 "You can't have several P_Cloud instances with different "
@@ -1327,7 +1380,8 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
 
         func_call_signature_addr = PValueAddress.from_strings(
             prefix = restore_from.prefix
-            , hash_id = restore_from.hash_id)
+            , descriptor = restore_from.descriptor
+            , hash_value = restore_from.hash_value)
 
         func_call_signature = func_call_signature_addr.get()
         assert isinstance(func_call_signature,PFunctionCallSignature)
@@ -1465,7 +1519,8 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
             , type(self).__name__
             , self.base_dir
             , func_key.prefix
-            , func_key.hash_id]
+            , func_key.descriptor
+            , func_key.hash_value]
 
         subprocess_results = subprocess.Popen(
             subprocess_command)
@@ -1492,7 +1547,8 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
             , type(self).__name__
             , self.base_dir
             , func_key.prefix
-            , func_key.hash_id]
+            , func_key.descriptor
+            , func_key.hash_value]
 
         subprocess_results = subprocess.run(
             subprocess_command
