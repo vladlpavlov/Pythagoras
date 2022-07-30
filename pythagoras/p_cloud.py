@@ -1486,7 +1486,7 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         cloudized_function = self.cloudized_functions[func_name]
         func_key = PFuncOutputAddress(cloudized_function, func_kwargs)
 
-        subprocess_command = ["python3"
+        subprocess_command = ["python3" #TODO: get the name of currently used python
             , "-m"
             , "pythagoras"
             , type(self).__name__
