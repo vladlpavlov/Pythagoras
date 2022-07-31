@@ -66,5 +66,24 @@ def test_get_normalized_function_source():
 
 
 
+class MMM:
+    pass
+def check2_subfunction():
+    assert detect_class_method_in_callstack(TTT)
+    assert not detect_class_method_in_callstack(MMM)
+class TTT:
+    def check(self):
+        assert detect_class_method_in_callstack(TTT)
+
+    def check2(self):
+        check2_subfunction()
+def test_detect_class_method_in_callstack():
+    assert not detect_class_method_in_callstack(TTT)
+    t = TTT()
+    t.check()
+
+
+
+
 
 

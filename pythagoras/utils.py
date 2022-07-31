@@ -38,6 +38,31 @@ def replace_unsafe_chars(a_str:str, replace_with:str) -> str :
     return result_str
 
 
+def detect_class_method_in_callstack(class_to_search):
+    """Check if class' method is present in outer frames"""
+
+    # TODO: refactor to address cases when
+    # 'self' has a different name
+    # TODO: add support for class and static methods
+
+    class SampleClass:
+        pass
+
+    assert type(class_to_search) == type(SampleClass)
+
+    for frame_record in inspect.stack():
+        func_name = frame_record.frame.f_code.co_name
+        if not func_name in dir(class_to_search):
+            continue
+        if "self" not in frame_record.frame.f_locals:
+            continue
+        if isinstance(frame_record.frame.f_locals["self"]
+                , class_to_search):
+            return True
+
+    return False
+
+
 class ABC_PostInitializable(ABCMeta):
     """ Metaclass that enables __post__init__() method for abstract classes. """
     def __call__(cls, *args, **kwargs):
