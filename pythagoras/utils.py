@@ -12,7 +12,7 @@ import socket
 from getpass import getuser
 import inspect
 import numbers, time
-from typing import Any, Dict, Callable
+from typing import Any, Dict, Callable, TypeVar, Type, Optional
 import pkg_resources
 import psutil
 import gc
@@ -38,8 +38,20 @@ def replace_unsafe_chars(a_str:str, replace_with:str) -> str :
     return result_str
 
 
-def detect_class_method_in_callstack(class_to_search):
-    """Check if class' method is present in outer frames"""
+
+T = TypeVar("T")
+def detect_instance_method_in_callstack(
+        class_to_detect:Type[T]
+        ) -> Optional[T]:
+    """Check if instance method call is present in outer frames.
+
+    If the callstack contains an instance method call
+    that belongs to an object of class_to_detect,
+    the function will return this object,
+    otherwise the return value is None.
+    The search starts from the innermost frames,
+    and ends once the first match is found.
+    """
 
     # TODO: refactor to address cases when
     # 'self' has a different name
@@ -48,19 +60,19 @@ def detect_class_method_in_callstack(class_to_search):
     class SampleClass:
         pass
 
-    assert type(class_to_search) == type(SampleClass)
+    assert type(class_to_detect) == type(SampleClass)
 
     for frame_record in inspect.stack():
         func_name = frame_record.frame.f_code.co_name
-        if not func_name in dir(class_to_search):
+        if not func_name in dir(class_to_detect):
             continue
         if "self" not in frame_record.frame.f_locals:
             continue
-        if isinstance(frame_record.frame.f_locals["self"]
-                , class_to_search):
-            return True
+        candidate = frame_record.frame.f_locals["self"]
+        if isinstance(candidate, class_to_detect):
+            return candidate
 
-    return False
+    return None
 
 
 class ABC_PostInitializable(ABCMeta):
