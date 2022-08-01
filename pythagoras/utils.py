@@ -55,7 +55,6 @@ def detect_instance_method_in_callstack(
 
     # TODO: refactor to address cases when
     # 'self' has a different name
-    # TODO: add support for class and static methods
 
     class SampleClass:
         pass

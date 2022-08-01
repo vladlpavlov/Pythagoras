@@ -24,7 +24,7 @@ from getpass import getuser
 from random import Random
 from inspect import getsource
 import traceback
-from typing import Any, Optional, Callable, List, Union, Dict
+from typing import Any, Optional, Callable, List, Union, Dict, Tuple, TypeVar, Type
 from zoneinfo import ZoneInfo
 from joblib.hashing import NumpyHasher, Hasher
 
@@ -61,12 +61,12 @@ class PCloudizedFunction:
         cloud = P_Cloud_Implementation._single_instance
         self.original_name = self.__name__ = function_name
         original_function = cloud.original_functions[function_name]
-        original_annotations = dict()
-        if hasattr(original_function, "__annotations__"):
-            original_annotations = deepcopy(original_function.__annotations__)
-        if "self" in original_annotations:
-            #TODO: Should we issue a warning here? Or raise an exception?
-            del original_annotations["self"]
+        # original_annotations = dict()
+        # if hasattr(original_function, "__annotations__"):
+        #     original_annotations = deepcopy(original_function.__annotations__)
+        # if "self" in original_annotations:
+        #     #TODO: Should we issue a warning here? Or raise an exception?
+        #     del original_annotations["self"]
         self.original_source = get_normalized_function_source(original_function)
         self.func_snapshot_address = None
         self._original_source_with_dependencies = None
@@ -335,6 +335,8 @@ class PHashAddress(Sequence):
         raise NotImplementedError
 
 
+T = TypeVar("T")
+
 class PValueAddress(PHashAddress):
     """A globally unique address of an immutable value.
 
@@ -383,6 +385,14 @@ class PValueAddress(PHashAddress):
         cloud = P_Cloud_Implementation._single_instance
         return cloud.value_store[self]
 
+    def get_typed(self
+            ,expected_type:Type[T]
+            ,timeout:Optional[int]=None
+            ) -> T:
+        """Retrieve value with a known type """
+        result = self.get(timeout)
+        assert isinstance(result, expected_type)
+        return result
 
     def __repr__(self):
         str_repr =  f"ValueAddress( prefix={self.prefix} "
@@ -448,7 +458,7 @@ class PFuncSnapshotAddress(PHashAddress):
         return self in cloud.value_store
 
 
-    def get(self, timeout:Optional[int]=None) -> Any:
+    def get(self, timeout:Optional[int]=None) -> PCloudizedFunctionSnapshot:
         """Retrieve value, reference by the address"""
         cloud = P_Cloud_Implementation._single_instance
         return cloud.value_store[self]
@@ -791,11 +801,6 @@ class P_Cloud(metaclass=ABCMeta):
         return key
 
 
-    # def get_func_output(self, address:PFuncOutputAddress) -> Any:
-    #     key = self.func_output_store[address]
-    #     return self.value_store[key]
-
-
     @abstractmethod
     def publish(self, a_func:Callable) -> PCloudizedFunction:
         """Decorator which 'cloudizes' user-provided functions. """
@@ -998,7 +1003,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
 
 
     def _register_exception_handlers(self) -> None:
-        """ Intersept & redirect unhandled exceptions to self.exceptions """
+        """ Intersept & redirect unhandled exceptions to self.crash_history """
 
         P_Cloud_Implementation._old_excepthook = sys.excepthook
 
@@ -1160,6 +1165,24 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         p_purity_checks==0 means 'always re-use cached values when possible'.
         """
         return self._p_purity_checks
+
+
+    def unpack_func_output_address(self
+            ,fo_address:PFuncOutputAddress
+            ) -> Tuple[str,KwArgsDict]:
+        """Restore function name and arguments, check consistency"""
+
+        assert isinstance(fo_address,PFuncOutputAddress)
+        signature_address = PValueAddress.from_strings(
+            prefix=fo_address.prefix
+            ,hash_value=fo_address.hash_value
+            ,descriptor=fo_address.descriptor)
+        restored_signature = signature_address.get_typed(PFunctionCallSignature)
+        name = restored_signature.__name__
+        assert (PFuncSnapshotAddress(self.cloudized_functions[name])
+                == restored_signature.function_addr)
+        arguments = restored_signature.args_addr.get_typed(KwArgsDict)
+        return name, arguments
 
 
     def sync_local_inprocess_function_call(

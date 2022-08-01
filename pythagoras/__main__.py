@@ -1,6 +1,7 @@
 import sys
 
-from pythagoras.p_cloud import SharedStorage_P2P_Cloud, PFuncOutputAddress, PValueAddress, PFunctionCallSignature
+from pythagoras.p_cloud import SharedStorage_P2P_Cloud, PFuncOutputAddress, PValueAddress, PFunctionCallSignature, \
+    KwArgsDict
 
 if sys.argv[1] == SharedStorage_P2P_Cloud.__name__:
     assert len(sys.argv) == 6
@@ -20,14 +21,6 @@ if sys.argv[1] == SharedStorage_P2P_Cloud.__name__:
         base_dir = base_dir
         , restore_from = target_address)
 
-    func_call_signature_addr = PValueAddress.from_strings(
-        prefix=address_prefix
-        ,descriptor = address_descriptor
-        , hash_value=address_hash_value)
-
-    func_call_signature = func_call_signature_addr.get()
-    assert isinstance(func_call_signature, PFunctionCallSignature)
-    func_name = func_call_signature.__name__
-    func_arguments = func_call_signature.args_addr.get()
+    func_name, func_arguments = cloud.unpack_func_output_address(target_address)
 
     cloud.sync_local_inprocess_function_call(func_name, func_arguments)
