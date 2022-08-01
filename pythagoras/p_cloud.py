@@ -522,9 +522,14 @@ class PFuncOutputAddress(PHashAddress):
     to interpret the address, and further decreases collision risk.
     """
 
-    def __init__(self, f:PCloudizedFunction, arguments:KwArgsDict):
-        assert isinstance(f,PCloudizedFunction)
+    def __init__(self
+                 , f:Union[PCloudizedFunction,str]
+                 , arguments:KwArgsDict):
+        assert isinstance(f,(PCloudizedFunction,str))
         assert isinstance(arguments, KwArgsDict)
+        if isinstance(f,str):
+            cloud = P_Cloud_Implementation._single_instance
+            f = cloud.cloudized_functions[f]
         f_o_signature = PFunctionCallSignature(f,arguments)
         result = PValueAddress(f_o_signature)
         self.prefix = result.prefix
@@ -571,6 +576,20 @@ class PFuncOutputAddress(PHashAddress):
             str_repr += f", descriptor={self.descriptor} "
         str_repr += f", hash_value={self.hash_value} )"
         return str_repr
+
+    def unpack_name_args(self) -> Tuple[str,KwArgsDict]:
+        """Restore function name and arguments, check consistency"""
+        cloud = P_Cloud_Implementation._single_instance
+        signature_address = PValueAddress.from_strings(
+            prefix=self.prefix
+            , hash_value=self.hash_value
+            , descriptor=self.descriptor)
+        restored_signature = signature_address.get_typed(PFunctionCallSignature)
+        func_name = restored_signature.__name__
+        assert (PFuncSnapshotAddress(cloud.cloudized_functions[func_name])
+                == restored_signature.function_addr)
+        arguments = restored_signature.args_addr.get_typed(KwArgsDict)
+        return func_name, arguments
 
 
 
@@ -1167,24 +1186,6 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         return self._p_purity_checks
 
 
-    def unpack_func_output_address(self
-            ,fo_address:PFuncOutputAddress
-            ) -> Tuple[str,KwArgsDict]:
-        """Restore function name and arguments, check consistency"""
-
-        assert isinstance(fo_address,PFuncOutputAddress)
-        signature_address = PValueAddress.from_strings(
-            prefix=fo_address.prefix
-            ,hash_value=fo_address.hash_value
-            ,descriptor=fo_address.descriptor)
-        restored_signature = signature_address.get_typed(PFunctionCallSignature)
-        name = restored_signature.__name__
-        assert (PFuncSnapshotAddress(self.cloudized_functions[name])
-                == restored_signature.function_addr)
-        arguments = restored_signature.args_addr.get_typed(KwArgsDict)
-        return name, arguments
-
-
     def sync_local_inprocess_function_call(
             self
             ,func_name:str
@@ -1198,10 +1199,8 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         """
 
         original_function = self.original_functions[func_name]
-        cloudized_function = self.cloudized_functions[func_name]
 
-        kwargs_packed = func_kwargs.pack()
-        func_key = PFuncOutputAddress(cloudized_function, kwargs_packed)
+        func_key = PFuncOutputAddress(func_name, func_kwargs)
 
         if self.p_purity_checks == 0:
             use_cached_output = True
@@ -1533,8 +1532,7 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         func_name.async_subprocess(**kwargs)
         """
 
-        cloudized_function = self.cloudized_functions[func_name]
-        func_key = PFuncOutputAddress(cloudized_function, func_kwargs)
+        func_key = PFuncOutputAddress(func_name, func_kwargs)
 
         subprocess_command = ["python3"
             , "-m"
@@ -1561,8 +1559,7 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         below (requires a functions first to be added to a cloud):
         func_name.sync_subprocess(**kwargs)
         """
-        cloudized_function = self.cloudized_functions[func_name]
-        func_key = PFuncOutputAddress(cloudized_function, func_kwargs)
+        func_key = PFuncOutputAddress(func_name, func_kwargs)
 
         subprocess_command = ["python3" #TODO: get the name of currently used python
             , "-m"

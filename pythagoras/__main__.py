@@ -21,6 +21,6 @@ if sys.argv[1] == SharedStorage_P2P_Cloud.__name__:
         base_dir = base_dir
         , restore_from = target_address)
 
-    func_name, func_arguments = cloud.unpack_func_output_address(target_address)
+    func_name,func_arguments = target_address.unpack_name_args()
 
     cloud.sync_local_inprocess_function_call(func_name, func_arguments)
