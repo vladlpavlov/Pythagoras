@@ -1,4 +1,4 @@
-from pythagoras.p_cloud import SharedStorage_P2P_Cloud, PFuncOutputAddress, P_Cloud_Implementation
+from pythagoras.p_cloud import SharedStorage_P2P_Cloud, PFuncOutputAddress, P_Cloud_Implementation, KwArgsDict
 
 from pythagoras import PValueAddress
 import pandas as pd
@@ -68,7 +68,7 @@ def test_constructors(tmpdir):
     global myau
     myau = cloud.publish(myau)
 
-    f_address = myau.async_remote(n=100)
+    f_address = PFuncOutputAddress("myau",KwArgsDict(n=100))
     new_f_address = PFuncOutputAddress.from_strings(
         prefix=f_address.prefix, descriptor=f_address.descriptor, hash_value=f_address.hash_value)
     assert f_address == new_f_address

@@ -43,11 +43,8 @@ def test_SharedStorage_P2P_Cloud_func1args_asp(tmpdir):
     global ooo_asp
     ooo_asp = my_cloud.publish(ooo_asp)
 
-    print(time.time())
-    addr =  ooo_asp.async_subprocess(a=7)
-    print(time.time())
-    print(addr.get(timeout=40))
-    print(time.time())
+    addr = ooo_asp.async_subprocess(a=7)
+    assert addr.get(timeout=40) == 49
 
     P_Cloud_Implementation._reset()
 
@@ -93,10 +90,11 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
     assert len(my_cloud.func_output_store) == 4
 
     for i in range(4):
-        assert ggg.sync_parallel(kw_args(a=i) for i in range(10)) == (
+        assert ggg.sync_parallel([kw_args(a=i) for i in range(10)]) == (
             [i*i for i in range(10)])
 
-    addr = my_cloud.sync_local_inprocess_function_call("ggg", kw_args(a=100))
+    addr = PFuncOutputAddress("ggg", kw_args(a=100))
+    my_cloud.sync_local_inprocess_function_call(addr)
     value_store_len = len(my_cloud.value_store)
 
     del ggg, fff, my_cloud
@@ -112,7 +110,7 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
     assert ggg(a=100) == 10000
 
     for i in range(4):
-        assert ggg.sync_parallel(kw_args(a=i) for i in range(10)) == (
+        assert ggg.sync_parallel([kw_args(a=i) for i in range(10)]) == (
             [i*i for i in range(10)])
 
     assert len(my_new_cloud.value_store) == value_store_len
@@ -181,17 +179,3 @@ def test_multiple_clouds(tmpdir):
     P_Cloud_Implementation._reset()
 
 
-
-def qwerty():
-    pass
-
-def test_experiment():
-    my_cloud = SharedStorage_P2P_Cloud(
-        base_dir=str("."), p_purity_checks=0)
-
-    global qwerty
-    qwerty = my_cloud.publish(qwerty)
-
-    my_cloud.sync_local_subprocess_function_call("qwerty", KwArgsDict(dict()))
-
-    P_Cloud_Implementation._reset()
