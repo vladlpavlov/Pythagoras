@@ -70,12 +70,12 @@ class MMM:
     pass
 
 def check2_subfunction():
-    assert detect_instance_method_in_callstack(TTT) is t
+    assert detect_instance_method_in_callstack(TTT)[0] is t
     assert detect_instance_method_in_callstack(MMM) is None
 
 class TTT:
     def check(self):
-        assert detect_instance_method_in_callstack(TTT) is t
+        assert detect_instance_method_in_callstack(TTT)[0] is t
 
     def check2(self):
         check2_subfunction()

@@ -11,8 +11,9 @@ import platform
 import socket
 from getpass import getuser
 import inspect
+from inspect import FrameInfo
 import numbers, time
-from typing import Any, Dict, Callable, TypeVar, Type, Optional
+from typing import Any, Dict, Callable, TypeVar, Type, Optional, Tuple
 import pkg_resources
 import psutil
 import gc
@@ -42,7 +43,7 @@ def replace_unsafe_chars(a_str:str, replace_with:str) -> str :
 T = TypeVar("T")
 def detect_instance_method_in_callstack(
         class_to_detect:Type[T]
-        ) -> Optional[T]:
+        ) -> Optional[Tuple[T, FrameInfo]]:
     """Check if instance method call is present in outer frames.
 
     If the callstack contains an instance method call
@@ -69,7 +70,7 @@ def detect_instance_method_in_callstack(
             continue
         candidate = frame_record.frame.f_locals["self"]
         if isinstance(candidate, class_to_detect):
-            return candidate
+            return (candidate,frame_record)
 
     return None
 
