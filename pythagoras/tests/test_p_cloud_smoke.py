@@ -44,7 +44,7 @@ def test_SharedStorage_P2P_Cloud_func1args_asp(tmpdir):
     ooo_asp = my_cloud.publish(ooo_asp)
 
     addr = ooo_asp.async_subprocess(a=7)
-    assert addr.get(timeout=40) == 49
+    assert addr.get() == 49
 
     P_Cloud_Implementation._reset()
 
