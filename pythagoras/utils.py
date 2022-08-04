@@ -39,7 +39,6 @@ def replace_unsafe_chars(a_str:str, replace_with:str) -> str :
     return result_str
 
 
-
 T = TypeVar("T")
 def detect_instance_method_in_callstack(
         class_to_detect:Type[T]
@@ -57,10 +56,9 @@ def detect_instance_method_in_callstack(
     # TODO: refactor to address cases when
     # 'self' has a different name
 
-    class SampleClass:
-        pass
+    class DummyClass: pass
 
-    assert type(class_to_detect) == type(SampleClass)
+    assert type(class_to_detect) == type(DummyClass)
 
     for frame_record in inspect.stack():
         func_name = frame_record.frame.f_code.co_name
@@ -74,6 +72,33 @@ def detect_instance_method_in_callstack(
 
     return None
 
+
+def detect_local_variable_in_callstack(
+        name_to_detect:str
+        , class_to_detect: Type[T]
+        ) -> Optional[T]:
+    """Given its name and type, find an object in outer frames.
+
+    If the callstack contains a local object
+    with name name_to_detect and type class_to_detect,
+    the function will return this object,
+    otherwise the return value is None.
+    The search starts from the innermost frames,
+    and ends once the first match is found.
+    """
+    class DummyClass: pass
+    assert type(class_to_detect) == type(DummyClass)
+    assert isinstance(name_to_detect, str)
+    assert len(name_to_detect)
+
+    for frame_record in inspect.stack():
+        if name_to_detect not in frame_record.frame.f_locals:
+            continue
+        candidate = frame_record.frame.f_locals[name_to_detect]
+        if isinstance(candidate, class_to_detect):
+            return candidate
+
+    return None
 
 class ABC_PostInitializable(ABCMeta):
     """ Metaclass that enables __post__init__() method for abstract classes. """

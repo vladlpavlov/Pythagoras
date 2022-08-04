@@ -89,6 +89,43 @@ def test_detect_instance_method_in_callstack():
 
 
 
+def dvic_outer():
+    dvic_outer_str = "sample string"
+    dvic_inner()
+
+def dvic_inner():
+    dvic_inner_str = "another string"
+    assert detect_local_variable_in_callstack(
+        "dvic_outer_str",int) is None
+
+    assert detect_local_variable_in_callstack(
+        "dvic_inner_str", str) is dvic_inner_str
+
+    assert detect_local_variable_in_callstack(
+        "dvic_outer_str", float) is None
+
+    assert detect_local_variable_in_callstack(
+        "dvic_outer_str", str) ==  "sample string"
+
+    assert detect_local_variable_in_callstack(
+        "this_name_exists", bool) ==  True
+
+
+def test_detect_variable_in_callstack():
+    assert detect_local_variable_in_callstack(
+        "this_name_does_not_exist",int) is None
+
+    this_name_exists = True
+
+    assert detect_local_variable_in_callstack(
+        "this_name_exists", bool) is this_name_exists
+
+    dvic_outer()
+
+
+
+
+
 
 
 
