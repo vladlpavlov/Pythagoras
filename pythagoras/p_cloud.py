@@ -123,21 +123,22 @@ class PCloudizedFunction:
         return self._async_incloud_a(**kwargs)
 
     def parallel(self, arg_list:List[KwArgsDict]) -> List[Any]:
-        """Synchronously execute multiple function calls.
+        """Synchronously execute multiple cloudized function calls.
 
         For each set of input parameters from arg_list,
         the system will run the function with this set of parameters.
         There is no guaranty whether all (or even most) of
         these function calls will be executed on a local computer
-        or in the cloud; however at least one execution
-        will always happen locally unless all outputs
-        are already stored in the cache.
+        or in the cloud, and in which order; however,
+        at least one execution will always happen locally
+        unless all outputs are already stored in the cache.
 
-        Pythagoras will try to execute all (or at least some)
-        of the function calls in parallel; if it's not possible,
-        they will be executed sequentially.
-        Once each function call executes at least once,
-        .parallel() will return a list of the execution outputs.
+        Pythagoras will try to execute most (or at least some)
+        of the function calls in parallel in the cloud;
+        if it's not possible, they will be executed
+        locally and sequentially. Once each function call
+        executes at least once, .parallel() will return
+        a list of the execution outputs.
         """
         self._async_group_incloud_kwargss_a(arg_list)
         return self._sync_group_inpocess_kwargss_v(arg_list)
@@ -146,7 +147,7 @@ class PCloudizedFunction:
     def remote_parallel(self
             , arg_list:List[KwArgsDict]
             ) -> List[PFuncOutputAddress]:
-        """Asynchronously execute multiple function calls.
+        """Asynchronously execute multiple cloudized function calls.
 
         For each set of input parameters from arg_list,
         the system will run the function with this set of parameters.
@@ -154,7 +155,7 @@ class PCloudizedFunction:
         these function calls will be executed on a local computer
         or in the cloud.
 
-        Pythagoras will try to execute all (or at least some)
+        Pythagoras will try to execute most (or at least some)
         of the function calls in parallel. However,
         there is no guaranty for the execution
         timeline/order, and there is no guaranty for how many times
