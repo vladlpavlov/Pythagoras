@@ -6,7 +6,7 @@ Function dependency graphs are required to
 calculate hash addresses for function snapshots.
 """
 
-from typing import Union, Callable, Any
+from typing import Union, Callable, Any, Dict, Set
 import re, inspect, copy
 
 def _name_is_used_in_source(
@@ -47,8 +47,8 @@ def _name_is_used_in_source(
 
 
 def _direct_dependencies_many_funcs(
-        all_funcs: dict[str, Callable]
-        ) -> dict[str, set[str]]:
+        all_funcs: Dict[str, Callable]
+        ) -> Dict[str, Set[str]]:
     """ Create sets of 1-st level (direct) dependencies for all analized functions.
 
     Each set always contains at least one element (the dependant function itself).
@@ -86,8 +86,8 @@ def _direct_dependencies_many_funcs(
 
 def _all_dependencies_one_func(
         the_function:str
-        ,all_funcs: dict[str, Callable]
-        ) -> set[str]:
+        ,all_funcs: Dict[str, Callable]
+        ) -> Set[str]:
     """ Create a set of all direct and indirect dependencies for one function.
 
     Resulting set always contains at least one element: the_function

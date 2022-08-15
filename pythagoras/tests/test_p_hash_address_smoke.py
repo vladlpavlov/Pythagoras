@@ -24,7 +24,24 @@ simple_test_cases = [
 
 
 def test_PHashAddress(tmpdir):
-    cloud = SharedStorage_P2P_Cloud(tmpdir)
+
+    persist_config_init = dict(
+        p_idempotency_checks=0.1
+        )
+
+    ephem_config_init = dict(
+        install_requires=""
+        ,python_requires=""
+        ,shared_import_statements = ""
+        )
+
+    cloud = SharedStorage_P2P_Cloud(
+        base_dir=tmpdir
+        , persist_config_init = persist_config_init
+        , persist_config_update = None
+        , ephem_config_init = ephem_config_init
+        )
+
     all_hash_ids = set()
     for a_case in simple_test_cases:
         address = PValueAddress(a_case["obj"])
@@ -58,7 +75,23 @@ def myau(n:int):
     return n+1
 
 def test_constructors(tmpdir):
-    cloud = SharedStorage_P2P_Cloud(tmpdir)
+    persist_config_init = dict(
+        p_idempotency_checks=0.1
+    )
+
+    ephem_config_init = dict(
+        install_requires=""
+        , python_requires=""
+        , shared_import_statements=""
+    )
+
+    cloud = SharedStorage_P2P_Cloud(
+        base_dir=tmpdir
+        , persist_config_init=persist_config_init
+        , persist_config_update=None
+        , ephem_config_init=ephem_config_init
+    )
+
     val = dict(a=1,b=2)
     address = PValueAddress(val)
     new_address = PValueAddress.from_strings(
@@ -66,11 +99,14 @@ def test_constructors(tmpdir):
     assert address == new_address
 
     global myau
-    myau = cloud.publish(myau)
+    myau = cloud.cloudize_function(myau)
 
     f_address = PFuncOutputAddress("myau",KwArgsDict(n=100))
     new_f_address = PFuncOutputAddress.from_strings(
-        prefix=f_address.prefix, descriptor=f_address.descriptor, hash_value=f_address.hash_value)
+        prefix=f_address.prefix
+        , descriptor=f_address.descriptor
+        , hash_value=f_address.hash_value)
+
     assert f_address == new_f_address
 
     P_Cloud_Implementation._reset()

@@ -11,8 +11,9 @@ import platform
 import socket
 from getpass import getuser
 import inspect
-from inspect import FrameInfo
+from inspect import FrameInfo, isclass
 import numbers, time
+from random import Random
 from typing import Any, Dict, Callable, TypeVar, Type, Optional, Tuple
 import pkg_resources
 import psutil
@@ -56,7 +57,8 @@ def detect_instance_method_in_callstack(
     # TODO: refactor to address cases when
     # 'self' has a different name
 
-    class DummyClass: pass
+    class DummyClass:
+        pass
 
     assert type(class_to_detect) == type(DummyClass)
 
@@ -86,8 +88,9 @@ def detect_local_variable_in_callstack(
     The search starts from the innermost frames,
     and ends once the first match is found.
     """
-    class DummyClass: pass
-    assert type(class_to_detect) == type(DummyClass)
+
+
+    assert isclass(class_to_detect)
     assert isinstance(name_to_detect, str)
     assert len(name_to_detect)
 
@@ -141,9 +144,9 @@ def get_long_infoname(x:Any, drop_unsafe_chars:bool = True) -> str:
         name += "." + str(type(x).__name__)
 
     if hasattr(x, "__qualname__"):
-        name += "___" + str(x.__qualname__)
+        name += "_" + str(x.__qualname__)
     elif hasattr(x, "__name__"):
-        name += "___" + str(x.__name__)
+        name += "_" + str(x.__name__)
 
     if drop_unsafe_chars:
         name = replace_unsafe_chars(name, "_")
@@ -363,3 +366,29 @@ def get_normalized_function_source(a_func:Callable) -> str:
 
     return ast.unparse(code_ast)
 
+
+def uuid8andhalf():
+    """ Generate UUID ver. 8 1/2"""
+    self = uuid8andhalf
+
+    if not hasattr(self,"counter"):
+        self.counter = 0
+    else:
+        self.counter += 1
+        if self.counter >= 1_000_000_000_000:
+            self.counter = 1
+
+    if not hasattr(self, "randomizer"):
+        self.randomizer = Random()
+
+    random_int = self.randomizer.randint(1, 1_000_000_000_000)
+
+    new_uuid = f"user-{getuser()}"
+    new_uuid += f"-pid-{os.getpid()}"
+    new_uuid += f"-time-{time.time()}"
+    new_uuid += f"-host-{socket.gethostname()}"
+    new_uuid += f"-platform-{platform.platform()}"
+    new_uuid += f"-counter-{self.counter}"
+    new_uuid += f"-random-{random_int}"
+
+    return new_uuid

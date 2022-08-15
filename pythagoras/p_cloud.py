@@ -7,9 +7,7 @@ import base64
 import hashlib
 import inspect
 import os
-import platform
 import shutil
-import socket
 import subprocess
 import sys
 import tempfile
@@ -18,20 +16,15 @@ import uuid
 from abc import abstractmethod, ABCMeta
 from collections.abc import Sequence
 from copy import deepcopy
-from datetime import datetime
-from functools import wraps
-from getpass import getuser
-from random import Random
-from inspect import getsource
+from random import Random, randint
 import traceback
 from typing import Any, Optional, Callable, List, Union, Dict, Tuple, TypeVar, Type
-from zoneinfo import ZoneInfo
 from joblib.hashing import NumpyHasher, Hasher
 
 from pythagoras._dependency_discovery import _all_dependencies_one_func
 from pythagoras.persistent_dicts import FileDirDict, SimplePersistentDict, SimpleDictKey
 from pythagoras.utils import get_long_infoname, replace_unsafe_chars, \
-    get_normalized_function_source, detect_instance_method_in_callstack
+    get_normalized_function_source, detect_instance_method_in_callstack, detect_local_variable_in_callstack
 from pythagoras.utils import buid_context, ABC_PostInitializable
 
 
@@ -55,7 +48,7 @@ class PCloudizedFunction:
     original_annotations:Dict
     original_source:str
     func_snapshot_address:Optional[PFuncSnapshotAddress]
-    _original_source_with_dependencies:Optional[Dict[str,str]]
+    __original_source_with_dependencies:Optional[Dict[str,str]]
 
     def __init__(self, function_name:str):
         cloud = P_Cloud_Implementation._single_instance
@@ -69,104 +62,170 @@ class PCloudizedFunction:
         #     del original_annotations["self"]
         self.original_source = get_normalized_function_source(original_function)
         self.func_snapshot_address = None
-        self._original_source_with_dependencies = None
+        self.__original_source_with_dependencies = None
         self.__doc__ = original_function.__doc__
         #TODO: mimic functools.update_wrapper for all 5 execution methods
 
+
     @property
-    def cloud(self):
+    def _cloud(self) -> P_Cloud_Implementation:
         return P_Cloud_Implementation._single_instance
+
+
+    @property
+    def _fsnapshot_event_log(self) -> SimplePersistentDict:
+        dummy_addr = PFuncOutputAddress(self,KwArgsDict())
+        snapshot_addr = (dummy_addr[0],dummy_addr[1])
+        return self._cloud.event_log.get_subdict(snapshot_addr)
+
+
+    @property
+    def _fsnapshot_crash_history(self) -> SimplePersistentDict:
+        dummy_addr = PFuncOutputAddress(self, KwArgsDict())
+        snapshot_addr = (dummy_addr[0], dummy_addr[1])
+        return self._cloud.crash_history.get_subdict(snapshot_addr)
+
+
+    @property
+    def _fname_event_log(self) -> SimplePersistentDict:
+        dummy_addr = PFuncOutputAddress(self, KwArgsDict())
+        snapshot_addr = (dummy_addr[0],)
+        return self._cloud.event_log.get_subdict(snapshot_addr)
+
+
+    @property
+    def _fname_crash_history(self) -> SimplePersistentDict:
+        dummy_addr = PFuncOutputAddress(self, KwArgsDict())
+        snapshot_addr = (dummy_addr[0],)
+        return self._cloud.crash_history.get_subdict(snapshot_addr)
 
 
     def __call__(self,**kwargs) -> Any:
         """Locally run memoized/cloudized version of afunction"""
-        return self.sync_inprocess(**kwargs)
+        return self._sync_inprocess_v(**kwargs)
 
 
-    def sync_inprocess(self, **kwargs) -> Any:
-        """Perform synchronous local inprocess execution of a function"""
-        return self.sync_inprocess_kw_args(
+    def _sync_inprocess_v(self, **kwargs) -> Any:
+        """Perform synchronous local inprocess execution of a function.
+
+        Returns an actual value of the execution output.
+        """
+        return self._sync_inprocess_kwargs_v(
             KwArgsDict(**kwargs).pack())
 
 
-    def sync_inprocess_kw_args(self, kwargsd:KwArgsDict) -> Any:
-        """Perform synchronous local inprocess execution of a function"""
+    def _sync_inprocess_kwargs_v(self, kwargsd:KwArgsDict) -> Any:
+        """Perform synchronous local inprocess execution of a function.
+
+        Returns an actual value of the execution output.
+        """
         assert isinstance(kwargsd, KwArgsDict)
-        principal_FO_ADDR = PFuncOutputAddress(self.__name__, kwargsd)
-        self.cloud.sync_local_inprocess_function_call(principal_FO_ADDR)
-        return principal_FO_ADDR.get()
+        __fo_addr__ = PFuncOutputAddress(self.__name__, kwargsd)
+        # post_log_entry() attributes posted events to an address, stored
+        # in a variable named __fo_addr__ in one of callstack frames
+        try:
+            self._cloud.sync_local_inprocess_function_call(__fo_addr__)
+            return __fo_addr__.get(timeout=0)
+        except BaseException as exc:
+            post_log_entry(exc)
+            raise
 
 
-    def sync_subprocess(self, **kwargs) -> Any:
+    def _sync_subprocess_v(self, **kwargs) -> Any:
         """Perform synchronous local execution of a function in a subprocess"""
-        return self.sync_subprocess_kw_args(
-            KwArgsDict(**kwargs).pack())
+        return self._sync_subprocess_kwargs_v(KwArgsDict(**kwargs).pack())
 
 
-    def sync_subprocess_kw_args(self, kwargsd:KwArgsDict) -> Any:
+
+    def _sync_subprocess_kwargs_v(self, kwargsd:KwArgsDict) -> Any:
         """Perform synchronous local execution of a function in a subprocess"""
         assert isinstance(kwargsd, KwArgsDict)
-        principal_FO_ADDR = PFuncOutputAddress(self.__name__, kwargsd)
-        self.cloud.sync_local_subprocess_function_call(principal_FO_ADDR)
-        return principal_FO_ADDR.get()
+        __fo_addr__ = PFuncOutputAddress(self.__name__, kwargsd)
+        # post_log_entry() attributes posted events to an address, stored
+        # in a variable named __fo_addr__ in one of callstack frames
+        try:
+            self._cloud.sync_local_subprocess_function_call(__fo_addr__)
+            return __fo_addr__.get()
+        except BaseException as exc:
+            post_log_entry(exc)
+            raise
 
 
-    def async_subprocess(self, **kwargs) -> PFuncOutputAddress:
-        """Perform asynchronous local execution of a function in a subprocess"""
-        return self.async_subprocess_kw_args(
-            KwArgsDict(**kwargs).pack())
+    def _async_subprocess_a(self, **kwargs) -> PFuncOutputAddress:
+            """Perform asynchronous local execution of a function in a subprocess"""
+            return self._async_subprocess_kwargs_a(KwArgsDict(**kwargs).pack())
 
 
-    def async_subprocess_kw_args(self, kwargsd:KwArgsDict) -> PFuncOutputAddress:
+    def _async_subprocess_kwargs_a(self, kwargsd:KwArgsDict) -> PFuncOutputAddress:
         """Perform asynchronous local execution of a function in a subprocess"""
         assert isinstance(kwargsd, KwArgsDict)
-        principal_FO_ADDR = PFuncOutputAddress(self.__name__, kwargsd)
-        self.cloud.async_local_subprocess_function_call(principal_FO_ADDR)
-        return principal_FO_ADDR
+        __fo_addr__ = PFuncOutputAddress(self.__name__, kwargsd)
+        # post_log_entry() attributes posted events to an address, stored
+        # in a variable named __fo_addr__ in one of callstack frames
+        try:
+            self._cloud.async_local_subprocess_function_call(__fo_addr__)
+            return __fo_addr__
+        except BaseException as exc:
+            post_log_entry(exc)
+            raise
 
 
-    def async_remote(self, **kwargs) -> PFuncOutputAddress:
-        """Perform asynchronous remote execution of a function"""
-        return self.async_remote_kw_args(
-            KwArgsDict(**kwargs).pack())
+    def _async_incloud_a(self, **kwargs) -> PFuncOutputAddress:
+            """Perform asynchronous remote execution of a function"""
+            return self._async_incloud_kwargs_a(KwArgsDict(**kwargs).pack())
 
 
-    def async_remote_kw_args(self, kwargsd:KwArgsDict) -> PFuncOutputAddress:
+    def _async_incloud_kwargs_a(self, kwargsd:KwArgsDict) -> PFuncOutputAddress:
         """Perform asynchronous remote execution of a function"""
         assert isinstance(kwargsd,KwArgsDict)
-        principal_FO_ADDR = PFuncOutputAddress(self.__name__, kwargsd)
-        self.cloud.async_remote_function_call(principal_FO_ADDR)
-        return principal_FO_ADDR
+        __fo_addr__ = PFuncOutputAddress(self.__name__, kwargsd)
+        # post_log_entry() attributes posted events to an address, stored
+        # in a variable named __fo_addr__ in one of callstack frames
+        try:
+            self._cloud.async_incloud_function_call(__fo_addr__)
+            return  __fo_addr__
+        except BaseException as exc:
+            post_log_entry(exc)
+            raise
 
 
-    def sync_parallel(self
+    def _sync_group_inpocess_kwargss_v(self
               ,arg_list:Sequence[KwArgsDict]
               ) -> List[Any]:
-        """Synchronously run multiple instances of function"""
+        """Synchronously execute multiple function calls"""
         addresses = []
         for a in arg_list:
             assert isinstance(a, KwArgsDict)
             addresses.append(PFuncOutputAddress(self.__name__, a))
-        self.cloud.sync_parallel_function_call(addresses)
-        return [a.get() for a in addresses]
+
+        shuffled_arg_list = [deepcopy(a.pack()) for a in arg_list]
+        self._cloud._randomizer.shuffle(shuffled_arg_list)
+
+        for a in shuffled_arg_list:
+            self._sync_inprocess_kwargs_v(a)
+
+        result =  [a.get(timeout=0) for a in addresses]
+        return result
 
 
-    def async_parallel(self
+    def _async_group_incloud_kwargss_a(self
                        ,arg_list:List[KwArgsDict]
                        ) -> List[PFuncOutputAddress]:
-        """Asynchronously run multiple instances of function"""
+        """Asynchronously run in the cloud multiple instances of function"""
         addresses = []
         for a in arg_list:
             assert isinstance(a, KwArgsDict)
-            addresses.append(PFuncOutputAddress(self.__name__, a))
-        self.cloud.async_parallel_function_call(addresses)
-        return addresses
+            __fo_addr__ = PFuncOutputAddress(self.__name__, a)
+            addresses.append(__fo_addr__)
+            self._cloud.async_incloud_function_call(__fo_addr__)
+        result = addresses
+        return result
 
 
     def ready(self, **kwargs):
             """Check if function output for the arguments has already been cached"""
 
-            return self.cloud.check_if_ready(
+            return self._cloud.check_if_ready(
                 self.__name__, KwArgsDict(**kwargs))
 
 
@@ -180,18 +239,18 @@ class PCloudizedFunction:
 
          Returned functions are sorted in alphabetical order by their names.
          """
-        if self._original_source_with_dependencies is not None:
+        if self.__original_source_with_dependencies is not None:
             #TODO: should we add asserts / checks here?
-            return self._original_source_with_dependencies
+            return self.__original_source_with_dependencies
 
         dependencies = _all_dependencies_one_func(
-            self.__name__, self.cloud.cloudized_functions)
+            self.__name__, self._cloud.cloudized_functions)
         dependencies = sorted(dependencies)
 
-        result = {f:self.cloud.cloudized_functions[f].original_source
+        result = {f:self._cloud.cloudized_functions[f].original_source
                   for f in dependencies}
 
-        self._original_source_with_dependencies = result
+        self.__original_source_with_dependencies = result
 
         return result
 
@@ -509,34 +568,40 @@ class PFuncSnapshotAddress(PHashAddress):
 class KwArgsDict(dict):
     """ A class that encapsulates keyword arguments for a function call."""
 
-    def __init__(self,*args, **kargs): # TODO: check if we need *args here
-        super().__init__(*args, **kargs)
+    def __init__(self, **kargs): # TODO: check if we need *args here
+        super().__init__()
+        for k in sorted(kargs):
+            self[k] = kargs[k]
+
+    @property
+    def cloud(self) -> P_Cloud_Implementation:
+        return P_Cloud_Implementation._single_instance
 
     def pack(self) -> KwArgsDict:
         """ Replace values in a dict with their hash addresses.
 
         This function also "normalizes" the dictionary by sorting keys
+        and replacing values with their hash addresses
         in order to always get the same hash values
         for the same lists of arguments.
         """
         packed_copy = KwArgsDict()
-        cloud = P_Cloud_Implementation._single_instance
-        for k in sorted(self.keys()):
+        for k in sorted(self):
             value = self[k]
             if isinstance(value,PValueAddress):
                 packed_copy[k] = value
             else:
-                key = cloud.push_value(value)
+                key = self.cloud.push_value(value)
                 packed_copy[k] = key
         return packed_copy
+
 
     def unpack(self) -> KwArgsDict:
         """ Restore values based on their hash addresses."""
         unpacked_copy = KwArgsDict()
-        cloud = P_Cloud_Implementation._single_instance
         for k,v in self.items():
             if isinstance(v, PValueAddress):
-                unpacked_copy[k] = cloud.value_store[v]
+                unpacked_copy[k] = self.cloud.value_store[v]
             else:
                 unpacked_copy[k] = v
         return unpacked_copy
@@ -604,19 +669,6 @@ class PFuncOutputAddress(PHashAddress):
                 backoff_period = max(1.0, backoff_period)
 
 
-    def get_or_run(self) -> Any:
-        """Retrieve value, referenced by the address.
-
-        If the value is not immediately available,
-        calculate it locally.
-        """
-        if  self in self.cloud.func_output_store:
-            return self.cloud.func_output_store[self]
-        else:
-            return self.function.sync_inprocess_kw_args(
-                self._packed_arguments)
-
-
     def __repr__(self) -> str:
         str_repr = f"PFuncOutputAddress( prefix={self.prefix} "
         if self.descriptor:
@@ -665,18 +717,20 @@ class PFuncOutputAddress(PHashAddress):
         arguments = restored_signature.args_addr.get_typed(KwArgsDict)
         return arguments
 
+
     @property
     def arguments(self) -> KwArgsDict:
         return self._packed_arguments.unpack()
 
+
     @property
-    def event_log(self) -> SimplePersistentDict:
-        return self.cloud.event_log[self]
+    def fo_event_log(self) -> SimplePersistentDict:
+        return self.cloud.event_log.get_subdict(tuple(self))
 
 
     @property
-    def crash_history(self) -> SimplePersistentDict:
-        return self.cloud.crash_history[self]
+    def fo_crash_history(self) -> SimplePersistentDict:
+        return self.cloud.crash_history.get_subdict(tuple(self))
 
 
 class P_Cloud(metaclass=ABCMeta):
@@ -688,14 +742,11 @@ class P_Cloud(metaclass=ABCMeta):
 
     Methods:
     ----------
-    publish(a_func:Callable) -> Callable
+    cloudize_function(a_func:Callable) -> PCloudizedFunction
             Decorator that 'cloudizes' user-provided functions.
 
     push_value(value:Any) -> PValueAddress
             Add a value to value_store.
-
-    post_log_entry(log_entry,prefix_key,add_context_info) -> SimpleDictKey
-            Post a new entry into the event_log store.
 
     Properties
     ----------
@@ -739,25 +790,15 @@ class P_Cloud(metaclass=ABCMeta):
             This property is not intended to be used as a messaging tool
             that enables communication between various components of the code.
 
-    p_purity_checks: float
-            An abstract property: probability of stochastic purity checks.
-            If a functions output has been stored on a cache,
-            when the function is called with the same arguments next time,
-            it'll re-use cached output with probability (1-p_purity_checks).
-            With probability p_purity_checks the function will be
-            executed once again, and its output will be compared with
-            the cached one: if they differ, purity check will fail.
-            p_purity_checks==1 means 'never re-use cached values'.
-            p_purity_checks==0 means 'always re-use cached values when possible'.
+
+    persistent_config_params: SimplePersistentDict
+            An abstract property: a persistent dict-like object that
+            stores all the configuration parameters of the cloud.
 
 
-    baseline_timezone: ZoneInfo
-            An abstract property: a timezone used by all instances
-            of cloudized functions. Different instances of cloudized
-            functions might run on servers, physically located
-            in various timezonses. To make logging and reporting consistent,
-            all of them are required to use their P_Cloud's timezone,
-            not their server's timezone.
+    ephemeral_config_params: Dict
+            An abstract property: an in-RAM dictionary that stores
+            all the ephemeral the configuration parameters of the cloud.
 
 
     python_requires: str
@@ -770,11 +811,38 @@ class P_Cloud(metaclass=ABCMeta):
             An abstract property: minimally required dependencies.
             The list of packages that a P_Cloud instance minimally needs
             to run. Its format follows setuptools' install_requires format.
+
+
+    shared_import_statements: Optional[str]
+            An abstract property: contains import statements, which
+            will be executed before running every cloudized function.
+            The format of the property is a sequence of Python import statements.
     """
 
-    def __init__(self,*args,**kwargs):
-        pass
+    def __init__(self
+                , persist_config_init:Dict[str,Any] = None
+                , persist_config_update:Dict[str,Any] = None
+                , ephem_config_init:Dict[str,Any] = None
+                , **kwargs):
 
+        if ephem_config_init is None:
+            ephem_config_init = self.default_ephemeral_params
+
+        for k in ephem_config_init:
+            self.ephemeral_config_params[k] = ephem_config_init[k]
+
+        if persist_config_init is None:
+            persist_config_init = self.default_persistent_params
+
+        crtn_tmstmp = "creation_timestamp"
+        if not crtn_tmstmp in self.persistent_config_params:
+            self.persistent_config_params[crtn_tmstmp] = time.time()
+            for k in persist_config_init:
+                self.persistent_config_params[k]=persist_config_init[k]
+
+        if persist_config_update is not None:
+            for k in persist_config_update:
+                self.persistent_config_params[k] = persist_config_update[k]
 
 
     @property
@@ -837,65 +905,98 @@ class P_Cloud(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def p_purity_checks(self) -> float:
-        """ Probability of stochastic purity checks.
+    def persistent_config_params(self) -> SimplePersistentDict:
+        """Persistent configuration parameters of the cloud.
 
-        If a functions output has been stored on a cache, when the function is
-        called with the same arguments next time, it will re-use
-        cached output with probability (1-p_purity_checks).
-        With probability p_purity_checks the function will be
-        executed once again, and its output will be compared with
-        the cached one: if they differ, purity check will fail.
-        p_purity_checks==1 means 'never re-use cached values'.
-        p_purity_checks==0 means 'always re-use cached values when possible'.
+         An abstract property: a persistent dict-like object that
+        stores all the configuration parameters of the cloud.
         """
         raise NotImplementedError
 
 
     @property
-    @abstractmethod
-    def baseline_timezone(self) -> ZoneInfo:
-        """ Timezone used by all instances of cloudized functions.
+    # @classmethod
+    def default_persistent_params(cls) -> Dict[str,Any]:
+        """Default values for persistent configuration parameters.
+        """
+        result = dict(
+            p_idempotency_checks=0.1
+            )
 
-        Different instances of cloudized functions might run on servers,
-        physically located in various timezonses. To make logging and reporting
-        consistent, all of them are required to use their P_Cloud's timezone,
-        not their server's timezone.
+        return result
+
+
+    @property
+    @abstractmethod
+    def ephemeral_config_params(self) -> Dict[str,Any]:
+        """Ephemeral configuration parameters of the cloud.
+
+        An abstract property: an in-RAM dictionary that stores
+        all the ephemeral the configuration parameters of the cloud.
         """
         raise NotImplementedError
 
 
     @property
-    @abstractmethod
+    # @classmethod
+    def default_ephemeral_params(cls) -> Dict[str, Any]:
+        """Default values for ephemeral parameters .
+        """
+        result = dict(
+            install_requires=""
+            ,python_requires=""
+            ,shared_import_statements = ""
+            )
+        return result
+
+
+    @property
     def python_requires(self) -> str:
         """A version specifier for Python.
 
-        Defines which Python versions are supported by a P_Loud instance
-        to run. Its format follows setuptools' python_requires format.
+        An ephemeral property that specifies Python versions,
+        which are supported by a currently running P_Cloud instance.
+        Its format follows setuptools' python_requires format.
         """
-        raise NotImplementedError
+        return self.ephemeral_config_params["python_requires"]
 
 
     @property
-    @abstractmethod
-    def install_requires(self) -> Optional[str]:
+    def install_requires(self) -> str:
         """Packages that a P_Cloud instance minimally needs to run.
 
+        An ephemeral property that specifies packages
+        (and their versions), needed by the currently running P-Cloud.
         The property's format follows setuptools' install_requires format.
         """
-        raise NotImplementedError
+        return self.ephemeral_config_params["install_requires"]
 
 
     @property
-    @abstractmethod
     def shared_import_statements(self) -> str:
-        """Import statements that are shared accross all instances of P_Cloud.
+        """Import statements that are shared across all cloudized functions.
 
+        An ephemeral property that contains import statements, which
+        will be executed before running every cloudized function.
         The format of the property is a sequence of Python import statements.
-        These import statements will be executed
-        before running cloudized functions.
         """
-        raise NotImplementedError
+        return self.ephemeral_config_params["shared_import_statements"]
+
+
+    @property
+    def p_idempotency_checks(self) -> float:
+        """ Probability of stochastic idempotency checks.
+
+        If a functions output has been stored on a cache, when the function is
+        called with the same arguments next time, it will re-use
+        cached output with probability (1-p_idempotency_checks).
+        With probability p_idempotency_checks the function will be
+        executed once again, and its output will be compared with
+        the cached one: if they differ, idempotency check will fail.
+        p_idempotency_checks==1 means 'never re-use cached values'.
+        p_idempotency_checks==0 means 'always re-use cached values when possible'.
+        """
+        return self.persistent_config_params["p_idempotency_checks"]
 
 
     def push_value(self, value:Any) -> PValueAddress:
@@ -906,27 +1007,42 @@ class P_Cloud(metaclass=ABCMeta):
         return key
 
 
+    def brief_self_check(self):
+        """Perform fast consistency ckeck for P-Cloud."""
+        assert len(self.ephemeral_config_params) >= 0
+        assert len(self.persistent_config_params) >= 0
+        assert len(self.value_store) >= 0
+        assert len(self.func_output_store) >= 0
+        assert len(self.crash_history) >= 0
+        assert len(self.event_log) >= 0
+        assert isinstance(self.p_idempotency_checks, (int,float,type(None)))
+        if not self.p_idempotency_checks is None:
+            assert 0 <= self.p_idempotency_checks <= 1
+        assert isinstance(self.install_requires, str)
+        assert isinstance(self.python_requires, str)
+        assert isinstance(self.shared_import_statements, str)
+        for i in range(1000):
+            random_int = randint(1, 1_000_000_000_000)
+            random_int_addr = PValueAddress(random_int, push_to_cloud=False)
+            if random_int_addr in self.value_store:
+                continue
+            else:
+                self.push_value(random_int)
+                assert random_int_addr in self.value_store
+                assert random_int == self.value_store[random_int_addr]
+                break
+        # TODO: add more checks
+
+
+    def full_self_check(self):
+        """Perform comprehensive consistency check for P-Cloud."""
+        self.brief_self_check()
+        # TODO: add more checks
+
+
     @abstractmethod
-    def publish(self, a_func:Callable) -> PCloudizedFunction:
+    def cloudize_function(self, a_func:Callable) -> PCloudizedFunction:
         """Decorator which 'cloudizes' user-provided functions. """
-        raise NotImplementedError
-
-
-    @abstractmethod
-    def post_log_entry(self, *
-            ,prefix_key:Optional[SimpleDictKey]=None
-            ,log_entry: Any
-            ,add_context_info:bool=True
-            ) -> SimpleDictKey:
-        """Post a new entry into the event_log store.
-        
-        If add_context_info==True, the entry name will contain human-readable
-        information about the event (timestamp, node, process, etc.),
-        and the entry will be augmented with detailed information about
-        an execution environment from which the entry was posted. Otherwise,
-        an UUID will be used to create the entry name, and no augmentation
-        will be performed.
-        """
         raise NotImplementedError
 
 
@@ -954,14 +1070,11 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
 
     Methods:
     ----------
-    publish(a_func:Callable) -> Callable
+    cloudize_function(a_func:Callable) -> Callable
             Decorator that 'cloudizes' user-provided functions.
 
     push_value(value:Any) -> PValueAddress
             Add a value to value_store.
-
-    post_log_entry(log_entry,prefix_key,add_context_info) -> SimpleDictKey
-            Post a new entry into the event_log store.
 
     Attributes
     ----------
@@ -981,7 +1094,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
             memoization functionality ("calculate once, reuse
             forever").
 
-    exception_log: SimplePersistentDict
+    crash_history: SimplePersistentDict
             An abstract property: a persistent dict-like object that
             stores a complete history of all the exceptions
             (catastrophic events) that terminated execution of any of
@@ -1002,40 +1115,56 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
             This property is not intended to be used as a messaging tool
             that enables communication between various components of the code.
 
-    p_purity_checks : float
-            Probability of stochastic purity checks. If a functions
+    persistent_config_params: SimplePersistentDict
+            An abstract property: a persistent dict-like object that
+            stores all the configuration parameters of the cloud.
+
+    ephemeral_config_params: dict
+            An abstract property: an in-RAM dictionary that stores
+            all the ephemeral the configuration parameters of the cloud.
+
+    python_requires: str
+            An abstract property: version specifier for Python.
+            Defines which Python versions are supported by a P_Loud instance
+            to run. Its format follows setuptools' python_requires format.
+
+    install_requires: Optional[str]
+            An abstract property: minimally required dependencies.
+            The list of packages that a P_Cloud instance minimally needs
+            to run. Its format follows setuptools' install_requires format.
+
+    shared_import_statements: Optional[str]
+            An abstract property: contains import statements, which
+            will be executed before running every cloudized function.
+            The format of the property is a sequence of Python import statements.
+
+    p_idempotency_checks : Optional[float]
+            Probability of stochastic idempotency checks. If a functions
             output has been stored on a cache, when the function is
             called with the same arguments next time, it will re-use
-            cached output with probability (1-p_purity_checks).
-            With probability p_purity_checks the function will be
+            cached output with probability (1-p_idempotency_checks).
+            With probability p_idempotency_checks the function will be
             executed once again, and its output will be compared with
-            the cached one: if they differ, purity check will fail.
+            the cached one: if they differ, idempotency check will fail.
 
     original_functions : dict[str, Callable]
             A dictionary with original (before application of the
-            @publish decorator) versions of all cloudized
+            @cloudize_function decorator) versions of all cloudized
             functions in P_Cloud. Keys are the names of the
             functions.
 
-    cloudized_functions: dict[str, Callable]
+    cloudized_functions: dict[str, PCloudizedFunction]
             A dictionary with modified (as a result of  applying
-            the @publish decorator) versions of all
+            the @cloudize_function decorator) versions of all
             cloudized functions in P_Cloud. Keys are the names
             of the functions.
     """
     _single_instance:Optional[P_Cloud_Implementation] = None
-    _install_requires: Optional[str] = None
-    _python_requires: Optional[str] = None
-    _shared_import_statements:Optional[str] = None
 
     original_functions: dict[str, Callable] = dict()
     cloudized_functions: dict[str, PCloudizedFunction] = dict()
 
     base_dir:str = ""
-
-    _p_purity_checks:float = 0.1
-
-    _baseline_timezone = ZoneInfo("America/Los_Angeles")
 
     _old_excepthook: Optional[Callable] = None
     _is_running_inside_IPython: Optional[bool] = None
@@ -1047,61 +1176,61 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
     for the default Random object, which it might do in order 
     to be qualified as a pure function."""
 
-    _event_counter:int = 0
-
     _instance_counter:int = 0
     _init_signature_hash_address = None
 
     def __init__(self
-                 , install_requires:Optional[str] = ""
-                 , python_requires:Optional[str] = ""
-                 , shared_import_statements:Optional[str] = ""
                  , base_dir:str = "P_Cloud"
-                 , p_purity_checks:float = 0.1
+                 , persist_config_init: Dict[str, Any] = None
+                 , persist_config_update: Dict[str, Any] = None
+                 , ephem_config_init: Dict[str, Any] = None
                  , **kwargs):
-        super().__init__(**kwargs)
-        self._install_requires = install_requires  # TODO: polish later
-        self._python_requires = python_requires  # TODO: polish later
 
-        imports = self._pre_process_import_statements(shared_import_statements)
-        P_Cloud_Implementation._shared_import_statements = imports
-        self._process_import_statements(imports)
+        P_Cloud_Implementation._single_instance = self
 
         assert not os.path.isfile(base_dir)
         if not os.path.isdir(base_dir):
-            os.mkdir(base_dir)
+            os.makedirs(base_dir,exist_ok=True)
         assert os.path.isdir(base_dir)
         self.base_dir = os.path.abspath(base_dir)
 
-        #TODO: add support for forbiden purity checks (p_purity_checks == None)
-        assert 0 <= p_purity_checks <= 1
-        self._p_purity_checks = p_purity_checks
+        super().__init__(persist_config_init=persist_config_init
+                         , persist_config_update=persist_config_update
+                         , ephem_config_init=ephem_config_init
+                         , **kwargs)
 
         self._register_exception_handlers()
 
     def __post__init__(self, *args, **kwargs) -> None:
         """ Enforce arguments-based singleton pattern. """
         P_Cloud_Implementation._instance_counter += 1
+        persistent_params = dict()
+        for k in self.persistent_config_params:
+            assert len(k)==1
+            k_str = k[0]
+            persistent_params[k_str] = self.persistent_config_params[k_str]
+        config_signature = (type(self)
+            , KwArgsDict(**persistent_params)
+            , KwArgsDict(**self.ephemeral_config_params))
+        config_signature_hash = PValueAddress(
+            data=config_signature
+            , push_to_cloud=False)
         if P_Cloud_Implementation._instance_counter == 1:
-            init_signature  = (type(self),args,KwArgsDict(**kwargs))
-            P_Cloud_Implementation._init_signature_hash_address = PValueAddress(
-                data=init_signature, push_to_cloud=False)
+            P_Cloud_Implementation._config_signature_hash_address = (
+                config_signature_hash)
             P_Cloud_Implementation._single_instance = self
         else:
-            new_init_signature = (type(self),args,KwArgsDict(**kwargs))
-            new_init_sign_hash = PValueAddress(
-                data=new_init_signature, push_to_cloud=False)
-            assert new_init_sign_hash == (
-                P_Cloud_Implementation._init_signature_hash_address), (
+            assert config_signature_hash == (
+                P_Cloud_Implementation._config_signature_hash_address), (
                 "You can't have several P_Cloud instances with different "
-                "types and/or initialization arguments.")
+                "types and/or configuration params.")
 
 
     @staticmethod
     def _reset() -> None:
         """Cleanup all data for P_Cloud_Implementation. Never use this method."""
         P_Cloud_Implementation._instance_counter = 0
-        P_Cloud_Implementation._init_signature_hash_address = None
+        P_Cloud_Implementation._config_signature_hash_address = None
         P_Cloud_Implementation._single_instance = None
         P_Cloud_Implementation.original_functions = dict()
         P_Cloud_Implementation.cloudized_functions = dict()
@@ -1113,36 +1242,17 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         P_Cloud_Implementation._old_excepthook = sys.excepthook
 
         def cloud_excepthook(exc_type, exc_value, trace_back):
-
             exc_event = ExceptionInfo(exc_type, exc_value, trace_back)
-
-            self._post_event(
-                event_store=self.crash_history
-                , prefix_key=None
-                , log_entry=exc_event
-                , add_context_info = True)
-
+            post_log_entry(entry=exc_event, category="exception")
             P_Cloud_Implementation._old_excepthook(
                 exc_type, exc_value, trace_back)
             return
 
         sys.excepthook = cloud_excepthook
 
-        def cloud_excepthandler(
-                other_self
-                , exc_type
-                , exc_value
-                , trace_back
-                , tb_offset=None):
-
+        def cloud_excepthandler( _, exc_type, exc_value , trace_back, tb_offset=None):
             exc_event = ExceptionInfo(exc_type, exc_value, trace_back)
-
-            self._post_event(
-                event_store=self.crash_history
-                ,prefix_key=None
-                ,log_entry=exc_event
-                ,add_context_info=True)
-
+            post_log_entry(entry = exc_event, category = "exception")
             traceback.print_exception(exc_type, exc_value, trace_back)
             return
 
@@ -1153,23 +1263,6 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         except:
             self._is_running_inside_IPython = False
 
-    @property
-    def install_requires(self) -> Optional[str]:
-        return self._install_requires
-
-    @property
-    def python_requires(self) -> Optional[str]:
-        return self._python_requires
-
-
-    def _pre_process_import_statements(self
-            ,import_statements:Optional[str]
-            ) -> Optional[str]:
-        #TODO: add some basic checks
-        if import_statements is not None and len(import_statements):
-            import_statements = ast.unparse(ast.parse(import_statements))
-        return import_statements
-
 
     def _process_import_statements(self
             ,import_statements: Optional[str]) -> None:
@@ -1178,98 +1271,6 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         # TODO: find if there is a less polluting way of doing this
         for frame_info in inspect.stack():
             exec(import_statements, frame_info.frame.f_globals)
-
-
-    @property
-    def shared_import_statements(self) -> Optional[str]:
-        """Import statements that are shared across all instances of P_Cloud.
-
-        The format of the property is a sequence of Python import statements.
-        These import statements will be executed
-        before running any cloudized function.
-        """
-        return P_Cloud_Implementation._shared_import_statements
-
-
-    def post_log_entry(
-            self
-            , log_entry: Any
-            , prefix_key: Optional[SimpleDictKey] = None
-            , add_context_info: bool = True
-            ) -> SimpleDictKey:
-        """Post a new entry into the event_log store."""
-        return self._post_event(
-            event_store = self.event_log
-            , prefix_key = prefix_key
-            , log_entry = log_entry
-            , add_context_info = add_context_info)
-
-
-    def _post_event(self
-                    , event_store: SimplePersistentDict
-                    , prefix_key:Optional[SimpleDictKey]
-                    , log_entry: Any
-                    , add_context_info:bool = True
-                    ) -> SimpleDictKey:
-        """ Add an event to an event store. """
-        if add_context_info:
-            event_id = str(datetime.now(self.baseline_timezone)
-                           ).replace(":", "-")
-            event_id += f"  user={getuser()}"
-            event_id += f"  host={socket.gethostname()}"
-            event_id += f"  pid={os.getpid()}"
-            event_id += f"  platform={platform.platform()}"
-            event_id += f"  event={get_long_infoname(log_entry)}"
-            self._event_counter +=1
-            if self._event_counter >= 1_000_000_000_000:
-                self._event_counter = 1
-            event_id += f"  counter={self._event_counter}"
-            random_int = self._randomizer.randint(1,1_000_000_000_000)
-            event_id += f"  random={random_int}"
-            event_id = replace_unsafe_chars(event_id,"_")
-        else:
-            event_id = str(uuid.uuid1())
-
-        if prefix_key is None:
-            key = (event_id,)
-        else:
-            key = event_store._normalize_key(prefix_key) + (event_id,)
-
-        if add_context_info:
-            event = dict(
-                event = log_entry
-                ,context=buid_context(self.base_dir, self.baseline_timezone))
-        else:
-            event = log_entry
-
-        event_store[key] = event
-        return key
-
-    @property
-    def baseline_timezone(self) -> ZoneInfo:
-        """ Timezone used by all instances of cloudized functions.
-
-        Different instances of cloudized functions might run on servers,
-        physically located in various timezonses. To make logging and reporting
-        consistent, all of them are required to use their P_Cloud's timezone,
-        not their server's timezone.
-        """
-        return self._baseline_timezone
-
-    @property
-    def p_purity_checks(self) -> float:
-        """ Probability of stochastic purity checks.
-
-        If a functions output has been stored on a cache, when the function is
-        called with the same arguments next time, it will re-use
-        cached output with probability (1-p_purity_checks).
-        With probability p_purity_checks the function will be
-        executed once again, and its output will be compared with
-        the cached one: if they differ, purity check will fail.
-        p_purity_checks==1 means 'never re-use cached values'.
-        p_purity_checks==0 means 'always re-use cached values when possible'.
-        """
-        return self._p_purity_checks
 
 
     def sync_local_inprocess_function_call(
@@ -1285,19 +1286,20 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
 
         original_function = self.original_functions[fo_address.function_name]
 
-        if self.p_purity_checks == 0:
+        if self.p_idempotency_checks == 0 or self.p_idempotency_checks is None:
             use_cached_output = True
-        elif self.p_purity_checks == 1:
+        elif self.p_idempotency_checks >= 1:
             use_cached_output = False
         else:
             use_cached_output = (
-                    self.p_purity_checks < self._randomizer.uniform(0, 1))
+                    self.p_idempotency_checks < self._randomizer.uniform(0, 1))
 
         if not (use_cached_output and fo_address in self.func_output_store):
             result = original_function(**fo_address.arguments)
             result_key = self.push_value(result)
 
-            if fo_address in self.func_output_store:
+            if (self.p_idempotency_checks is not None
+                and fo_address in self.func_output_store):
                 # TODO: change to a "raise" statement
                 assert self.func_output_store[fo_address] == result_key, (
                     "Stochastic purity check has failed")
@@ -1306,8 +1308,8 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
 
 
     def async_local_subprocess_function_call(self
-                                  ,address:PFuncOutputAddress
-                                  ) -> None:
+            ,fo_address:PFuncOutputAddress
+            ) -> None:
         """ Perform an asynchronous subprocess call for a cloudized function.
 
         This method should not be called directly. Instead, use the syntax
@@ -1329,8 +1331,8 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         raise NotImplementedError
 
 
-    def async_remote_function_call(self
-            ,address: PFuncOutputAddress
+    def async_incloud_function_call(self
+            ,fo_address: PFuncOutputAddress
             )-> None:
         """ Perform a remote asynchronous call for a cloudized function.
 
@@ -1341,29 +1343,29 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         raise NotImplementedError
 
 
-    def sync_parallel_function_call(self
-            , arg_list: List[PFuncOutputAddress]
-            ) -> None:
-        """Synchronously execute multiple instances of a cloudized function.
+    # def sync_parallel_function_call(self
+    #         , arg_list: List[PFuncOutputAddress]
+    #         ) -> None:
+    #     """Synchronously execute multiple instances of a cloudized function.
+    #
+    #     This method should not be called directly. Instead, use the syntax
+    #     below (requires a functions first to be added to a cloud):
+    #     func_name.sync_parallel( kw_args(..) for .. in .. )
+    #     """
+    #
+    #     raise NotImplementedError
 
-        This method should not be called directly. Instead, use the syntax
-        below (requires a functions first to be added to a cloud):
-        func_name.sync_parallel( kw_args(..) for .. in .. )
-        """
 
-        raise NotImplementedError
-
-
-    def async_parallel_function_call(self
-            , arg_list: List[PFuncOutputAddress]
-            ) -> None:
-        """Asynchronously execute multiple instances of a cloudized function.
-
-        This function should not be called directly. Instead, use the syntax
-        below (requires a functions first to be added to a cloud):
-        func_name.async_parallel( kw_args(..) for .. in .. )
-        """
-        raise NotImplementedError
+    # def async_parallel_function_call(self
+    #         , arg_list: List[PFuncOutputAddress]
+    #         ) -> None:
+    #     """Asynchronously execute multiple instances of a cloudized function.
+    #
+    #     This function should not be called directly. Instead, use the syntax
+    #     below (requires a functions first to be added to a cloud):
+    #     func_name.async_parallel( kw_args(..) for .. in .. )
+    #     """
+    #     raise NotImplementedError
 
 
     def check_if_ready(
@@ -1382,7 +1384,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         return func_key in self.func_output_store
 
 
-    def publish(self, a_func:Callable) -> PCloudizedFunction:
+    def cloudize_function(self, a_func:Callable) -> PCloudizedFunction:
         """Decorator which 'cloudizes' user-provided functions. """
         assert callable(a_func)
         assert not isinstance(a_func, PCloudizedFunction), (
@@ -1430,47 +1432,52 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
     """
 
     def __init__(self
-                 , install_requires:Optional[str]=""
-                 , python_requires:str = ""
-                 , shared_import_statements:Optional[str] = ""
+                 , persist_config_init: Dict[str,Any] = None
+                 , persist_config_update: Dict[str,Any] = None
+                 , ephem_config_init: Dict[str,Any] = None
                  , base_dir:str = "SharedStorage_P2P_Cloud"
-                 , p_purity_checks:float=0.1
                  , restore_from:Optional[PFuncOutputAddress]=None
                  , **kwargs
                  ):
-        super().__init__(install_requires = install_requires
-                         , python_requires = python_requires
-                         , shared_import_statements = shared_import_statements
-                         , base_dir = base_dir
-                         , p_purity_checks = p_purity_checks)
 
         self._value_store = FileDirDict(
-            dir_name=os.path.join(self.base_dir, "value_store")
+            dir_name=os.path.join(base_dir, "value_store")
             ,file_type="pkl")
 
         self._func_output_store = FileDirDict(
-            dir_name=os.path.join(self.base_dir, "func_output_store")
+            dir_name=os.path.join(base_dir, "func_output_store")
             ,file_type="pkl")
 
         self._crash_history = FileDirDict(
-            dir_name=os.path.join(self.base_dir, "exception_log")
+            dir_name=os.path.join(base_dir, "exception_log")
             ,file_type="json")
 
         self._event_log = FileDirDict(
-            dir_name=os.path.join(self.base_dir, "event_log")
+            dir_name=os.path.join(base_dir, "event_log")
             ,file_type="json")
+
+        self._ephemeral_config_params = dict()
+
+        self._persistent_config_params = FileDirDict(
+            dir_name=os.path.join(base_dir, "persistent_config_params")
+            , file_type="json")
+
+        super().__init__(persist_config_init = persist_config_init
+                         ,persist_config_update = persist_config_update
+                         ,ephem_config_init = ephem_config_init
+                         ,base_dir=base_dir
+                         ,**kwargs)
 
         self._temp_dir = None
 
         if restore_from is None:
             return
 
-        assert install_requires == "" or install_requires is None
-        assert python_requires == "" or python_requires is None
-        assert shared_import_statements == "" or shared_import_statements is None
+        assert persist_config_init is None
+        assert persist_config_update is None
+        assert ephem_config_init is None
 
-        if P_Cloud_Implementation._single_instance is None:
-            P_Cloud_Implementation._single_instance = self
+        #########################################################
 
         func_call_signature_addr = PValueAddress.from_strings(
             prefix = restore_from.prefix
@@ -1482,19 +1489,16 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         func_snapshot = func_call_signature.function_addr.get()
         assert isinstance(func_snapshot, PCloudizedFunctionSnapshot)
 
-        super().__init__(install_requires=func_snapshot.install_requires
-                         , python_requires=func_snapshot.python_requires
-                         , shared_import_statements = func_snapshot.shared_import_statements
-                         , base_dir=base_dir
-                         , p_purity_checks=p_purity_checks)
-
+        self.ephemeral_config_params["install_requires"] = func_snapshot.install_requires
+        self.ephemeral_config_params["python_requires"] = func_snapshot.python_requires
+        self.ephemeral_config_params["shared_import_statements"] = func_snapshot.shared_import_statements
 
         all_functions = func_snapshot.shared_import_statements
-        all_functions += "\nfrom pythagoras import P_Cloud_Implementation\n"
+        all_functions += "\nimport pythagoras\n"
 
         for f_name in func_snapshot.source_with_dependencies:
             all_functions += "\n\n"
-            all_functions +="@P_Cloud_Implementation._single_instance.publish\n"
+            all_functions +="@pythagoras.P_Cloud_Implementation._single_instance.cloudize_function\n"
             all_functions += func_snapshot.source_with_dependencies[f_name]
 
         self._temp_dir = tempfile.mkdtemp()
@@ -1578,8 +1582,27 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         """
         return self._event_log
 
+    @property
+    def ephemeral_config_params(self) -> Dict[str,Any]:
+        """Ephemeral configuration parameters of the cloud.
 
-    def async_remote_function_call(self
+        An abstract property: an in-RAM dictionary that stores
+        all the ephemeral the configuration parameters of the cloud.
+        """
+        return self._ephemeral_config_params
+
+
+    @property
+    def persistent_config_params(self) -> SimplePersistentDict:
+        """Persistent configuration parameters of the cloud.
+
+         An abstract property: a persistent dict-like object that
+        stores all the configuration parameters of the cloud.
+        """
+        return self._persistent_config_params
+
+
+    def async_incloud_function_call(self
                                   ,fo_address: PFuncOutputAddress
                                   ) -> None:
         """Emulate asynchronous remote execution of a function.
@@ -1588,7 +1611,6 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         it performs local synchronous one.
         """
         self.sync_local_inprocess_function_call(fo_address)
-
 
 
     def async_local_subprocess_function_call(self
@@ -1640,39 +1662,39 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
             f"Subprocess was not able to complete successfully: {subprocess_results.stderr.decode()}")
 
 
-    def sync_parallel_function_call(self
-            , arg_list: List[PFuncOutputAddress]
-            ) -> None:
-        """Emulate parallel execution of multiple instances of function.
+    # def sync_parallel_function_call(self
+    #         , arg_list: List[PFuncOutputAddress]
+    #         ) -> None:
+    #     """Emulate parallel execution of multiple instances of function.
+    #
+    #     Instead of actual remote parallel execution,
+    #     it performs randomized local sequential execution .
+    #     """
+    #
+    #     input_list = list(arg_list)
+    #     for a in input_list:
+    #         assert isinstance(a, PFuncOutputAddress)
+    #
+    #     shuffled_input_list = deepcopy(input_list)
+    #     self._randomizer.shuffle(shuffled_input_list)
+    #
+    #     for a in shuffled_input_list:
+    #         a.function._sync_inprocess_v(**a.arguments)
+    #         # We are intentionally not using here
+    #         # self.sync_local_inprocess_function_call(a)
+    #         # in order to enable Pythagoras' event logging and
+    #         # exception reporting mechanisms
 
-        Instead of actual remote parallel execution,
-        it performs randomized local sequential execution .
-        """
 
-        input_list = list(arg_list)
-        for a in input_list:
-            assert isinstance(a, PFuncOutputAddress)
-
-        shuffled_input_list = deepcopy(input_list)
-        self._randomizer.shuffle(shuffled_input_list)
-
-        for a in shuffled_input_list:
-            a.function.sync_inprocess(**a.arguments)
-            # We are intentionally not using here
-            # self.sync_local_inprocess_function_call(a)
-            # in order to enable Pythagoras' event logging and
-            # exception reporting mechanisms
-
-
-    def async_parallel_function_call(self
-            ,arg_list: List[PFuncOutputAddress]
-            ) -> None:
-        """Emulate parallel async execution of multiple instances of function.
-
-        Instead of actual remote asynchronous parallel execution,
-        it performs randomized local sequential synchronous execution.
-        """
-        self.sync_parallel_function_call(arg_list)
+    # def async_parallel_function_call(self
+    #         ,arg_list: List[PFuncOutputAddress]
+    #         ) -> None:
+    #     """Emulate parallel async execution of multiple instances of function.
+    #
+    #     Instead of actual remote asynchronous parallel execution,
+    #     it performs randomized local sequential synchronous execution.
+    #     """
+    #     self.sync_parallel_function_call(arg_list)
 
 
 class MLProjectWorkspace(P_Cloud):
@@ -1749,21 +1771,21 @@ class MLProjectWorkspace(P_Cloud):
         return self.base_cloud.event_log
 
 
-    def p_purity_checks(self) -> float:
+    def p_idempotency_checks(self) -> float:
         """ Probability of stochastic purity checks.
 
         If a functions output has been stored on a cache, when the function is
         called with the same arguments next time, it will re-use
-        cached output with probability (1-p_purity_checks).
-        With probability p_purity_checks the function will be
+        cached output with probability (1-p_idempotency_checks).
+        With probability p_idempotency_checks the function will be
         executed once again, and its output will be compared with
         the cached one: if they differ, purity check will fail.
         """
-        return self.base_cloud.p_purity_checks
+        return self.base_cloud.p_idempotency_checks
 
-    def publish(self, a_func):
+    def cloudize_function(self, a_func):
         """Decorator which 'cloudizes' user-provided functions. """
-        return self.base_cloud.publish(a_func)
+        return self.base_cloud.cloudize_function(a_func)
 
 
     def install_requires(self) -> Optional[str]:
@@ -1778,32 +1800,48 @@ class MLProjectWorkspace(P_Cloud):
         return self.base_cloud.shared_import_statements
 
 
-def _log_a_record(
-        record:Any
-        , record_type:str = "event") -> None:
-    """Determine event key and post an event record."""
-    assert record_type in {"event","exception" }
+def post_log_entry(
+        entry:Any
+        , *
+        , name_prefix:Optional[str] = None
+        , category:Optional[str] = None
+        , name_generator:Callable = uuid.uuid4) -> None:
+    """Determine event key and post an event/exception."""
+
+    if name_prefix is None:
+        name_prefix = get_long_infoname(entry)
+    assert isinstance(name_prefix, str)
+    name_prefix = replace_unsafe_chars(name_prefix, "_")
+
+    if category is None:
+        if isinstance(entry,BaseException):
+            category = "exception"
+        else:
+            category = "event"
+
+    assert isinstance(category,str)
+    category = category.lower()
+    assert category in {"event","exception"}
+
     cloud = P_Cloud_Implementation._single_instance
-    if record_type == "event":
+    if category == "event":
         destination = cloud.event_log
     else:
         destination = cloud.crash_history
-    scope = detect_instance_method_in_callstack(PCloudizedFunction)
-    event_key = None
-    if scope is None:
+
+    event_key = detect_local_variable_in_callstack(
+        "__fo_addr__", PFuncOutputAddress)
+
+    if event_key is None:
         event_key = ("unattributed",)
-    elif "principal_FO_ADDR" in scope[1].frame.f_locals:
-        candidate_key = scope[1].frame.f_locals["principal_FO_ADDR"]
-        assert isinstance(candidate_key, PFuncOutputAddress)
-        event_key = tuple(candidate_key)
     else:
-        dummy_call_signature = PFunctionCallSignature(scope[0],KwArgsDict())
-        dummy_call_address = PValueAddress(
-            dummy_call_signature, push_to_cloud=False)
-        event_key = (dummy_call_address[0],dummy_call_address[1])
+        event_key = tuple(event_key)
+
     event_id = str(uuid.uuid4())
+    event_id = name_prefix+"_"+event_id
+
     event_key = event_key+(event_id,)
-    destination[event_key] = record
+    destination[event_key] = entry
 
 
 
