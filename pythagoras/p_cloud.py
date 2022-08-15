@@ -101,8 +101,73 @@ class PCloudizedFunction:
 
 
     def __call__(self,**kwargs) -> Any:
-        """Locally run memoized/cloudized version of afunction"""
+        """Locally run memoized/cloudized version of a function"""
         return self._sync_inprocess_v(**kwargs)
+
+    def remote(self,**kwargs) -> PFuncOutputAddress:
+        """Asynchronously/remotely run a cloudized version of a function
+
+         'Remotely' could mean either running on a different computer
+         in the cloud or running in a different process on the
+         local computer. There is no guaranty where exactly
+         the function will run.
+
+         'Asynchronously' means there is no guaranty for the execution
+         timeline and there is no guaranty for how many times
+         the function will run; eventually it will execute
+         at least once. The .remote() call returns a cloud address.
+         The address will point to the actual function output
+         once it successfully completes its first execution;
+         until then the address points to an unretrievable non-value.
+         """
+        return self._async_incloud_a(**kwargs)
+
+    def parallel(self, arg_list:List[KwArgsDict]) -> List[Any]:
+        """Synchronously execute multiple function calls.
+
+        For each set of input parameters from arg_list,
+        the system will run the function with this set of parameters.
+        There is no guaranty whether all (or even most) of
+        these function calls will be executed on a local computer
+        or in the cloud; however at least one execution
+        will always happen locally unless all outputs
+        are already stored in the cache.
+
+        Pythagoras will try to execute all (or at least some)
+        of the function calls in parallel; if it's not possible,
+        they will be executed sequentially.
+        Once each function call executes at least once,
+        .parallel() will return a list of the execution outputs.
+        """
+        self._async_group_incloud_kwargss_a(arg_list)
+        return self._sync_group_inpocess_kwargss_v(arg_list)
+
+
+    def remote_parallel(self
+            , arg_list:List[KwArgsDict]
+            ) -> List[PFuncOutputAddress]:
+        """Asynchronously execute multiple function calls.
+
+        For each set of input parameters from arg_list,
+        the system will run the function with this set of parameters.
+        There is no guaranty whether all (or even most) of
+        these function calls will be executed on a local computer
+        or in the cloud.
+
+        Pythagoras will try to execute all (or at least some)
+        of the function calls in parallel. However,
+        there is no guaranty for the execution
+        timeline/order, and there is no guaranty for how many times
+        each combination of input parameters will be used;
+        eventually each of them will be used at least once.
+
+        .remote_parallel() will return a list of cloud addresses.
+        Each address will point to an actual function output
+        once the function successfully runs with the corresponding
+        set of parameters; until then the address points
+        to an unretrievable non-value.
+        """
+        return self._async_group_incloud_kwargss_a(arg_list)
 
 
     def _sync_inprocess_v(self, **kwargs) -> Any:
