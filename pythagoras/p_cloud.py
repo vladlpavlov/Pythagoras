@@ -18,13 +18,14 @@ from collections.abc import Sequence
 from copy import deepcopy
 from random import Random, randint
 import traceback
-from typing import Any, Optional, Callable, List, Union, Dict, Tuple, TypeVar, Type
+from typing import Any, Optional, Callable, List, Union, Dict, TypeVar, Type
 from joblib.hashing import NumpyHasher, Hasher
 
 from pythagoras._dependency_discovery import _all_dependencies_one_func
-from pythagoras.persistent_dicts import FileDirDict, SimplePersistentDict, SimpleDictKey
-from pythagoras.utils import get_long_infoname, replace_unsafe_chars, \
-    get_normalized_function_source, detect_instance_method_in_callstack, detect_local_variable_in_callstack
+from pythagoras.persistent_dicts import FileDirDict, SimplePersistentDict
+from pythagoras.utils import get_long_infoname, replace_unsafe_chars \
+    ,get_normalized_function_source ,detect_local_variable_in_callstack
+
 from pythagoras.utils import buid_context, ABC_PostInitializable
 
 
@@ -217,16 +218,20 @@ class PCloudizedFunction:
             raise
 
 
-    def _async_subprocess_a(self, **kwargs) -> PFuncOutputAddress:
-            """Perform asynchronous local execution of a function in a subprocess"""
-            return self._async_subprocess_kwargs_a(KwArgsDict(**kwargs).pack())
+    def _async_subprocess_a(self
+            , **kwargs
+            ) -> PFuncOutputAddress:
+        """Perform asynchronous local execution of a function in a subprocess"""
+        return self._async_subprocess_kwargs_a(KwArgsDict(**kwargs).pack())
 
 
-    def _async_subprocess_kwargs_a(self, kwargsd:KwArgsDict) -> PFuncOutputAddress:
+    def _async_subprocess_kwargs_a(self
+            , kwargsd:KwArgsDict
+            ) -> PFuncOutputAddress:
         """Perform asynchronous local execution of a function in a subprocess"""
         assert isinstance(kwargsd, KwArgsDict)
         __fo_addr__ = PFuncOutputAddress(self.__name__, kwargsd)
-        # post_log_entry() attributes posted events to an address, stored
+        # post_log_entry() attributes events to an address, stored
         # in a variable named __fo_addr__ in one of callstack frames
         try:
             self._cloud.async_local_subprocess_function_call(__fo_addr__)
@@ -236,12 +241,16 @@ class PCloudizedFunction:
             raise
 
 
-    def _async_incloud_a(self, **kwargs) -> PFuncOutputAddress:
-            """Perform asynchronous remote execution of a function"""
-            return self._async_incloud_kwargs_a(KwArgsDict(**kwargs).pack())
+    def _async_incloud_a(self
+            , **kwargs
+            ) -> PFuncOutputAddress:
+        """Perform asynchronous remote execution of a function"""
+        return self._async_incloud_kwargs_a(KwArgsDict(**kwargs).pack())
 
 
-    def _async_incloud_kwargs_a(self, kwargsd:KwArgsDict) -> PFuncOutputAddress:
+    def _async_incloud_kwargs_a(self
+            , kwargsd:KwArgsDict
+            ) -> PFuncOutputAddress:
         """Perform asynchronous remote execution of a function"""
         assert isinstance(kwargsd,KwArgsDict)
         __fo_addr__ = PFuncOutputAddress(self.__name__, kwargsd)
@@ -289,10 +298,10 @@ class PCloudizedFunction:
 
 
     def ready(self, **kwargs):
-            """Check if function output for the arguments has already been cached"""
+        """Check if function output for the arguments has already been cached"""
 
-            return self._cloud.check_if_ready(
-                self.__name__, KwArgsDict(**kwargs))
+        return self._cloud.check_if_ready(
+            self.__name__, KwArgsDict(**kwargs))
 
 
     @property
@@ -356,7 +365,7 @@ class PFunctionCallSignature:
 
 
 class PHashAddress(Sequence):
-    """A globally unique hash-based adderess.
+    """A globally unique hash-based address.
 
      Consists of 2 or 3 strings. Includes
      a human-readable prefix, an optional descriptor, and a hash.
@@ -705,7 +714,7 @@ class PFuncOutputAddress(PHashAddress):
     @property
     def ready(self):
         """Check if address points to a value that is ready to be retrieved."""
-        return self in self.cloud.func_output_store
+        return self in self._cloud.func_output_store
 
 
     def get(self, timeout:Optional[int]=None) -> Any:
@@ -744,12 +753,12 @@ class PFuncOutputAddress(PHashAddress):
 
 
     @property
-    def cloud(self) -> P_Cloud_Implementation:
+    def _cloud(self) -> P_Cloud_Implementation:
         return P_Cloud_Implementation._single_instance
 
 
     @property
-    def function_name(self) -> str:
+    def _function_name(self) -> str:
         signature_address = PValueAddress.from_strings(
             prefix=self.prefix
             , hash_value=self.hash_value
@@ -759,18 +768,18 @@ class PFuncOutputAddress(PHashAddress):
 
 
     @property
-    def function(self) -> PCloudizedFunction:
+    def _function(self) -> PCloudizedFunction:
         signature_address = PValueAddress.from_strings(
             prefix=self.prefix
             , hash_value=self.hash_value
             , descriptor=self.descriptor)
         restored_signature = signature_address.get_typed(PFunctionCallSignature)
         func_name = restored_signature.__name__
-        assert (PFuncSnapshotAddress(self.cloud.cloudized_functions[func_name])
+        assert (PFuncSnapshotAddress(self._cloud.cloudized_functions[func_name])
                 == restored_signature.function_addr), (
                 "Restored snapshot is inconsistent with the current version" +
                 f" of cloudized function {func_name}" )
-        return self.cloud.cloudized_functions[func_name]
+        return self._cloud.cloudized_functions[func_name]
 
 
     @property
@@ -785,18 +794,18 @@ class PFuncOutputAddress(PHashAddress):
 
 
     @property
-    def arguments(self) -> KwArgsDict:
+    def _arguments(self) -> KwArgsDict:
         return self._packed_arguments.unpack()
 
 
     @property
-    def fo_event_log(self) -> SimplePersistentDict:
-        return self.cloud.event_log.get_subdict(tuple(self))
+    def _fo_event_log(self) -> SimplePersistentDict:
+        return self._cloud.event_log.get_subdict(tuple(self))
 
 
     @property
-    def fo_crash_history(self) -> SimplePersistentDict:
-        return self.cloud.crash_history.get_subdict(tuple(self))
+    def _fo_crash_history(self) -> SimplePersistentDict:
+        return self._cloud.crash_history.get_subdict(tuple(self))
 
 
 class P_Cloud(metaclass=ABCMeta):
@@ -809,7 +818,7 @@ class P_Cloud(metaclass=ABCMeta):
     Methods:
     ----------
     cloudize_function(a_func:Callable) -> PCloudizedFunction
-            Decorator that 'cloudizes' user-provided functions.
+            Decorator that cloudizes a user-provided idempotent function.
 
     push_value(value:Any) -> PValueAddress
             Add a value to value_store.
@@ -1050,17 +1059,33 @@ class P_Cloud(metaclass=ABCMeta):
 
 
     @property
-    def p_idempotency_checks(self) -> float:
+    def p_idempotency_checks(self) -> Optional[float]:
         """ Probability of stochastic idempotency checks.
 
-        If a functions output has been stored on a cache, when the function is
-        called with the same arguments next time, it will re-use
-        cached output with probability (1-p_idempotency_checks).
+        If a functions output has been stored on a cache,
+        when the function is called with the same arguments next time,
+        it will reuse cached output with probability (1-p_idempotency_checks).
         With probability p_idempotency_checks the function will be
         executed once again, and its output will be compared with
-        the cached one: if they differ, idempotency check will fail.
+        the cached one: if they differ, idempotency check will fail and
+        an exception will be thrown.
+
         p_idempotency_checks==1 means 'never re-use cached values'.
-        p_idempotency_checks==0 means 'always re-use cached values when possible'.
+        p_idempotency_checks==0 means 'always re-use cached values
+        when possible'.
+
+        Even when  p_idempotency_checks==0, there are possible
+        scenarios when the function will be executed two or more times.
+        E.g. the function takes long time to execute, so before it finishes
+        (and stores its output in the cache) another instance of the same
+        function with the same arguments might be launched
+        on a different computer in the cloud. In such a case,
+        when both function calls complete, their outputs will be compared
+        even if p_idempotency_checks==0. If the outputs differ,
+        an exception will be raised. To completely prevent idempotency checks,
+        p_idempotency_checks must be set to None.
+
+        p_idempotency_checks==None means 'never conduct idempotency checks'.
         """
         return self.persistent_config_params["p_idempotency_checks"]
 
@@ -1108,7 +1133,7 @@ class P_Cloud(metaclass=ABCMeta):
 
     @abstractmethod
     def cloudize_function(self, a_func:Callable) -> PCloudizedFunction:
-        """Decorator which 'cloudizes' user-provided functions. """
+        """Decorator which cloudizes a user-provided idempotent function"""
         raise NotImplementedError
 
 
@@ -1137,7 +1162,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
     Methods:
     ----------
     cloudize_function(a_func:Callable) -> Callable
-            Decorator that 'cloudizes' user-provided functions.
+            Decorator that cloudizes a user-provided idempotent function.
 
     push_value(value:Any) -> PValueAddress
             Add a value to value_store.
@@ -1350,7 +1375,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
         func_name(**kwargs)
         """
 
-        original_function = self.original_functions[fo_address.function_name]
+        original_function = self.original_functions[fo_address._function_name]
 
         if self.p_idempotency_checks == 0 or self.p_idempotency_checks is None:
             use_cached_output = True
@@ -1361,7 +1386,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
                     self.p_idempotency_checks < self._randomizer.uniform(0, 1))
 
         if not (use_cached_output and fo_address in self.func_output_store):
-            result = original_function(**fo_address.arguments)
+            result = original_function(**fo_address._arguments)
             result_key = self.push_value(result)
 
             if (self.p_idempotency_checks is not None
@@ -1451,7 +1476,7 @@ class P_Cloud_Implementation(P_Cloud, metaclass=ABC_PostInitializable):
 
 
     def cloudize_function(self, a_func:Callable) -> PCloudizedFunction:
-        """Decorator which 'cloudizes' user-provided functions. """
+        """Decorator which cloudizes a user-provided idempotent function."""
         assert callable(a_func)
         assert not isinstance(a_func, PCloudizedFunction), (
             "A function is not allowed to be added to the cloud twice")
@@ -1850,7 +1875,7 @@ class MLProjectWorkspace(P_Cloud):
         return self.base_cloud.p_idempotency_checks
 
     def cloudize_function(self, a_func):
-        """Decorator which 'cloudizes' user-provided functions. """
+        """Decorator which cloudizes a user-provided idempotent function"""
         return self.base_cloud.cloudize_function(a_func)
 
 
@@ -1903,7 +1928,7 @@ def post_log_entry(
     else:
         event_key = tuple(event_key)
 
-    event_id = str(uuid.uuid4())
+    event_id = str(name_generator())
     event_id = name_prefix+"_"+event_id
 
     event_key = event_key+(event_id,)

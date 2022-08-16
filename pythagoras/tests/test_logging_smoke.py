@@ -165,8 +165,8 @@ def test_exceptiions_from_cloudfunction_asp(tmpdir):
     for j in range(3):
         addr = another_sample_function._async_subprocess_a(i=1000+j)
         sleep(15)
-        assert len(addr.fo_crash_history) == 1
-        assert len(addr.fo_event_log) == 1
+        assert len(addr._fo_crash_history) == 1
+        assert len(addr._fo_event_log) == 1
 
     assert len(another_sample_function._fsnapshot_crash_history) == 3
     assert len(another_sample_function._fname_crash_history) == 3

@@ -138,7 +138,6 @@ def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
     P_Cloud_Implementation._reset()
 
 
-
 def lyslyslya(*, x: float, y: float, z:float):
     return x + 100 * y + z*10_000
 

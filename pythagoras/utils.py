@@ -41,39 +41,6 @@ def replace_unsafe_chars(a_str:str, replace_with:str) -> str :
 
 
 T = TypeVar("T")
-def detect_instance_method_in_callstack(
-        class_to_detect:Type[T]
-        ) -> Optional[Tuple[T, FrameInfo]]:
-    """Check if instance method call is present in outer frames.
-
-    If the callstack contains an instance method call
-    that belongs to an object of class_to_detect,
-    the function will return this object,
-    otherwise the return value is None.
-    The search starts from the innermost frames,
-    and ends once the first match is found.
-    """
-
-    # TODO: refactor to address cases when
-    # 'self' has a different name
-
-    class DummyClass:
-        pass
-
-    assert type(class_to_detect) == type(DummyClass)
-
-    for frame_record in inspect.stack():
-        func_name = frame_record.frame.f_code.co_name
-        if not func_name in dir(class_to_detect):
-            continue
-        if "self" not in frame_record.frame.f_locals:
-            continue
-        candidate = frame_record.frame.f_locals["self"]
-        if isinstance(candidate, class_to_detect):
-            return (candidate,frame_record)
-
-    return None
-
 
 def detect_local_variable_in_callstack(
         name_to_detect:str
@@ -112,7 +79,11 @@ class ABC_PostInitializable(ABCMeta):
 
 
 def buid_context(file_path:str=None, time_zone=None)-> Dict:
-    """Capture core information about execution environment. """
+    """Capture core information about execution environment.
+
+    The function is supposed to be used to log environment information
+    to help debugging distributed applications.
+    """
 
     result = dict(
         date_time = datetime.datetime.now(time_zone)
@@ -288,42 +259,6 @@ def free_RAM(print_info:bool=True, collect_garbage:bool=True) -> int:
     return free_memory
 
 
-class BasicStopwatch:
-    """Simple class to measure time durations."""
-
-    start_time: float
-    stop_time: float
-
-    def __init__(self, start: bool = False) -> None:
-        self.reset_timer(start)
-
-    def reset_timer(self, start: bool = False) -> BasicStopwatch:
-        if start:
-            self.start_timer()
-        else:
-            self.start_time = 0
-            self.stop_time = 0
-        return self
-
-    def start_timer(self) -> BasicStopwatch:
-        self.start_time = time.time()
-        self.stop_time = 0
-        return self
-
-    def stop_timer(self) -> BasicStopwatch:
-        assert self.stop_time == 0
-        self.stop_time = time.time()
-        assert self.start_time != 0
-        return self
-
-    def get_float_repr(self) -> float:
-        assert self.stop_time != 0
-        return self.stop_time - self.start_time
-
-    def __str__(self) -> str:
-        return NeatStr.time_diff(self.get_float_repr())
-
-
 def get_normalized_function_source(a_func:Callable) -> str:
     """Return function's source code in a 'canonical' form.
 
@@ -368,7 +303,15 @@ def get_normalized_function_source(a_func:Callable) -> str:
 
 
 def uuid8andhalf():
-    """ Generate UUID ver. 8 1/2"""
+    """ Generate UUID ver. 8 1/2
+
+    A human-readable unique ID that can guarantee
+    uniqueness across space and time, and contains textual information
+    that helps to debug distributed applications.
+
+    Version 8 1/2 is a reference to Federico Fellini's movie
+    and is not supposed to make sense.
+    """
     self = uuid8andhalf
 
     if not hasattr(self,"counter"):

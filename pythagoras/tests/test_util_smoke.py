@@ -66,33 +66,10 @@ def test_get_normalized_function_source():
     assert ggg_source_3 != ggg_source_2
 
 
-
-class MMM:
-    pass
-
-def check2_subfunction():
-    assert detect_instance_method_in_callstack(TTT)[0] is t
-    assert detect_instance_method_in_callstack(MMM) is None
-
-class TTT:
-    def check(self):
-        assert detect_instance_method_in_callstack(TTT)[0] is t
-
-    def check2(self):
-        check2_subfunction()
-
-t = TTT()
-
-def test_detect_instance_method_in_callstack():
-    assert detect_instance_method_in_callstack(TTT) is None
-    t.check()
-    t.check2()
-
-
-
 def dvic_outer():
     dvic_outer_str = "sample string"
     dvic_inner()
+
 
 def dvic_inner():
     dvic_inner_str = "another string"
@@ -122,11 +99,3 @@ def test_detect_variable_in_callstack():
         "this_name_exists", bool) is this_name_exists
 
     dvic_outer()
-
-
-
-
-
-
-
-
