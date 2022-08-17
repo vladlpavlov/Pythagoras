@@ -30,12 +30,12 @@ from pythagoras.utils import buid_context, ABC_PostInitializable
 
 
 def kw_args(**kwargs) -> KwArgsDict:
-    """ Helper function to be used with .sync_parallel and similar methods
+    """ Helper function to be used with .parallel and similar methods
 
     It enables simple syntax to simultaneously launch
     many remote instances of a function with different input arguments:
 
-    some_slow_function.sync_parallel(
+    some_slow_function.parallel(
         kw_args(arg1=i, arg2=j) for i in range(100) for j in range(15)  )
     """
     return KwArgsDict(**kwargs).pack()
@@ -649,13 +649,13 @@ class KwArgsDict(dict):
             self[k] = kargs[k]
 
     @property
-    def cloud(self) -> P_Cloud_Implementation:
+    def _cloud(self) -> P_Cloud_Implementation:
         return P_Cloud_Implementation._single_instance
 
     def pack(self) -> KwArgsDict:
         """ Replace values in a dict with their hash addresses.
 
-        This function also "normalizes" the dictionary by sorting keys
+        This function  "normalizes" the dictionary by sorting the keys
         and replacing values with their hash addresses
         in order to always get the same hash values
         for the same lists of arguments.
@@ -666,7 +666,7 @@ class KwArgsDict(dict):
             if isinstance(value,PValueAddress):
                 packed_copy[k] = value
             else:
-                key = self.cloud.push_value(value)
+                key = self._cloud.push_value(value)
                 packed_copy[k] = key
         return packed_copy
 
@@ -676,7 +676,7 @@ class KwArgsDict(dict):
         unpacked_copy = KwArgsDict()
         for k,v in self.items():
             if isinstance(v, PValueAddress):
-                unpacked_copy[k] = self.cloud.value_store[v]
+                unpacked_copy[k] = self._cloud.value_store[v]
             else:
                 unpacked_copy[k] = v
         return unpacked_copy
@@ -897,14 +897,16 @@ class P_Cloud(metaclass=ABCMeta):
     def __init__(self
                 , persist_config_init:Dict[str,Any] = None
                 , persist_config_update:Dict[str,Any] = None
-                , ephem_config_init:Dict[str,Any] = None
+                , ephem_config:Dict[str,Any] = None
                 , **kwargs):
 
-        if ephem_config_init is None:
-            ephem_config_init = self.default_ephemeral_params
+        if ephem_config is None:
+            ephem_config = self.default_ephemeral_params
 
-        for k in ephem_config_init:
-            self.ephemeral_config_params[k] = ephem_config_init[k]
+        for k in ephem_config:
+            self.ephemeral_config_params[k] = ephem_config[k]
+
+        # TODO: Check the logic ^^^here^^^^ !!!!!!!!!!!
 
         if persist_config_init is None:
             persist_config_init = self.default_persistent_params
@@ -1062,8 +1064,8 @@ class P_Cloud(metaclass=ABCMeta):
     def p_idempotency_checks(self) -> Optional[float]:
         """ Probability of stochastic idempotency checks.
 
-        If a functions output has been stored on a cache,
-        when the function is called with the same arguments next time,
+        If a function's output has been stored in a cache,
+        when the function is called with the same arguments the next time,
         it will reuse cached output with probability (1-p_idempotency_checks).
         With probability p_idempotency_checks the function will be
         executed once again, and its output will be compared with
@@ -1141,7 +1143,7 @@ class ExceptionInfo:
     """ Helper class for remote logging, encapsulates exception/environment info.
 
     This class is used by P_Cloud_Implementation objects to log information
-    in P_Cloud.exception persistent store.
+    in P_Cloud.crash_history persistent store.
     """
 
     def __init__(self, exc_type, exc_value, trace_back):
@@ -1580,16 +1582,20 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         func_snapshot = func_call_signature.function_addr.get()
         assert isinstance(func_snapshot, PCloudizedFunctionSnapshot)
 
-        self.ephemeral_config_params["install_requires"] = func_snapshot.install_requires
-        self.ephemeral_config_params["python_requires"] = func_snapshot.python_requires
-        self.ephemeral_config_params["shared_import_statements"] = func_snapshot.shared_import_statements
+        self.ephemeral_config_params["install_requires"] = (
+            func_snapshot.install_requires)
+        self.ephemeral_config_params["python_requires"] = (
+            func_snapshot.python_requires)
+        self.ephemeral_config_params["shared_import_statements"] = (
+            func_snapshot.shared_import_statements)
 
         all_functions = func_snapshot.shared_import_statements
         all_functions += "\nimport pythagoras\n"
 
         for f_name in func_snapshot.source_with_dependencies:
             all_functions += "\n\n"
-            all_functions +="@pythagoras.P_Cloud_Implementation._single_instance.cloudize_function\n"
+            all_functions +="@pythagoras.P_Cloud_Implementation"
+            all_functions +="._single_instance.cloudize_function\n"
             all_functions += func_snapshot.source_with_dependencies[f_name]
 
         self._temp_dir = tempfile.mkdtemp()
@@ -1933,10 +1939,3 @@ def post_log_entry(
 
     event_key = event_key+(event_id,)
     destination[event_key] = entry
-
-
-
-
-
-
-
