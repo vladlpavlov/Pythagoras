@@ -29,7 +29,7 @@ setuptools.setup(
     ]
     ,keywords='cloud, ML, AI, serverless, distributed, parallel'
               ', machine-learning, deep-learning, pythagoras'
-    ,python_requires='>=3.9'
+    ,python_requires='>=3.7'
     ,install_requires=[
         'numpy'
         , 'scipy'

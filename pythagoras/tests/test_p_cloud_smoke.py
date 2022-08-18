@@ -10,10 +10,12 @@ def ggg_sp(a:int):
     sleep(3)
     return int(a*a)
 
+
 def ggg2_sp(x:int,y:float):
     from time import sleep
     sleep(3)
     return int(x*x*y)
+
 
 def test_SharedStorage_P2P_Cloud_func1args_sp(tmpdir):
     my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir)
@@ -28,13 +30,15 @@ def test_SharedStorage_P2P_Cloud_func1args_sp(tmpdir):
 
     P_Cloud_Implementation._reset()
 
+
 def ooo_asp(a:int):
     from time import sleep
     sleep(10)
     return int(a*a)
 
+
 def test_SharedStorage_P2P_Cloud_func1args_asp(tmpdir):
-    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
+    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir)
 
     global ooo_asp
     ooo_asp = my_cloud.cloudize_function(ooo_asp)
@@ -48,17 +52,20 @@ def test_SharedStorage_P2P_Cloud_func1args_asp(tmpdir):
 def fff():
     return int(1)
 
+
 def ggg(a:int):
     from time import sleep
     return int(a*a)
 
+
 def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
-    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
+    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir)
 
     global fff
     fff = my_cloud.cloudize_function(fff)
 
-    assert len(my_cloud.original_functions) == len(my_cloud.cloudized_functions) == 1
+    assert len(my_cloud.original_functions) == 1
+    assert len(my_cloud.cloudized_functions) == 1
 
     for i in range(4): assert fff() == 1
     assert len(my_cloud.value_store) == 4
@@ -86,7 +93,8 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
     assert len(my_cloud.func_output_store) == 4
 
     for i in range(4):
-        assert ggg._sync_group_inpocess_kwargss_v([kw_args(a=i) for i in range(10)]) == (
+        assert ggg._sync_group_inpocess_kwargss_v(
+            [kw_args(a=i) for i in range(10)]) == (
             [i*i for i in range(10)])
 
     addr = PFuncOutputAddress("ggg", kw_args(a=100))
@@ -97,16 +105,15 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
 
     P_Cloud_Implementation._reset()
 
-
     my_new_cloud = SharedStorage_P2P_Cloud(
         base_dir=tmpdir
-        , p_purity_checks=0.5
         , restore_from = addr)
 
     assert ggg(a=100) == 10000
 
     for i in range(4):
-        assert ggg._sync_group_inpocess_kwargss_v([kw_args(a=i) for i in range(10)]) == (
+        assert ggg._sync_group_inpocess_kwargss_v(
+            [kw_args(a=i) for i in range(10)]) == (
             [i*i for i in range(10)])
 
     assert len(my_new_cloud.value_store) == value_store_len
@@ -114,12 +121,12 @@ def test_SharedStorage_P2P_Cloud_func1args(tmpdir):
     P_Cloud_Implementation._reset()
 
 
-
 def hihihi(*, x: int, y: int):
     return x + 100 * y
 
+
 def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
-    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
+    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir)
 
     global hihihi
     hihihi = my_cloud.cloudize_function(hihihi)
@@ -141,8 +148,9 @@ def test_SharedStorage_P2P_Cloud_func2args(tmpdir):
 def lyslyslya(*, x: float, y: float, z:float):
     return x + 100 * y + z*10_000
 
+
 def test_SharedStorage_P2P_Cloud_func3args(tmpdir):
-    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir, p_purity_checks=0.5)
+    my_cloud = SharedStorage_P2P_Cloud(base_dir=tmpdir)
 
     global lyslyslya
     lyslyslya = my_cloud.cloudize_function(lyslyslya)
@@ -176,5 +184,3 @@ def test_multiple_clouds(tmpdir):
                 p_idempotency_checks = 0.987654321))
 
     P_Cloud_Implementation._reset()
-
-

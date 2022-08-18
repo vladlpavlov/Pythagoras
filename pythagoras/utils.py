@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import astor
 from abc import ABCMeta
 import datetime
 import math
@@ -284,7 +285,8 @@ def get_normalized_function_source(a_func:Callable) -> str:
     code_clean_version = []
     for line in code_no_empty_lines:
         assert line.startswith(chars_to_remove)
-        code_clean_version.append(line[n_chars_to_remove:])
+        cleaned_line = line[n_chars_to_remove:]
+        code_clean_version.append(cleaned_line)
 
     code_clean_version = "\n".join(code_clean_version)
     code_ast = ast.parse(code_clean_version)
@@ -299,7 +301,12 @@ def get_normalized_function_source(a_func:Callable) -> str:
     #TODO: add removal of a function's docstring
     #TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    return ast.unparse(code_ast)
+    if hasattr(ast,"unparse"):
+        result = ast.unparse(code_ast)
+    else: # ast.unparse() is only available starting from Python 3.9
+        result = astor.to_source(code_ast)
+
+    return result
 
 
 def uuid8andhalf():
