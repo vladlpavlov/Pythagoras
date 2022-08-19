@@ -31,7 +31,9 @@ setuptools.setup(
               ', machine-learning, deep-learning, pythagoras'
     ,python_requires='>=3.7'
     ,install_requires=[
-        'numpy'
+        'astor'
+        , 'isort'
+        , 'numpy'
         , 'scipy'
         , 'pandas'
         , 'scikit-learn'

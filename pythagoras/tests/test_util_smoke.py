@@ -1,3 +1,5 @@
+import sys
+
 from pythagoras import *
 
 class TestNeatStr:
@@ -22,6 +24,7 @@ def test_get_long_infoname(tmpdir):
 
 def test_get_normalized_function_source():
     def fff():
+        """Some docstring"""
         pass
 
     fff_source_1 = get_normalized_function_source(fff)
@@ -99,3 +102,6 @@ def test_detect_variable_in_callstack():
         "this_name_exists", bool) is this_name_exists
 
     dvic_outer()
+
+def test_print_system_info():
+    print(f"\n\n sys.version = {sys.version} \n")

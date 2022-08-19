@@ -263,7 +263,7 @@ def free_RAM(print_info:bool=True, collect_garbage:bool=True) -> int:
 def get_normalized_function_source(a_func:Callable) -> str:
     """Return function's source code in a 'canonical' form.
 
-    Remove all decorators, comments and empty lines;
+    Remove all decorators, comments, docstrings and empty lines;
     standardize code formatting.
     """
 
@@ -298,8 +298,24 @@ def get_normalized_function_source(a_func:Callable) -> str:
         "Currently cloudized functions can not have multiple decorators")
     code_ast.body[0].decorator_list = []
 
-    #TODO: add removal of a function's docstring
-    #TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    for node in ast.walk(code_ast): #remove docstrings
+        if not isinstance(node
+                , (ast.FunctionDef, ast.ClassDef
+                   , ast.AsyncFunctionDef, ast.Module)):
+            continue
+        if not len(node.body):
+            continue
+        if not isinstance(node.body[0], ast.Expr):
+            continue
+        if not hasattr(node.body[0], 'value'):
+            continue
+        if not isinstance(node.body[0].value, ast.Str):
+            continue
+
+        node.body = node.body[1:]
+        if len(node.body) < 1:
+            node.body.append(ast.Pass())
+        # TODO: compare with the source for ast.candidate_docstring()
 
     if hasattr(ast,"unparse"):
         result = ast.unparse(code_ast)
