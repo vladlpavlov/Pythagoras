@@ -1720,7 +1720,7 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         func_name.async_subprocess(**kwargs)
         """
 
-        subprocess_command = ["python3"
+        subprocess_command = [sys.executable
             , "-m"
             , "pythagoras"
             , type(self).__name__
@@ -1742,7 +1742,7 @@ class SharedStorage_P2P_Cloud(P_Cloud_Implementation):
         func_name.sync_subprocess(**kwargs)
         """
 
-        subprocess_command = ["python3" #TODO: get the name of currently used python
+        subprocess_command = [sys.executable
             , "-m"
             , "pythagoras"
             , type(self).__name__
