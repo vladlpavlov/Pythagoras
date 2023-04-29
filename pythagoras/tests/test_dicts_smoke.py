@@ -1,4 +1,5 @@
-from pythagoras.persistent_dicts import FileDirDict, S3_Dict
+# from pythagoras.persistent_dicts import FileDirDict, S3_Dict
+from pythagoras.persidicts import FileDirDict, S3_Dict
 import pandas as pd
 from moto import mock_s3
 

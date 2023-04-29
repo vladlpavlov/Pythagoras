@@ -1,6 +1,7 @@
 import os
 from tempfile import TemporaryDirectory
-from pythagoras.persistent_dicts import FileDirDict, safe_chars
+# from pythagoras.persistent_dicts import FileDirDict, safe_chars
+from pythagoras.persidicts import FileDirDict, safe_chars
 
 from hypothesis import given, strategies as st
 import pytest
