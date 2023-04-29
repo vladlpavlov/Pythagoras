@@ -29,9 +29,11 @@ setuptools.setup(
     ]
     ,keywords='cloud, ML, AI, serverless, distributed, parallel'
               ', machine-learning, deep-learning, pythagoras'
-    ,python_requires='>=3.9'
+    ,python_requires='>=3.7'
     ,install_requires=[
-        'numpy'
+        'astor'
+        , 'isort'
+        , 'numpy'
         , 'scipy'
         , 'pandas'
         , 'scikit-learn'
@@ -42,11 +44,5 @@ setuptools.setup(
         , 'pytest'
         , 'hypothesis'
     ]
-    ,entry_points = {
-        'console_scripts': [
-            'pythagoras_oneoff_sharedstorage_worker ' 
-            ' = pythagoras:oneoff_subprocess_sharedstorage_worker'
-        ]
-    }
 
 )

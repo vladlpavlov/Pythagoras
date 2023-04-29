@@ -10,4 +10,3 @@ in a shorter time with smaller budgets.
 from pythagoras.utils import *
 from pythagoras.persistent_dicts import *
 from pythagoras.p_cloud import *
-from pythagoras.workers import *

@@ -6,7 +6,7 @@ Function dependency graphs are required to
 calculate hash addresses for function snapshots.
 """
 
-from typing import Union, Callable, Any
+from typing import Union, Callable, Any, Dict, Set
 import re, inspect, copy
 
 def _name_is_used_in_source(
@@ -18,15 +18,15 @@ def _name_is_used_in_source(
     Parameters
     ----------
     name: str
-          an identifier which will be searched for in the source
+        an identifier which will be searched for in the source
 
     source: Union[Callable, str]
-            either a function of a source code of a function.
+        either a function of a source code of a function.
 
     Returns
     ----------
     search_result: bool
-                   whether the source contains a direct reference to the name
+        whether the source contains a direct reference to the name
     """
 
     assert isinstance(name, str)
@@ -47,27 +47,27 @@ def _name_is_used_in_source(
 
 
 def _direct_dependencies_many_funcs(
-        all_funcs: dict[str, Callable]
-        ) -> dict[str, set[str]]:
-    """ Create sets of 1-st level (direct) dependencies for all analized functions.
+        all_funcs: Dict[str, Callable]
+        ) -> Dict[str, Set[str]]:
+    """Create sets of 1st level (direct) dependencies for all analyzed functions.
 
-    Each set always contains at least one element (the dependant function itself).
+    Each set always contains at least 1 element (the dependant function itself).
 
     Parameters
     ----------
     all_funcs: dict[str, Callable]
-                a dictionary with keys containing function names, and values
-                containing actual functions
+        a dictionary with keys containing function names, and values
+        containing actual functions
 
     Returns
     ----------
     direct_dependencies: dict[str, set[str]]
-                         a dictionary with keys containing function names,
-                         and values containing sets of function names.
-                         Each set direct_dependencies[some_name] contains
-                         names of oll functions from the original all_funcs,
-                         that are directly referenced from within
-                         some_name's source code
+        a dictionary with keys containing function names,
+        and values containing sets of function names.
+        Each set direct_dependencies[some_name] contains
+        names of oll functions from the original all_funcs,
+        that are directly referenced from within
+        some_name's source code
     """
 
     for fn_name in all_funcs:
@@ -86,8 +86,8 @@ def _direct_dependencies_many_funcs(
 
 def _all_dependencies_one_func(
         the_function:str
-        ,all_funcs: dict[str, Callable]
-        ) -> set[str]:
+        ,all_funcs: Dict[str, Callable]
+        ) -> Set[str]:
     """ Create a set of all direct and indirect dependencies for one function.
 
     Resulting set always contains at least one element: the_function
@@ -96,18 +96,18 @@ def _all_dependencies_one_func(
     Parameters
     ----------
     all_funcs: all_funcs: dict[str, Callable]
-               a dictionary with keys containing function names,
-               and values containing actual functions
+        a dictionary with keys containing function names,
+        and values containing actual functions
 
     the_function: str
-                  a name of a function for which we are discovering dependencies
+        a name of a function for which we are discovering dependencies
 
     Returns
     ----------
     all_dependencies_set: set[str]
-                          names of all the functions from all_funcs
-                          that are directly or indirectly
-                          referenced from all_funcs's source code
+        names of all the functions from all_funcs
+        that are directly or indirectly
+        referenced from all_funcs's source code
     """
 
     assert isinstance(the_function, str)

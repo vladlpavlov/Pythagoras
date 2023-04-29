@@ -360,7 +360,7 @@ class FileDirDict(SimplePersistentDict):
             "file_type must be either pkl or json")
         assert not os.path.isfile(dir_name)
         if not os.path.isdir(dir_name):
-            os.mkdir(dir_name)
+            os.makedirs(dir_name,exist_ok=True)
         assert os.path.isdir(dir_name)
 
         self.base_dir = os.path.abspath(dir_name)

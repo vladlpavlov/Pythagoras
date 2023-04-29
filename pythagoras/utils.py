@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import astor
 from abc import ABCMeta
 import datetime
 import math
@@ -11,8 +12,10 @@ import platform
 import socket
 from getpass import getuser
 import inspect
+from inspect import FrameInfo, isclass
 import numbers, time
-from typing import Any, Dict, Callable
+from random import Random
+from typing import Any, Dict, Callable, TypeVar, Type, Optional, Tuple
 import pkg_resources
 import psutil
 import gc
@@ -38,6 +41,36 @@ def replace_unsafe_chars(a_str:str, replace_with:str) -> str :
     return result_str
 
 
+T = TypeVar("T")
+
+def detect_local_variable_in_callstack(
+        name_to_detect:str
+        , class_to_detect: Type[T]
+        ) -> Optional[T]:
+    """Given its name and type, find an object in outer frames.
+
+    If the callstack contains a local object
+    with name name_to_detect and type class_to_detect,
+    the function will return this object,
+    otherwise the return value is None.
+    The search starts from the innermost frames,
+    and ends once the first match is found.
+    """
+
+
+    assert isclass(class_to_detect)
+    assert isinstance(name_to_detect, str)
+    assert len(name_to_detect)
+
+    for frame_record in inspect.stack():
+        if name_to_detect not in frame_record.frame.f_locals:
+            continue
+        candidate = frame_record.frame.f_locals[name_to_detect]
+        if isinstance(candidate, class_to_detect):
+            return candidate
+
+    return None
+
 class ABC_PostInitializable(ABCMeta):
     """ Metaclass that enables __post__init__() method for abstract classes. """
     def __call__(cls, *args, **kwargs):
@@ -47,7 +80,11 @@ class ABC_PostInitializable(ABCMeta):
 
 
 def buid_context(file_path:str=None, time_zone=None)-> Dict:
-    """Capture core information about execution environment. """
+    """Capture core information about execution environment.
+
+    The function is supposed to be used to log environment information
+    to help debugging distributed applications.
+    """
 
     result = dict(
         date_time = datetime.datetime.now(time_zone)
@@ -79,9 +116,9 @@ def get_long_infoname(x:Any, drop_unsafe_chars:bool = True) -> str:
         name += "." + str(type(x).__name__)
 
     if hasattr(x, "__qualname__"):
-        name += "___" + str(x.__qualname__)
+        name += "_" + str(x.__qualname__)
     elif hasattr(x, "__name__"):
-        name += "___" + str(x.__name__)
+        name += "_" + str(x.__name__)
 
     if drop_unsafe_chars:
         name = replace_unsafe_chars(name, "_")
@@ -223,46 +260,10 @@ def free_RAM(print_info:bool=True, collect_garbage:bool=True) -> int:
     return free_memory
 
 
-class BasicStopwatch:
-    """Simple class to measure time durations."""
-
-    start_time: float
-    stop_time: float
-
-    def __init__(self, start: bool = False) -> None:
-        self.reset_timer(start)
-
-    def reset_timer(self, start: bool = False) -> BasicStopwatch:
-        if start:
-            self.start_timer()
-        else:
-            self.start_time = 0
-            self.stop_time = 0
-        return self
-
-    def start_timer(self) -> BasicStopwatch:
-        self.start_time = time.time()
-        self.stop_time = 0
-        return self
-
-    def stop_timer(self) -> BasicStopwatch:
-        assert self.stop_time == 0
-        self.stop_time = time.time()
-        assert self.start_time != 0
-        return self
-
-    def get_float_repr(self) -> float:
-        assert self.stop_time != 0
-        return self.stop_time - self.start_time
-
-    def __str__(self) -> str:
-        return NeatStr.time_diff(self.get_float_repr())
-
-
 def get_normalized_function_source(a_func:Callable) -> str:
     """Return function's source code in a 'canonical' form.
 
-    Remove all decorators, comments and empty lines;
+    Remove all decorators, comments, docstrings and empty lines;
     standardize code formatting.
     """
 
@@ -284,7 +285,8 @@ def get_normalized_function_source(a_func:Callable) -> str:
     code_clean_version = []
     for line in code_no_empty_lines:
         assert line.startswith(chars_to_remove)
-        code_clean_version.append(line[n_chars_to_remove:])
+        cleaned_line = line[n_chars_to_remove:]
+        code_clean_version.append(cleaned_line)
 
     code_clean_version = "\n".join(code_clean_version)
     code_ast = ast.parse(code_clean_version)
@@ -296,8 +298,63 @@ def get_normalized_function_source(a_func:Callable) -> str:
         "Currently cloudized functions can not have multiple decorators")
     code_ast.body[0].decorator_list = []
 
-    #TODO: add removal of a function's docstring
-    #TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    for node in ast.walk(code_ast): #remove docstrings
+        if not isinstance(node
+                , (ast.FunctionDef, ast.ClassDef
+                   , ast.AsyncFunctionDef, ast.Module)):
+            continue
+        if not len(node.body):
+            continue
+        if not isinstance(node.body[0], ast.Expr):
+            continue
+        if not hasattr(node.body[0], 'value'):
+            continue
+        if not isinstance(node.body[0].value, ast.Str):
+            continue
 
-    return ast.unparse(code_ast)
+        node.body = node.body[1:]
+        if len(node.body) < 1:
+            node.body.append(ast.Pass())
+        # TODO: compare with the source for ast.candidate_docstring()
 
+    if hasattr(ast,"unparse"):
+        result = ast.unparse(code_ast)
+    else: # ast.unparse() is only available starting from Python 3.9
+        result = astor.to_source(code_ast)
+
+    return result
+
+
+def uuid8andhalf():
+    """ Generate UUID ver. 8 1/2
+
+    A human-readable unique ID that can guarantee
+    uniqueness across space and time, and contains textual information
+    that helps to debug distributed applications.
+
+    Version 8 1/2 is a reference to Federico Fellini's movie
+    and is not supposed to make sense.
+    """
+    self = uuid8andhalf
+
+    if not hasattr(self,"counter"):
+        self.counter = 0
+    else:
+        self.counter += 1
+        if self.counter >= 1_000_000_000_000:
+            self.counter = 1
+
+    if not hasattr(self, "randomizer"):
+        self.randomizer = Random()
+
+    random_int = self.randomizer.randint(1, 1_000_000_000_000)
+
+    new_uuid = f"user-{getuser()}"
+    new_uuid += f"-pid-{os.getpid()}"
+    new_uuid += f"-time-{time.time()}"
+    new_uuid += f"-host-{socket.gethostname()}"
+    new_uuid += f"-platform-{platform.platform()}"
+    new_uuid += f"-counter-{self.counter}"
+    new_uuid += f"-random-{random_int}"
+
+    return new_uuid

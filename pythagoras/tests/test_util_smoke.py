@@ -1,3 +1,5 @@
+import sys
+
 from pythagoras import *
 
 class TestNeatStr:
@@ -10,10 +12,11 @@ class TestNeatStr:
         assert NeatStr.mem_size(1_073_741_824,"") == "1Gb"
         assert NeatStr.mem_size(1_099_511_627_776) == "1 Tb"
 
-def test_get_long_infoname():
+def test_get_long_infoname(tmpdir):
     assert "int" in get_long_infoname(10)
     assert "str" in get_long_infoname("QWERTY")
-    assert get_long_infoname(FileDirDict())  == "pythagoras.persistent_dicts.FileDirDict"
+    assert (get_long_infoname(FileDirDict(dir_name=tmpdir))
+            == "pythagoras.persistent_dicts.FileDirDict")
     self_name = get_long_infoname(get_long_infoname)
     assert "function" in self_name
     assert "get_long_infoname" in self_name
@@ -21,6 +24,7 @@ def test_get_long_infoname():
 
 def test_get_normalized_function_source():
     def fff():
+        """Some docstring"""
         pass
 
     fff_source_1 = get_normalized_function_source(fff)
@@ -65,6 +69,39 @@ def test_get_normalized_function_source():
     assert ggg_source_3 != ggg_source_2
 
 
+def dvic_outer():
+    dvic_outer_str = "sample string"
+    dvic_inner()
 
 
+def dvic_inner():
+    dvic_inner_str = "another string"
+    assert detect_local_variable_in_callstack(
+        "dvic_outer_str",int) is None
 
+    assert detect_local_variable_in_callstack(
+        "dvic_inner_str", str) is dvic_inner_str
+
+    assert detect_local_variable_in_callstack(
+        "dvic_outer_str", float) is None
+
+    assert detect_local_variable_in_callstack(
+        "dvic_outer_str", str) ==  "sample string"
+
+    assert detect_local_variable_in_callstack(
+        "this_name_exists", bool) ==  True
+
+
+def test_detect_variable_in_callstack():
+    assert detect_local_variable_in_callstack(
+        "this_name_does_not_exist",int) is None
+
+    this_name_exists = True
+
+    assert detect_local_variable_in_callstack(
+        "this_name_exists", bool) is this_name_exists
+
+    dvic_outer()
+
+def test_print_system_info():
+    print(f"\n\n sys.version = {sys.version} \n")
