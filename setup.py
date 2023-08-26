@@ -29,7 +29,7 @@ setuptools.setup(
     ]
     ,keywords='cloud, ML, AI, serverless, distributed, parallel'
               ', machine-learning, deep-learning, pythagoras'
-    ,python_requires='>=3.7'
+    ,python_requires='>=3.9'
     ,install_requires=[
         'astor'
         , 'isort'
