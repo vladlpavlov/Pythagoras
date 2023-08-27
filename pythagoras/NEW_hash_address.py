@@ -15,14 +15,16 @@ T = TypeVar("T")
 value_store:Optional[PersiDict] = None
 
 def set_value_store(store:PersiDict) -> None:
+    """Set a global value store."""
     global value_store
     value_store = store
 
 class HashAddress(SafeStrTuple):
     """A globally unique hash-based address.
 
-    Consists of 2 strings. Includes a human-readable prefix,
-    an optional descriptor, and a hash.
+    Consists of 2 strings. Includes a human-readable prefix, and a hash.
+    A hash string may begin an optional descriptor,
+    which provides additional human-readable information about the object.
     """
 
     _hash_type: str = "sha256"
