@@ -6,14 +6,17 @@ from copy import deepcopy
 from typing import Optional, Any, Type, TypeVar, Dict
 
 from joblib.hashing import NumpyHasher, Hasher
-from persidict import SafeStrTuple, PersiDict
+from persidict import SafeStrTuple, PersiDict, replace_unsafe_chars
 
-from pythagoras.NEW_utils import get_long_infoname, replace_unsafe_chars
+from pythagoras.NEW_utils import get_long_infoname
 
 T = TypeVar("T")
 
 value_store:Optional[PersiDict] = None
 
+def set_value_store(store:PersiDict) -> None:
+    global value_store
+    value_store = store
 
 class HashAddress(SafeStrTuple):
     """A globally unique hash-based address.
@@ -47,11 +50,13 @@ class HashAddress(SafeStrTuple):
     def _build_descriptor(x: Any) -> Optional[str]:
         """Create a short summary of object's length/shape."""
 
-        dscrptr = None
+        dscrptr = ""
 
+        #### FROM OLD CODE #############################
         # if isinstance(x,PFunctionCallSignature):
         #     # TODO: replace with proper OOP approach
         #     dscrptr = x.get_snpsht_id()
+        ################################################
 
         if (hasattr(x, "shape")
             and hasattr(x.shape, "__iter__")
@@ -67,10 +72,7 @@ class HashAddress(SafeStrTuple):
               and callable(x.__len__)):
             dscrptr = "len_" + str(len(x))
 
-        if dscrptr:
-            return replace_unsafe_chars(dscrptr, replace_with="_")
-        else:
-            return None
+        return replace_unsafe_chars(dscrptr, replace_with="_")
 
 
     @staticmethod
@@ -134,6 +136,7 @@ class ValueAddress(HashAddress):
     """
 
     def __init__(self, data: Any, push_to_cloud:bool=True, *args, **kwargs):
+        global value_store
         assert len(args) == 0
         assert len(kwargs) == 0
 
@@ -152,7 +155,7 @@ class ValueAddress(HashAddress):
 
         super().__init__(prefix, full_hash_signature)
 
-        if push_to_cloud and not self in value_store
+        if push_to_cloud and not (self in value_store):
             value_store[self] = data
 
     def ready(self):
