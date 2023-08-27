@@ -76,14 +76,19 @@ class HashAddress(SafeStrTuple):
 
 
     @staticmethod
-    def _build_raw_hash_value(x: Any) -> str:
+    def _build_hash_value(x: Any) -> str:
         """Create a URL-safe hashdigest for an object."""
 
         if 'numpy' in sys.modules:
             hasher = NumpyHasher(hash_name=HashAddress._hash_type)
         else:
             hasher = Hasher(hash_name=HashAddress._hash_type)
-        return hasher.hash(x) #TODO: switch to Base32
+        raw_hash_value = hasher.hash(x) #TODO: switch to Base32
+
+        descriptor = HashAddress._build_descriptor(x)
+        hash_value = descriptor + "_" + raw_hash_value
+
+        return hash_value
 
 
     @classmethod
@@ -149,11 +154,9 @@ class ValueAddress(HashAddress):
             + "to be converted to ValueAddress")
 
         prefix = self._build_prefix(data)
-        descriptor = self._build_descriptor(data)
-        raw_hash_signature = self._build_raw_hash_value(data)
-        full_hash_signature = descriptor + "_" + raw_hash_signature
+        hash_value = self._build_hash_value(data)
 
-        super().__init__(prefix, full_hash_signature)
+        super().__init__(prefix, hash_value)
 
         if push_to_cloud and not (self in value_store):
             value_store[self] = data
