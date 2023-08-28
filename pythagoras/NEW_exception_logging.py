@@ -39,26 +39,24 @@ def log_exception(entry:ExceptionInfo) -> None:
     entry_name += str(uuid.uuid4())
     crash_history[entry_name] = entry
 
+def cloud_excepthook(exc_type, exc_value, trace_back):
+    exc_event = ExceptionInfo(exc_type, exc_value, trace_back)
+    log_exception(exc_event)
+    _old_excepthook(exc_type, exc_value, trace_back)
+    return
+
+def cloud_excepthandler(_, exc_type, exc_value, trace_back, tb_offset=None):
+    exc_event = ExceptionInfo(exc_type, exc_value, trace_back)
+    log_exception(exc_event)
+    traceback.print_exception(exc_type, exc_value, trace_back)
+    return
+
 def register_exception_handlers() -> None:
     """ Intercept & redirect unhandled exceptions to crash_history """
 
     global _old_excepthook, _is_running_inside_IPython
-
     _old_excepthook = sys.excepthook
-
-    def cloud_excepthook(exc_type, exc_value, trace_back):
-        exc_event = ExceptionInfo(exc_type, exc_value, trace_back)
-        log_exception(exc_event)
-        _old_excepthook(exc_type, exc_value, trace_back)
-        return
-
     sys.excepthook = cloud_excepthook
-
-    def cloud_excepthandler(_, exc_type, exc_value, trace_back, tb_offset=None):
-        exc_event = ExceptionInfo(exc_type, exc_value, trace_back)
-        log_exception(exc_event)
-        traceback.print_exception(exc_type, exc_value, trace_back)
-        return
 
     try:  # if we are inside a notebook
         get_ipython().set_custom_exc(
