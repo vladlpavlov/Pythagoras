@@ -1,4 +1,4 @@
-import pytest
+"""Test package_dependencies.py."""
 
 from pythagoras.package_dependencies import *
 
@@ -19,3 +19,6 @@ def test_PckgDependencies_basic():
 
     assert len(p_dep_1) == len(p_dep_2) == len(p_dep_3) == 3
     assert p_dep_1 == p_dep_2 == p_dep_3 == p_dep_4
+
+    del p_dep_4["numpy"]
+    assert len(p_dep_4) == 2

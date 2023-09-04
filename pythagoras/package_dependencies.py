@@ -31,7 +31,7 @@ two equal groups of requirements always have the
 same string representation and hash value.
 
 Requirements are stored as packaging.requirements.Requirement objects.
-For every requirement, the name of the package is always equal to the key:
+For every requirement, the name of the package is always equal to its key:
 pckg_dependencies_object[key].name == key
 for every key in pckg_dependencies_object:PckgDependencies
 
