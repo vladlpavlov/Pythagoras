@@ -8,17 +8,22 @@ accessible via import statements inside the function body.
 
 from functools import wraps
 import builtins
+from typing import Callable
 
-def autonomous(a_func):
+
+def autonomous(a_func: Callable) -> Callable:
     """Decorator for autonomous functions.
 
     It hides from the function all the global and non-local objects,
     except the built-in ones. If a function tries to use a non-built-in object without
     importing it inside the function body, it will result in raising a NameError exception.
     """
+
+    assert callable(a_func)
+
     if len(a_func.__code__.co_freevars):
         raise NameError(f"The function {a_func.__name__} is not autonomous, it uses "
-            , f"non-global/non-local objects {a_func.__code__.co_freevars}")
+                        , f"non-global/non-local objects {a_func.__code__.co_freevars}")
 
     @wraps(a_func)
     def wrapper(*args, **kwargs):
@@ -33,8 +38,22 @@ def autonomous(a_func):
         try:
             result = a_func(*args, **kwargs)
             return result
+        except:
+            wrapper.__autonomous__ = False
+            raise
         finally:
             for obj_name in old_globals:
                 a_func.__globals__[obj_name] = old_globals[obj_name]
 
+    wrapper.__autonomous__ = True
+
     return wrapper
+
+
+def is_autonomous(a_func: Callable) -> bool:
+    """Check if a function is autonomous."""
+    assert callable(a_func)
+    try:
+        return a_func.__autonomous__
+    except AttributeError:
+        return False
