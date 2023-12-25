@@ -93,7 +93,8 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
 
     def visit_Nonlocal(self, node):
         for name in node.names:
-            self.nonlocal_names |= {name}
+            if name not in self.local_names:
+                self.nonlocal_names |= {name}
         self.generic_visit(node)
 
     def visit_Global(self, node):
@@ -136,8 +137,8 @@ class autonomous:
 
         It does both static and dynamic checks for autonomous functions.
 
-        Static checks: it checks whether the function uses any non-global
-        objects which do not have associated import statements
+        Static checks: it checks whether the function uses any global
+        non-built-in objects which do not have associated import statements
         inside the function. It also checks whether the function is using
         any free variables (non-global/non-local objects).
         If static checks fail, the decorator throws a NameError exception.
@@ -145,13 +146,21 @@ class autonomous:
         Dynamic checks: during the execution time it hides all the global
         and non-local objects from the function, except the built-in ones.
         If a function tries to use a non-built-in object
-        without importing it inside the function body,
+        without explicitly importing it inside the function body,
         it will result in raising a NameError exception.
+
+        Currently, neither static nor dynamic checks are guaranteed to catch
+        all possible violations of function autonomy requirements.
         """
 
         # Static checks
 
         analyzer = analyze_function_dependencies(a_func)
+
+        if len(analyzer.nonlocal_names):
+            raise NameError(f"The function {a_func.__name__}"
+                , f" is not autonomous, it uses external nonlocal"
+                , f" objects: {analyzer.nonlocal_names}")
 
         builtin_names = set(dir(builtins))
         import_required = analyzer.nonimported_outside_names - builtin_names
