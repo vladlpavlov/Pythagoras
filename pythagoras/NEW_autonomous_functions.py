@@ -23,17 +23,21 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
     needed to analyze function autonomy.
 
     Attributes:
-        global_names: A set to store all the global names found in the function.
-        imported_names: A set to store the all object names,
+        all_outside_names: A set to store all the outside names
+            found in the function.
+        imported_global_names: A set to store the all object names,
             that are explicitly imported inside the function.
         imported_packages: A set to store the names of the packages,
             imported inside the function.
-        external_globals: A set to store the names of the global objects that
-            are used in the function, but not explicitly imported inside it.
+        nonimported_outside_names: A set to store the names of
+            the global objects that are used in the function,
+            but not explicitly imported inside it.
         nonlocal_names: A set to store the nonlocal names found in the function.
         local_names: A set to store the names of local variables,
             found in the function.
     """
+
+    # TODO: add support for nested functions
     def __init__(self):
         self.imported_packages = set()
         self.imported_global_names = set()
@@ -148,11 +152,6 @@ class autonomous:
         # Static checks
 
         analyzer = analyze_function_dependencies(a_func)
-
-        if analyzer.nonlocal_names:
-            raise NameError(f"The function {a_func.__name__}"
-                , f" is not autonomous, it uses non-local"
-                , f" objects {analyzer.nonlocal_names}")
 
         builtin_names = set(dir(builtins))
         import_required = analyzer.nonimported_outside_names - builtin_names
