@@ -56,24 +56,48 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Name(self, node):
-        if isinstance(node.ctx, ast.Load) and node.id not in self.local_names:
+        if isinstance(node.ctx, ast.Load) and (node.id not in self.local_names):
             self.all_outside_names |= {node.id}
             if node.id not in self.imported_global_names:
                 self.nonimported_outside_names |= {node.id}
+
+        if isinstance(node.ctx, ast.Store) and (node.id not in self.all_outside_names):
+            self.local_names |= {node.id}
+
         self.generic_visit(node)
 
-    def visit_Assign(self, node):
-        for target in node.targets:
+    def visit_comprehension(self, node):
+        if isinstance(node.target, (ast.Tuple, ast.List)):
+            all_targets =node.target.elts
+        else:
+            all_targets = [node.target]
+        for target in all_targets:
             if isinstance(target, ast.Name):
                 if target.id not in self.all_outside_names:
                     self.local_names |= {target.id}
         self.generic_visit(node)
 
-    def visit_comprehension(self, node):
-        target_id = node.target.id
-        self.local_names |= {target_id}
-        self.all_outside_names -= {target_id}
-        self.nonimported_outside_names -= {target_id}
+    def visit_For(self, node):
+        self.visit_comprehension(node)
+
+    def visit_ListComp(self, node):
+        for gen in node.generators:
+            self.visit_comprehension(gen)
+        self.generic_visit(node)
+
+    def visit_SetComp(self, node):
+        for gen in node.generators:
+            self.visit_comprehension(gen)
+        self.generic_visit(node)
+
+    def visit_DictComp(self, node):
+        for gen in node.generators:
+            self.visit_comprehension(gen)
+        self.generic_visit(node)
+
+    def visit_GeneratorExp(self, node):
+        for gen in node.generators:
+            self.visit_comprehension(gen)
         self.generic_visit(node)
 
     def visit_Import(self, node):
@@ -120,7 +144,8 @@ def analyze_function_dependencies(
     tree = ast.parse(source)
     analyzer = FunctionDependencyAnalyzer()
     analyzer.visit(tree)
-    return analyzer
+    result = dict(tree=tree, analyzer=analyzer)
+    return result
 
 class autonomous:
     """Decorator for autonomous functions.
@@ -155,7 +180,7 @@ class autonomous:
 
         # Static checks
 
-        analyzer = analyze_function_dependencies(a_func)
+        analyzer = analyze_function_dependencies(a_func)["analyzer"]
 
         if len(analyzer.nonlocal_names):
             raise NameError(f"The function {a_func.__name__}"
