@@ -57,3 +57,28 @@ def test_inclosed():
     new_a2 = get_normalized_function_source(a2)
     assert old_a2 == new_a2
     assert new_a2 == autopep8.fix_code(new_a2)
+
+def a3(x): # a sample function to test
+    if x>0: return x*x*x
+    elif x<100_000_000: return -x*x*x
+    else: return 0
+
+def test_inclosed2():
+    global a3
+    old_a3 = get_normalized_function_source(a3)
+    del a3
+    def a3(x):
+        """ another version of the same function
+        this is a docstring
+        """
+        if x > 0:
+            return x * x * x
+        elif x < 100000000:
+            return -x * x * x
+        else:
+            return 0
+
+    new_a3 = get_normalized_function_source(a3)
+    assert old_a3 == new_a3
+    assert new_a3 == autopep8.fix_code(new_a3)
+
