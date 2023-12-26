@@ -10,60 +10,71 @@ global objects, imported outside the function body.
 """
 import ast
 import inspect
+from copy import deepcopy
 from functools import wraps
-from typing import Callable
+from typing import Callable, Set
 from pythagoras.NEW_utils import get_normalized_function_source
 import builtins
 
+
+class NamesUsedInFunction:
+    def __init__(self):
+        self.explicitly_global_unbound_deep = set() # names, explicitly marked as global inside the function and/or called subfunctions, yet not bound to any object
+        self.explicitly_nonlocal_unbound_deep = set() # names, explicitly marked as nonlocal inside the function and/or called subfunctions, yet not bound to any object
+        self.local = set() # local variables in a function
+        self.imported = set() # all names, which are explixitly imported inside the function
+        self.unclassified_deep = set() # names, used inside the function and/or called subfunctions, while not explicitly imported, amd not explicitly marked as nonlocal / global
+        self.accessible = set() # all names, currently accessable within the function
 
 class FunctionDependencyAnalyzer(ast.NodeVisitor):
     """Collect data needed to analyze function autonomy.
 
     This class is a visitor of an AST (Abstract Syntax Tree) that collects data
     needed to analyze function autonomy.
-
-    Attributes:
-        all_outside_names: A set to store all the outside names
-            found in the function.
-        imported_global_names: A set to store the all object names,
-            that are explicitly imported inside the function.
-        imported_packages: A set to store the names of the packages,
-            imported inside the function.
-        nonimported_outside_names: A set to store the names of
-            the global objects that are used in the function,
-            but not explicitly imported inside it.
-        nonlocal_names: A set to store the nonlocal names found in the function.
-        local_names: A set to store the names of local variables,
-            found in the function.
     """
 
-    # TODO: add support for nested functions
     def __init__(self):
-        self.imported_packages = set()
-        self.imported_global_names = set()
-        self.nonimported_outside_names = set()
-        self.all_outside_names = set()
-        self.local_names = set()
-        self.nonlocal_names = set()
+        self.names = NamesUsedInFunction()
+        self.imported_packages_deep = set()
+        self.func_nesting_level = 0
 
     def visit_FunctionDef(self, node):
-        for arg in node.args.args:
-            self.local_names |= {arg.arg}
-        if node.args.vararg:
-            self.local_names |= {node.args.vararg.arg}
-        if node.args.kwarg:
-            self.local_names |= {node.args.kwarg.arg}
-        self.generic_visit(node)
+        if self.func_nesting_level == 0:
+            self.func_nesting_level += 1
+            for arg in node.args.args:
+                self.names.accessible |= {arg.arg}
+                self.names.local |= {arg.arg}
+            if node.args.vararg:
+                self.names.local |= {node.args.vararg.arg}
+            if node.args.kwarg:
+                self.names.local |= {node.args.kwarg.arg}
+            self.names.accessible |= self.names.local
+            self.generic_visit(node)
+            self.func_nesting_level -= 1
+        else: ###TBD
+            nested = FunctionDependencyAnalyzer()
+            nested.visit(node)
+            self.imported_packages_deep |= nested.imported_packages_deep
+            nested.names.explicitly_nonlocal_unbound_deep -= self.names.local
+            self.names.explicitly_nonlocal_unbound_deep |= nested.names.explicitly_nonlocal_unbound_deep
+            self.names.explicitly_global_unbound_deep |= nested.names.explicitly_global_unbound_deep
+            nested.names.unclassified_deep -= self.names.local
+            nested.names.unclassified_deep -= self.names.imported
+            self.names.unclassified_deep |= nested.names.unclassified_deep
+            self.names.local |= {node.name}
+            self.names.accessible |= {node.name}
+            # self.names.imported is not changing
+
 
     def visit_Name(self, node):
-        if isinstance(node.ctx, ast.Load) and (node.id not in self.local_names):
-            self.all_outside_names |= {node.id}
-            if node.id not in self.imported_global_names:
-                self.nonimported_outside_names |= {node.id}
-
-        if isinstance(node.ctx, ast.Store) and (node.id not in self.all_outside_names):
-            self.local_names |= {node.id}
-
+        if isinstance(node.ctx, ast.Load):
+            if node.id not in self.names.accessible:
+                self.names.unclassified_deep |= {node.id}
+                self.names.accessible |= {node.id}
+        if isinstance(node.ctx, ast.Store):
+            if node.id not in self.names.accessible:
+                self.names.local |= {node.id}
+                self.names.accessible |= {node.id}
         self.generic_visit(node)
 
     def visit_comprehension(self, node):
@@ -73,9 +84,11 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
             all_targets = [node.target]
         for target in all_targets:
             if isinstance(target, ast.Name):
-                if target.id not in self.all_outside_names:
-                    self.local_names |= {target.id}
+                if target.id not in self.names.accessible:
+                    self.names.local |= {target.id}
+                    self.names.accessible |= {target.id}
         self.generic_visit(node)
+
 
     def visit_For(self, node):
         self.visit_comprehension(node)
@@ -103,32 +116,34 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
     def visit_Import(self, node):
         for alias in node.names:
             name = alias.asname if alias.asname else alias.name
-            self.imported_global_names |= {name}
-            self.imported_packages |= {alias.name.split('.')[0]}
+            self.names.imported |= {name}
+            self.names.accessible |= {name}
+            self.names.local |= {name}
+            self.imported_packages_deep |= {alias.name.split('.')[0]}
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node):
-        module = node.module
-        self.imported_packages |= {node.module.split('.')[-1]}
+        self.imported_packages_deep |= {node.module.split('.')[-1]}
         for alias in node.names:
             name = alias.asname if alias.asname else alias.name
-            self.imported_global_names |= {name}
+            self.names.imported |= {name}
+            self.names.accessible |= {name}
+            self.names.local |= {name}
         self.generic_visit(node)
 
     def visit_Nonlocal(self, node):
-        for name in node.names:
-            if name not in self.local_names:
-                self.nonlocal_names |= {name}
+        self.names.explicitly_nonlocal_unbound_deep |= set(node.names)
+        self.names.accessible |= set(node.names)
         self.generic_visit(node)
 
     def visit_Global(self, node):
-        for name in node.names:
-            self.all_outside_names |= {name}
+        self.names.explicitly_global_unbound_deep |= set(node.names)
+        self.names.accessible |= set(node.names)
         self.generic_visit(node)
 
 def analyze_function_dependencies(
         a_func: Callable
-        ) -> FunctionDependencyAnalyzer:
+        ):
     """Analyze function dependencies.
 
     It returns an instance of FunctionDependencyAnalyzer class,
@@ -182,13 +197,15 @@ class autonomous:
 
         analyzer = analyze_function_dependencies(a_func)["analyzer"]
 
-        if len(analyzer.nonlocal_names):
+        if len(analyzer.names.explicitly_nonlocal_unbound_deep):
             raise NameError(f"The function {a_func.__name__}"
                 , f" is not autonomous, it uses external nonlocal"
-                , f" objects: {analyzer.nonlocal_names}")
+                , f" objects: {analyzer.names.explicitly_nonlocal_unbound_deep}")
 
         builtin_names = set(dir(builtins))
-        import_required = analyzer.nonimported_outside_names - builtin_names
+        import_required = analyzer.names.explicitly_global_unbound_deep
+        import_required |= analyzer.names.unclassified_deep
+        import_required -= builtin_names
         if import_required:
             raise NameError(f"The function {a_func.__name__}"
                 , f" is not autonomous, it uses global"

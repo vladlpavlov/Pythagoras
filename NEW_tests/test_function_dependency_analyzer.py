@@ -14,12 +14,13 @@ def sample_from_x_import_y(x):
 def test_from_x_import_y_s():
     sample_from_x_import_y(3)
     analyzer = analyze_function_dependencies(sample_from_x_import_y)["analyzer"]
-    assert analyzer.all_outside_names == {"apv","sq", "str", "fabs"}
-    assert analyzer.nonlocal_names == set()
-    assert analyzer.imported_global_names == {"apv","sq", "fabs"}
-    assert analyzer.imported_packages == {"math", "sys"}
-    assert analyzer.local_names == {"i","x","y"}
-    assert analyzer.nonimported_outside_names == {"str"}
+    assert analyzer.imported_packages_deep == {"math", "sys"}
+    assert analyzer.names.accessible == {"sq", "apv", "x", "y","i", "fabs", "str"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == {"sq", "apv", "fabs"}
+    assert analyzer.names.local == {"x", "y","i"}
+    assert analyzer.names.unclassified_deep == { "str"}
 
 def sample_import_y_as(a, *args, **kwargs):
     import math
@@ -32,12 +33,13 @@ def sample_import_y_as(a, *args, **kwargs):
 def test_import_y_as():
     sample_import_y_as(3, 4, 5)
     analyzer = analyze_function_dependencies(sample_import_y_as)["analyzer"]
-    assert analyzer.all_outside_names == {"len", "math", "str", "s"}
-    assert analyzer.nonlocal_names == set()
-    assert analyzer.imported_global_names == {"math", "s"}
-    assert analyzer.imported_packages == {"math", "sys"}
-    assert analyzer.local_names == {"a", "args", "b", "kwargs", "x", "y"}
-    assert analyzer.nonimported_outside_names == {"str", "len"}
+    assert analyzer.imported_packages_deep == {"math","sys"}
+    assert analyzer.names.accessible == {"a", "args", "kwargs", "math","s","b","x","y","len","str"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == {"math","s"}
+    assert analyzer.names.local == {"a", "args", "kwargs","b","x","y"}
+    assert analyzer.names.unclassified_deep == {"len","str"}
 
 def sample_good_list_comprecension(x):
     return [i for i in range(x)]
@@ -45,12 +47,14 @@ def sample_good_list_comprecension(x):
 def test_good_list_comprencension():
     sample_good_list_comprecension(3)
     analyzer = analyze_function_dependencies(sample_good_list_comprecension)["analyzer"]
-    assert analyzer.all_outside_names == {"range"}
-    assert analyzer.nonlocal_names == set()
-    assert analyzer.imported_global_names == set()
-    assert analyzer.imported_packages == set()
-    assert analyzer.local_names == {"i", "x"}
-    assert analyzer.nonimported_outside_names == {"range"}
+    assert analyzer.imported_packages_deep == set()
+    assert analyzer.names.accessible == {"i", "x", "range"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == set()
+    assert analyzer.names.local == {"i", "x"}
+    assert analyzer.names.unclassified_deep == {"range"}
+
 
 def sample_bad_list_comprecension(x):
     print(i)
@@ -60,12 +64,13 @@ def test_bad_list_comprencension():
     with pytest.raises(Exception):
         sample_bad_list_comprecension(3)
     analyzer = analyze_function_dependencies(sample_bad_list_comprecension)["analyzer"]
-    assert analyzer.all_outside_names == {"range","i","print"}
-    assert analyzer.nonlocal_names == set()
-    assert analyzer.imported_global_names == set()
-    assert analyzer.imported_packages == set()
-    assert analyzer.local_names == {"x"}
-    assert analyzer.nonimported_outside_names == {"range","i","print"}
+    assert analyzer.imported_packages_deep == set()
+    assert analyzer.names.accessible == {"i", "x", "range", "print"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == set()
+    assert analyzer.names.local == {"x"}
+    assert analyzer.names.unclassified_deep == {"range", "print","i"}
 
 def sample_for_loop(x):
     for i in range(x):
@@ -78,9 +83,101 @@ def test_for_loop():
     sample_for_loop(3)
     dependencies = analyze_function_dependencies(sample_for_loop)
     analyzer = dependencies["analyzer"]
-    assert analyzer.all_outside_names == {"range", "print","enumerate"}
-    assert analyzer.nonlocal_names == set()
-    assert analyzer.imported_global_names == set()
-    assert analyzer.imported_packages == set()
-    assert analyzer.local_names == {"i", "x", "y"}
-    assert analyzer.nonimported_outside_names == {"range", "print", "enumerate"}
+    assert analyzer.imported_packages_deep == set()
+    assert analyzer.names.accessible == {"i", "x", "y", "range", "print", "enumerate"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == set()
+    assert analyzer.names.local == {"x", "i", "y"}
+    assert analyzer.names.unclassified_deep == {"range", "print", "enumerate"}
+
+def simple_nested(x):
+    def nested(y):
+        import math
+        return math.sqrt(y)
+    return nested(x)
+
+def test_simple_nested():
+    assert simple_nested(4) == 2
+    analyzer = analyze_function_dependencies(simple_nested)["analyzer"]
+    assert analyzer.imported_packages_deep == {"math"}
+    assert analyzer.names.accessible == {"nested", "x"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == set()
+    assert analyzer.names.local == {"nested", "x"}
+    assert analyzer.names.unclassified_deep == set()
+
+def bad_simple_nested(x):
+    def nested(y):
+        return math.sqrt(y)
+    return nested(x)
+
+def test_bad_simple_nested():
+    with pytest.raises(Exception):
+        bad_simple_nested(4)
+    analyzer = analyze_function_dependencies(bad_simple_nested)["analyzer"]
+    assert analyzer.imported_packages_deep == set()
+    assert analyzer.names.accessible == {"nested", "x"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == set()
+    assert analyzer.names.local == {"nested", "x"}
+    assert analyzer.names.unclassified_deep == {"math"}
+
+
+def simple_nested_2(x):
+    import math
+    def nested(y):
+        return math.sqrt(float(y))
+    return nested(x)
+
+def test_simple_nested_2():
+    assert simple_nested_2(4) == 2
+    analyzer = analyze_function_dependencies(simple_nested_2)["analyzer"]
+    assert analyzer.imported_packages_deep == {"math"}
+    assert analyzer.names.accessible == {"nested", "x", "math"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == {"math"}
+    assert analyzer.names.local == {"nested", "x"}
+    assert analyzer.names.unclassified_deep == {"float"}
+
+def simple_nonlocal(x):
+    import math as mmm
+    z =12
+    def nested(y):
+        nonlocal z
+        return mmm.sqrt(float(y)+z)
+    return nested(x)
+
+def test_simple_nonlocal():
+    assert simple_nonlocal(4) == 4
+    analyzer = analyze_function_dependencies(simple_nonlocal)["analyzer"]
+    assert analyzer.imported_packages_deep == {"math"}
+    assert analyzer.names.accessible == {"nested", "x", "z", "mmm"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == {"mmm"}
+    assert analyzer.names.local == {"nested", "x", "z"}
+    assert analyzer.names.unclassified_deep == {"float"}
+
+
+def simple_global(x):
+    import math as m
+    def nested(y):
+        nonlocal m
+        global float
+        return m.sqrt(float(y)+3*int(x))
+    return nested(x)
+
+def test_simple_global():
+    assert simple_global(4) == 4
+    analyzer = analyze_function_dependencies(simple_global)["analyzer"]
+    assert analyzer.imported_packages_deep == {"math"}
+    assert analyzer.names.accessible == {"nested", "x", "m"}
+    assert analyzer.names.explicitly_global_unbound_deep == {"float"}
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == {"m"}
+    assert analyzer.names.local == {"nested", "x", "m"}
+    assert analyzer.names.unclassified_deep == {"int"}
