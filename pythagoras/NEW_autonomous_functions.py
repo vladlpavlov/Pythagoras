@@ -2,11 +2,19 @@
 
 Autonomous functions are only allowed to use the built-in objects
 (functions, types, variables), as well as global objects,
-accessible via import statements inside the function body.
+explicitly imported inside the function body.
 
-Autonomous functions are not allowed to use free variables
-(non-global/non-local objects). They are also not allowed to use
-global objects, imported outside the function body.
+Autonomous functions are not allowed to:
+    * use global objects, imported outside the function body;
+    * use nonlocal variables, referencing the outside objects;
+    * use yield (yield from) statements.
+
+Autonomous functions can have nested sub-functions.
+The sub-functions are allowed to:
+    * use yield (yield from) statements;
+    * use nonlocal variables, referencing the objects from the parent function.
+The sub-functions are not allowed to:
+    * use global objects, imported outside the body of autonomous parent.
 """
 import ast
 import inspect
@@ -15,6 +23,11 @@ from functools import wraps
 from typing import Callable, Set
 from pythagoras.NEW_utils import get_normalized_function_source
 import builtins
+
+
+class FunctionAutonomicityError(Exception):
+    """Base class for exceptions in this module."""
+    pass
 
 
 class NamesUsedInFunction:
@@ -37,6 +50,7 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
         self.names = NamesUsedInFunction()
         self.imported_packages_deep = set()
         self.func_nesting_level = 0
+        self.n_yelds = 0
 
     def visit_FunctionDef(self, node):
         if self.func_nesting_level == 0:
@@ -51,7 +65,7 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
             self.names.accessible |= self.names.local
             self.generic_visit(node)
             self.func_nesting_level -= 1
-        else: ###TBD
+        else:
             nested = FunctionDependencyAnalyzer()
             nested.visit(node)
             self.imported_packages_deep |= nested.imported_packages_deep
@@ -64,6 +78,7 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
             self.names.local |= {node.name}
             self.names.accessible |= {node.name}
             # self.names.imported is not changing
+            # self.n_yelds is not changing
 
 
     def visit_Name(self, node):
@@ -75,6 +90,14 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
             if node.id not in self.names.accessible:
                 self.names.local |= {node.id}
                 self.names.accessible |= {node.id}
+        self.generic_visit(node)
+
+    def visit_Yield(self, node):
+        self.n_yelds += 1
+        self.generic_visit(node)
+
+    def visit_YieldFrom(self, node):
+        self.n_yelds += 1
         self.generic_visit(node)
 
     def visit_comprehension(self, node):
@@ -149,23 +172,28 @@ def analyze_function_dependencies(
     It returns an instance of FunctionDependencyAnalyzer class,
     which contains all the data needed to analyze function autonomy.
     """
-    assert callable(a_func), ("This acton can only"
-        , " be applied to functions.")
+    if not callable(a_func):
+        raise FunctionAutonomicityError("This acton can only"
+            + " be applied to functions.")
     source = get_normalized_function_source(a_func)
-    assert source.startswith("def "), ("This action can only"
-        , " be applied to conventional functions,"
-        , " not to instances of callable classes and"
-        , " not to lambda functions.")
+    if not source.startswith("def "):
+        raise FunctionAutonomicityError("This action can only"
+            + " be applied to conventional functions,"
+            + " not to instances of callable classes and"
+            + " not to lambda functions.")
     tree = ast.parse(source)
-    assert isinstance(tree, ast.Module), (f"Only one high lever"
-        + f" function definition is allowed to be processed."
-        , f" The following code is not allowed: {source}")
-    assert isinstance(tree.body[0], ast.FunctionDef), (f"Only one high lever"
-        + f" function definition is allowed to be processed."
-        , f" The following code is not allowed: {source}")
-    assert len(tree.body)==1 , (f"Only one high lever"
-        + f" function definition is allowed to be processed."
-        , f" The following code is not allowed: {source}")
+    if not isinstance(tree, ast.Module):
+        raise FunctionAutonomicityError(f"Only one high lever"
+            + f" function definition is allowed to be processed."
+            + f" The following code is not allowed: {source}")
+    if not isinstance(tree.body[0], ast.FunctionDef):
+        raise FunctionAutonomicityError(f"Only one high lever"
+            + f" function definition is allowed to be processed."
+            + f" The following code is not allowed: {source}")
+    if not len(tree.body)==1:
+        raise FunctionAutonomicityError(f"Only one high lever"
+            + f" function definition is allowed to be processed."
+            + f" The following code is not allowed: {source}")
     analyzer = FunctionDependencyAnalyzer()
     analyzer.visit(tree)
     result = dict(tree=tree, analyzer=analyzer)
@@ -189,14 +217,15 @@ class autonomous:
         Static checks: it checks whether the function uses any global
         non-built-in objects which do not have associated import statements
         inside the function. It also checks whether the function is using
-        any free variables (non-global/non-local objects).
+        any non-local objects variables, and whether the function
+        has yield / yield from statements in its code.
         If static checks fail, the decorator throws a NameError exception.
 
         Dynamic checks: during the execution time it hides all the global
         and non-local objects from the function, except the built-in ones.
         If a function tries to use a non-built-in object
         without explicitly importing it inside the function body,
-        it will result in raising a NameError exception.
+        it will result in raising an exception.
 
         Currently, neither static nor dynamic checks are guaranteed to catch
         all possible violations of function autonomy requirements.
@@ -207,24 +236,28 @@ class autonomous:
         analyzer = analyze_function_dependencies(a_func)["analyzer"]
 
         if len(analyzer.names.explicitly_nonlocal_unbound_deep):
-            raise NameError(f"The function {a_func.__name__}"
-                , f" is not autonomous, it uses external nonlocal"
-                , f" objects: {analyzer.names.explicitly_nonlocal_unbound_deep}")
+            raise FunctionAutonomicityError(f"Function {a_func.__name__}"
+                + f" is not autonomous, it uses external nonlocal"
+                + f" objects: {analyzer.names.explicitly_nonlocal_unbound_deep}")
 
         builtin_names = set(dir(builtins))
         import_required = analyzer.names.explicitly_global_unbound_deep
         import_required |= analyzer.names.unclassified_deep
         import_required -= builtin_names
         if import_required:
-            raise NameError(f"The function {a_func.__name__}"
-                , f" is not autonomous, it uses global"
-                , f" objects {import_required}"
-                , f" without importing them inside the function body")
+            raise FunctionAutonomicityError(f"Function {a_func.__name__}"
+                + f" is not autonomous, it uses global"
+                + f" objects {import_required}"
+                + f" without importing them inside the function body")
+
+        if analyzer.n_yelds:
+            raise FunctionAutonomicityError(f"Function {a_func.__name__}"
+                + f" is not autonomous, it uses yield statements")
 
         if len(a_func.__code__.co_freevars): #TODO: will ASTs serve better here?
-            raise NameError(f"The function {a_func.__name__}"
-                , f" is not autonomous, it uses non-global"
-                , f" objects: {a_func.__code__.co_freevars}")
+            raise FunctionAutonomicityError(f"Function {a_func.__name__}"
+                + f" is not autonomous, it uses non-global"
+                + f" objects: {a_func.__code__.co_freevars}")
 
         @wraps(a_func)
         def wrapper(*args, **kwargs):

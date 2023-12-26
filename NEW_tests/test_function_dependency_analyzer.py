@@ -212,3 +212,41 @@ def test_simple_deep():
     assert analyzer.names.imported == {"m"}
     assert analyzer.names.local == {"nested","second_nested", "x", "m"}
     assert analyzer.names.unclassified_deep == {"str"}
+
+def nested_yeld(x):
+    import math as m
+    def nested(y):
+        import ast as a
+        y2=y
+        def subnested(z):
+            global print
+            nonlocal m
+            yield str(z+y2)
+        global float
+        return subnested
+    def second_nested(i):
+        from pandas import DataFrame
+        DataFrame()
+        return i*i
+    return nested(x)(x)
+
+def test_nested_yeld():
+    analyzer = analyze_function_dependencies(simple_deep)
+    tree = analyzer["tree"]
+    analyzer = analyzer["analyzer"]
+    assert analyzer.n_yelds == 0
+
+def simple_yeld(x):
+    y = x+2
+    if y > 100:
+        yield y
+    else:
+        yield x
+
+def test_simple_yeld():
+    analyzer = analyze_function_dependencies(simple_yeld)
+    tree = analyzer["tree"]
+    analyzer = analyzer["analyzer"]
+    assert analyzer.n_yelds == 2
+
+
