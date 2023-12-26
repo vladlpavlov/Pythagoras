@@ -157,6 +157,15 @@ def analyze_function_dependencies(
         , " not to instances of callable classes and"
         , " not to lambda functions.")
     tree = ast.parse(source)
+    assert isinstance(tree, ast.Module), (f"Only one high lever"
+        + f" function definition is allowed to be processed."
+        , f" The following code is not allowed: {source}")
+    assert isinstance(tree.body[0], ast.FunctionDef), (f"Only one high lever"
+        + f" function definition is allowed to be processed."
+        , f" The following code is not allowed: {source}")
+    assert len(tree.body)==1 , (f"Only one high lever"
+        + f" function definition is allowed to be processed."
+        , f" The following code is not allowed: {source}")
     analyzer = FunctionDependencyAnalyzer()
     analyzer.visit(tree)
     result = dict(tree=tree, analyzer=analyzer)
