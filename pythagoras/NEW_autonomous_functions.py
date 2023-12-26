@@ -4,17 +4,20 @@ Autonomous functions are only allowed to use the built-in objects
 (functions, types, variables), as well as global objects,
 explicitly imported inside the function body.
 
+Only conventional functions can be autonomous. Asynchronous functions,
+class methods and lambda functions cannot be autonomous.
+
 Autonomous functions are not allowed to:
     * use global objects, imported outside the function body;
     * use nonlocal variables, referencing the outside objects;
     * use yield (yield from) statements.
 
-Autonomous functions can have nested sub-functions.
-The sub-functions are allowed to:
+Autonomous functions can have nested functions and classes.
+Nested functions and class methods are allowed to:
     * use yield (yield from) statements;
     * use nonlocal variables, referencing the objects from the parent function.
-The sub-functions are not allowed to:
-    * use global objects, imported outside the body of autonomous parent.
+The functions and class methods are not allowed to:
+    * use global objects, imported outside the body of the autonomous parent.
 """
 import ast
 import inspect
@@ -175,12 +178,17 @@ def analyze_function_dependencies(
     if not callable(a_func):
         raise FunctionAutonomicityError("This acton can only"
             + " be applied to functions.")
+    if inspect.ismethod(a_func):
+        raise FunctionAutonomicityError("This action can only"
+            + " be applied to conventional functions,"
+            + " not to class methods.")
     source = get_normalized_function_source(a_func)
     if not source.startswith("def "):
         raise FunctionAutonomicityError("This action can only"
             + " be applied to conventional functions,"
-            + " not to instances of callable classes and"
-            + " not to lambda functions.")
+            + " not to instances of callable classes, "
+            + " not to lambda functions, "
+            + " not to async functions.")
     tree = ast.parse(source)
     if not isinstance(tree, ast.Module):
         raise FunctionAutonomicityError(f"Only one high lever"

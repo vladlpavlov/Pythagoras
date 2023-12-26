@@ -65,8 +65,24 @@ def test_non_classic_callables():
         def __call__(self, x):
             return x**2
 
+        def a_method(self,x):
+            return x**2
+
+        @classmethod
+        def c_method(cls,x):
+            return x**2
+
+    a = A()
+
     with pytest.raises(Exception):
         autonomous()(A)
+
+    with pytest.raises(Exception):
+        autonomous()(a.a_method)
+
+    with pytest.raises(Exception):
+        autonomous()(A.c_method)
+
 
 def test_yield():
     with pytest.raises(Exception):
