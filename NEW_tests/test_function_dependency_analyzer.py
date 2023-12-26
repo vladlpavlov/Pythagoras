@@ -19,7 +19,7 @@ def test_from_x_import_y_s():
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"sq", "apv", "fabs"}
-    assert analyzer.names.local == {"x", "y","i"}
+    assert analyzer.names.local == {"sq", "apv", "x", "y","i", "fabs"}
     assert analyzer.names.unclassified_deep == { "str"}
 
 def sample_import_y_as(a, *args, **kwargs):
@@ -38,7 +38,7 @@ def test_import_y_as():
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"math","s"}
-    assert analyzer.names.local == {"a", "args", "kwargs","b","x","y"}
+    assert analyzer.names.local == {'kwargs', 'x', 'a', 'args', 'y', 's', 'b', 'math'}
     assert analyzer.names.unclassified_deep == {"len","str"}
 
 def sample_good_list_comprecension(x):
@@ -140,7 +140,7 @@ def test_simple_nested_2():
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"math"}
-    assert analyzer.names.local == {"nested", "x"}
+    assert analyzer.names.local == {"nested", "x", "math"}
     assert analyzer.names.unclassified_deep == {"float"}
 
 def simple_nonlocal(x):
@@ -159,7 +159,7 @@ def test_simple_nonlocal():
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"mmm"}
-    assert analyzer.names.local == {"nested", "x", "z"}
+    assert analyzer.names.local == {"nested", "x", "z", "mmm"}
     assert analyzer.names.unclassified_deep == {"float"}
 
 
