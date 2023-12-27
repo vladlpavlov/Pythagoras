@@ -29,9 +29,12 @@ allow to inform Pythagoras that a function is intended to be autonomous,
 and to enforce autonomicity requirements for the function.
 """
 from pythagoras._autonomous.function_dependency_analyzer import *
+from pythagoras._autonomous.autonomicity_utils import *
 from functools import wraps
 import builtins
 
+class StaticAutonomicityChecksFailed(FunctionAutonomicityError):
+    pass
 
 class autonomous:
     """Decorator for enforcing autonomicity requirements for functions.
@@ -79,10 +82,14 @@ class autonomous:
 
         # Static checks
 
+        if is_autonomous(a_func):
+            raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__} "
+                + f"is already autonomous, it can't be made autonomous twice.")
+
         analyzer = analyze_function_dependencies(a_func)["analyzer"]
 
         if len(analyzer.names.explicitly_nonlocal_unbound_deep):
-            raise FunctionAutonomicityError(f"Function {a_func.__name__}"
+            raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__}"
                 + f" is not autonomous, it uses external nonlocal"
                 + f" objects: {analyzer.names.explicitly_nonlocal_unbound_deep}")
 
@@ -91,17 +98,17 @@ class autonomous:
         import_required |= analyzer.names.unclassified_deep
         import_required -= builtin_names
         if import_required:
-            raise FunctionAutonomicityError(f"Function {a_func.__name__}"
+            raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__}"
                 + f" is not autonomous, it uses global"
                 + f" objects {import_required}"
                 + f" without importing them inside the function body")
 
         if analyzer.n_yelds:
-            raise FunctionAutonomicityError(f"Function {a_func.__name__}"
+            raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__}"
                 + f" is not autonomous, it uses yield statements")
 
         if len(a_func.__code__.co_freevars): #TODO: will ASTs serve better here?
-            raise FunctionAutonomicityError(f"Function {a_func.__name__}"
+            raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__}"
                 + f" is not autonomous, it uses non-global"
                 + f" objects: {a_func.__code__.co_freevars}")
 
