@@ -19,7 +19,7 @@ def test_from_x_import_y_s():
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"sq", "apv", "fabs"}
-    assert analyzer.names.local == {"sq", "apv", "x", "y","i", "fabs"}
+    assert analyzer.names.local == {"x", "y","i"}
     assert analyzer.names.unclassified_deep == { "str"}
 
 def sample_import_y_as(a, *args, **kwargs):
@@ -38,7 +38,7 @@ def test_import_y_as():
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"math","s"}
-    assert analyzer.names.local == {'kwargs', 'x', 'a', 'args', 'y', 's', 'b', 'math'}
+    assert analyzer.names.local == {'kwargs', 'x', 'a', 'args', 'y', 'b'}
     assert analyzer.names.unclassified_deep == {"len","str"}
 
 def sample_good_list_comprecension(x):
@@ -57,39 +57,40 @@ def test_good_list_comprencension():
 
 
 def sample_bad_list_comprecension(x):
-    print(i)
-    return [i for i in range(x)]
+    n = i
+    return [i+n for i in range(x)]
 
 def test_bad_list_comprencension():
     with pytest.raises(Exception):
         sample_bad_list_comprecension(3)
     analyzer = analyze_function_dependencies(sample_bad_list_comprecension)["analyzer"]
     assert analyzer.imported_packages_deep == set()
-    assert analyzer.names.accessible == {"i", "x", "range", "print"}
+    assert analyzer.names.accessible == {"i", "x", "range", "n"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == set()
-    assert analyzer.names.local == {"x"}
-    assert analyzer.names.unclassified_deep == {"range", "print","i"}
+    assert analyzer.names.local == {"x", "n"}
+    assert analyzer.names.unclassified_deep == {"range","i"}
 
 def sample_for_loop(x):
+    total = 0
     for i in range(x):
-        print(i)
-
+        total += i
     for i,y in enumerate(range(x)):
-        print(i,y)
+        total += i+ y
+    return total
 
 def test_for_loop():
     sample_for_loop(3)
     dependencies = analyze_function_dependencies(sample_for_loop)
     analyzer = dependencies["analyzer"]
     assert analyzer.imported_packages_deep == set()
-    assert analyzer.names.accessible == {"i", "x", "y", "range", "print", "enumerate"}
+    assert analyzer.names.accessible == {"total","i", "x", "y", "range", "enumerate"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == set()
-    assert analyzer.names.local == {"x", "i", "y"}
-    assert analyzer.names.unclassified_deep == {"range", "print", "enumerate"}
+    assert analyzer.names.local == {"x", "i", "y", "total"}
+    assert analyzer.names.unclassified_deep == {"range", "enumerate"}
 
 def simple_nested(x):
     def nested(y):
@@ -140,7 +141,7 @@ def test_simple_nested_2():
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"math"}
-    assert analyzer.names.local == {"nested", "x", "math"}
+    assert analyzer.names.local == {"nested", "x"}
     assert analyzer.names.unclassified_deep == {"float"}
 
 def simple_nonlocal(x):
@@ -159,7 +160,7 @@ def test_simple_nonlocal():
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"mmm"}
-    assert analyzer.names.local == {"nested", "x", "z", "mmm"}
+    assert analyzer.names.local == {"nested", "x", "z"}
     assert analyzer.names.unclassified_deep == {"float"}
 
 
@@ -179,7 +180,7 @@ def test_simple_global():
     assert analyzer.names.explicitly_global_unbound_deep == {"float"}
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"m"}
-    assert analyzer.names.local == {"nested", "x", "m"}
+    assert analyzer.names.local == {"nested", "x"}
     assert analyzer.names.unclassified_deep == {"int"}
 
 
@@ -210,7 +211,7 @@ def test_simple_deep():
     assert analyzer.names.explicitly_global_unbound_deep == {"float","print"}
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"m"}
-    assert analyzer.names.local == {"nested","second_nested", "x", "m"}
+    assert analyzer.names.local == {"nested","second_nested", "x"}
     assert analyzer.names.unclassified_deep == {"str"}
 
 def nested_yeld(x):
@@ -249,5 +250,43 @@ def test_simple_yeld():
     analyzer = analyzer["analyzer"]
     assert analyzer.n_yelds == 2
 
+def simple_exceptioms():
+    try:
+        pass
+    except Exception as e:
+        print(e)
+    finally:
+        a = 5
+
+def test_simple_exceptioms():
+    simple_exceptioms()
+    analyzer = analyze_function_dependencies(simple_exceptioms)
+    tree = analyzer["tree"]
+    analyzer = analyzer["analyzer"]
+    assert analyzer.imported_packages_deep == set()
+    assert analyzer.names.accessible == {"print", "Exception", "e", "a"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == set()
+    assert analyzer.names.local == {"e", "a"}
+    assert analyzer.names.unclassified_deep == {"Exception", "print"}
+
+def simple_with():
+    import contextlib
+    with contextlib.suppress(Exception) as suppressed:
+        pass
+
+def test_simple_with():
+    simple_with()
+    analyzer = analyze_function_dependencies(simple_with)
+    tree = analyzer["tree"]
+    analyzer = analyzer["analyzer"]
+    assert analyzer.imported_packages_deep == {"contextlib"}
+    assert analyzer.names.accessible == {"contextlib", "Exception", "suppressed"}
+    assert analyzer.names.explicitly_global_unbound_deep == set()
+    assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
+    assert analyzer.names.imported == {"contextlib"}
+    assert analyzer.names.local == {"suppressed"}
+    assert analyzer.names.unclassified_deep == {"Exception"}
 
 

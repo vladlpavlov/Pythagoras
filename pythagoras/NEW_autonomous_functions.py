@@ -1,23 +1,28 @@
 """Work with autonomous functions.
 
-Autonomous functions are only allowed to use the built-in objects
+In an essence, an autonomous function contains self-sufficient code
+that does not depend on external imports or definitions.
+
+Autonomous functions are always allowed to use the built-in objects
 (functions, types, variables), as well as global objects,
-explicitly imported inside the function body.
+explicitly imported inside the function body. An autonomous function
+may be allowed to use idempotent functions, which are created or imported
+outside the autonomous function.
+
+Autonomous functions are not allowed to:
+    * use global objects, imported or defined outside the function body
+      (except built-in objects and, possibly, idempotent functions);
+    * use yield (yield from) statements;
+    * use nonlocal variables, referencing the outside objects.
+
+If an autonomous function is allowed to use outside idempotent functions,
+it is called "loosely autonomous function". Otherwise, it is called
+"strictly autonomous function".
+
+Autonomous functions can have nested functions and classes.
 
 Only conventional functions can be autonomous. Asynchronous functions,
 class methods and lambda functions cannot be autonomous.
-
-Autonomous functions are not allowed to:
-    * use global objects, imported outside the function body;
-    * use nonlocal variables, referencing the outside objects;
-    * use yield (yield from) statements.
-
-Autonomous functions can have nested functions and classes.
-Nested functions and class methods are allowed to:
-    * use yield (yield from) statements;
-    * use nonlocal variables, referencing the objects from the parent function.
-The functions and class methods are not allowed to:
-    * use global objects, imported outside the body of the autonomous parent.
 """
 import ast
 import inspect
@@ -59,7 +64,6 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
         if self.func_nesting_level == 0:
             self.func_nesting_level += 1
             for arg in node.args.args:
-                self.names.accessible |= {arg.arg}
                 self.names.local |= {arg.arg}
             if node.args.vararg:
                 self.names.local |= {node.args.vararg.arg}
@@ -72,11 +76,10 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
             nested = FunctionDependencyAnalyzer()
             nested.visit(node)
             self.imported_packages_deep |= nested.imported_packages_deep
-            nested.names.explicitly_nonlocal_unbound_deep -= self.names.local
+            nested.names.explicitly_nonlocal_unbound_deep -= self.names.accessible
             self.names.explicitly_nonlocal_unbound_deep |= nested.names.explicitly_nonlocal_unbound_deep
             self.names.explicitly_global_unbound_deep |= nested.names.explicitly_global_unbound_deep
-            nested.names.unclassified_deep -= self.names.local
-            nested.names.unclassified_deep -= self.names.imported
+            nested.names.unclassified_deep -= self.names.accessible
             self.names.unclassified_deep |= nested.names.unclassified_deep
             self.names.local |= {node.name}
             self.names.accessible |= {node.name}
@@ -103,6 +106,12 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
         self.n_yelds += 1
         self.generic_visit(node)
 
+    def visit_Try(self, node):
+        for handler in node.handlers:
+            self.names.local |= {handler.name}
+            self.names.accessible |= {handler.name}
+        self.generic_visit(node)
+
     def visit_comprehension(self, node):
         if isinstance(node.target, (ast.Tuple, ast.List)):
             all_targets =node.target.elts
@@ -112,7 +121,7 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
             if isinstance(target, ast.Name):
                 if target.id not in self.names.accessible:
                     self.names.local |= {target.id}
-                    self.names.accessible |= {target.id}
+        self.names.accessible |= self.names.local
         self.generic_visit(node)
 
 
@@ -143,9 +152,8 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
         for alias in node.names:
             name = alias.asname if alias.asname else alias.name
             self.names.imported |= {name}
-            self.names.accessible |= {name}
-            self.names.local |= {name}
             self.imported_packages_deep |= {alias.name.split('.')[0]}
+        self.names.accessible |= self.names.imported
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node):
@@ -153,18 +161,19 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
         for alias in node.names:
             name = alias.asname if alias.asname else alias.name
             self.names.imported |= {name}
-            self.names.accessible |= {name}
-            self.names.local |= {name}
+        self.names.accessible |= self.names.imported
         self.generic_visit(node)
 
     def visit_Nonlocal(self, node):
-        self.names.explicitly_nonlocal_unbound_deep |= set(node.names)
-        self.names.accessible |= set(node.names)
+        nonlocals =  set(node.names)
+        self.names.explicitly_nonlocal_unbound_deep |= nonlocals
+        self.names.accessible |= nonlocals
         self.generic_visit(node)
 
     def visit_Global(self, node):
-        self.names.explicitly_global_unbound_deep |= set(node.names)
-        self.names.accessible |= set(node.names)
+        globals = set(node.names)
+        self.names.explicitly_global_unbound_deep |= globals
+        self.names.accessible |= globals
         self.generic_visit(node)
 
 def analyze_function_dependencies(
