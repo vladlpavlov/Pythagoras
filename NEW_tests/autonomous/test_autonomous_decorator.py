@@ -1,7 +1,6 @@
 import pytest
 
-from pythagoras.NEW_autonomous_functions import autonomous, is_autonomous, \
-    FunctionAutonomicityError
+from pythagoras._autonomous import *
 
 import sys
 
@@ -10,7 +9,6 @@ def test_globals():
     @autonomous()
     def good_global_f():
         import math
-        import sys
         return math.sqrt(4)
 
     from math import sqrt

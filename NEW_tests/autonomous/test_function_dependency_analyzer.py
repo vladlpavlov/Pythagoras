@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from pythagoras.NEW_autonomous_functions import analyze_function_dependencies
+from pythagoras._autonomous import *
 
 def sample_from_x_import_y(x):
     from math import sqrt as sq
@@ -110,6 +110,8 @@ def test_simple_nested():
     assert analyzer.names.unclassified_deep == set()
 
 def bad_simple_nested(x):
+    del sys
+    sys.api_version
     def nested(y):
         return math.sqrt(y)
     return nested(x)
@@ -119,12 +121,12 @@ def test_bad_simple_nested():
         bad_simple_nested(4)
     analyzer = analyze_function_dependencies(bad_simple_nested)["analyzer"]
     assert analyzer.imported_packages_deep == set()
-    assert analyzer.names.accessible == {"nested", "x"}
+    assert analyzer.names.accessible == {"nested", "x", "sys"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == set()
     assert analyzer.names.local == {"nested", "x"}
-    assert analyzer.names.unclassified_deep == {"math"}
+    assert analyzer.names.unclassified_deep == {"math","sys"}
 
 
 def simple_nested_2(x):

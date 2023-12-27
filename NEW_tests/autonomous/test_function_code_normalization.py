@@ -1,12 +1,16 @@
-import inspect
 from functools import cache
-
-import autopep8
-
-from pythagoras.NEW_utils import get_normalized_function_source
+from pythagoras._autonomous import *
 
 def f_docstring():
     """ This is a CRAZY docstring"""
+    def internal(a:int):
+        """ This is another CRAZY docstring"""
+        b=24
+        return a+b
+    class A:
+        """ This is a third CRAZY docstring"""
+        def __init__(self):
+            pass
     return 123456
 
 def f_comments():
