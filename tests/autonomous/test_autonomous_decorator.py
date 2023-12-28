@@ -21,10 +21,10 @@ def test_globals():
 
     assert good_global_f() == 2
 
-    with pytest.raises(FunctionAutonomicityError):
+    with pytest.raises(StaticAutonomicityChecksFailed):
         bad_global_f1 = autonomous()(bad_global_f1)
 
-    with pytest.raises(FunctionAutonomicityError):
+    with pytest.raises(StaticAutonomicityChecksFailed):
         bad_global_f1 = autonomous()(bad_global_f1)
 
     assert is_autonomous(good_global_f)
@@ -41,7 +41,7 @@ def test_locals_2():
         x = 3
         return random.random()
 
-    with pytest.raises(FunctionAutonomicityError):
+    with pytest.raises(StaticAutonomicityChecksFailed):
         bad_local_f3 = autonomous()(bad_local_f3)
 
     @autonomous()
@@ -56,7 +56,7 @@ def test_locals_2():
     assert not is_autonomous(bad_local_f3)
 
 def test_non_classic_callables():
-    with pytest.raises(Exception):
+    with pytest.raises(PythagorasException):
         autonomous()(lambda x: x**2)
 
     class A:
@@ -94,3 +94,12 @@ def test_nested_yield():
         def g():
             yield 1
         return g()
+
+
+def test_nested_autonomous():
+    @autonomous()
+    def f():
+        pass
+    
+    with pytest.raises(PythagorasException):
+        f = autonomous()(f)

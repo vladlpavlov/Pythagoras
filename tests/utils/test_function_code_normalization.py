@@ -1,5 +1,5 @@
 from functools import cache
-from pythagoras._autonomous import *
+from pythagoras._utils import *
 
 def f_docstring():
     """ This is a CRAZY docstring"""

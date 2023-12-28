@@ -1,4 +1,3 @@
-from pythagoras.persidicts import PersiDict
 import io, uuid
 
 persi_stdout = None

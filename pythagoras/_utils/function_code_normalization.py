@@ -1,12 +1,13 @@
 """
-This Python module provides functionality for normalizing function source codes.
-Normalization consists of remove decorators, comments, docstrings,
-and empty lines, and standardizes formatting according to PEP 8 guidelines.
+This module provides functionality for normalizing function source codes.
+Normalization consists of removing decorators, comments, docstrings,
+and empty lines, and then formatting according to PEP 8 guidelines.
 
 The module's primary function, `get_normalized_function_source`, takes a callable
-as input and returns its source code in a 'canonical' form. This includes type
-verification to ensure it's not a method or lambda, and cleaning and reformatting
-the code. The module also defines `FunctionSourceNormalizationError`, a custom
+as input and returns its source code in a 'canonical' form. The function only
+works with regular functions, a method, a lambda function, or an async function
+can not be passed as an argument to get_normalized_function_source.
+The module also defines `FunctionSourceNormalizationError`, a custom
 exception for errors specific to function normalization.
 
 External libraries `ast`, `astor`, and `autopep8` are used for
@@ -20,11 +21,11 @@ from typing import Callable
 import astor
 import autopep8
 
-from pythagoras import get_long_infoname
-from pythagoras._autonomous.autonomicity_exceptions import *
+from pythagoras._utils.basic_utils import get_long_infoname
+from pythagoras._utils.basic_exceptions import PythagorasException
 
 
-class FunctionSourceNormalizationError(FunctionAutonomicityError):
+class FunctionSourceNormalizationError(PythagorasException):
     """Custom class for exceptions in this module."""
     pass
 
@@ -78,7 +79,9 @@ def get_normalized_function_source(a_func:Callable) -> str:
     code_ast = ast.parse(code_clean_version)
 
     assert isinstance(code_ast, ast.Module)
-    assert isinstance(code_ast.body[0], ast.FunctionDef)
+    assert isinstance(code_ast.body[0], ast.FunctionDef),(
+        f"{type(code_ast.body[0])=}"
+    )
     #TODO: add support for multiple decorators
     if len(code_ast.body[0].decorator_list) > 1:
         raise FunctionSourceNormalizationError(

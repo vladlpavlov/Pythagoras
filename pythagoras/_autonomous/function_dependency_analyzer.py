@@ -1,7 +1,6 @@
-from pythagoras._autonomous.autonomicity_exceptions import *
-from pythagoras._autonomous.function_code_normalization import *
+from pythagoras._utils.function_code_normalization import *
 
-class FunctionDependencyAnalysisError(FunctionAutonomicityError):
+class FunctionDependencyAnalysisError(PythagorasException):
     """Custom class for exceptions in this module."""
     pass
 

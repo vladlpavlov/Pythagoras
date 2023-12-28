@@ -1,6 +1,6 @@
 """Test package_dependencies.py."""
 
-from pythagoras.package_dependencies import *
+from pythagoras.___OLD___.OLD_package_dependencies import *
 
 def test_PckgDependencies_basic():
     p_dep_1 = PckgDependencies(["pythagoras~=1.0", "pandas", "numpy==1.24"])

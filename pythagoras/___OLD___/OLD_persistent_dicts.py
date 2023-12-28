@@ -29,7 +29,7 @@ import jsonpickle
 import jsonpickle.ext.numpy as jsonpickle_numpy
 import jsonpickle.ext.pandas as jsonpickle_pandas
 
-from pythagoras.utils import get_safe_chars
+from pythagoras.OLD_utils import get_safe_chars
 
 from collections.abc import MutableMapping
 

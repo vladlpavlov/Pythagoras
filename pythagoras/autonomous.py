@@ -48,7 +48,4 @@ from pythagoras._autonomous import is_autonomous
 from pythagoras._autonomous import is_loosely_autonomous
 from pythagoras._autonomous import is_strictly_autonomous
 
-from pythagoras._autonomous import get_normalized_function_source
-
 from pythagoras._autonomous import FunctionAutonomicityError
-from pythagoras._autonomous import FunctionSourceNormalizationError

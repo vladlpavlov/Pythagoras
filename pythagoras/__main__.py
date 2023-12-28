@@ -1,6 +1,6 @@
 import sys
 
-from pythagoras.p_cloud import SharedStorage_P2P_Cloud, PFuncOutputAddress, PValueAddress, PFunctionCallSignature, \
+from pythagoras.OLD_p_cloud import SharedStorage_P2P_Cloud, PFuncOutputAddress, PValueAddress, PFunctionCallSignature, \
     KwArgsDict, post_log_entry
 
 if sys.argv[1] == SharedStorage_P2P_Cloud.__name__:

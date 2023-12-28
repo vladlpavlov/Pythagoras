@@ -33,7 +33,7 @@ from pythagoras._autonomous.autonomicity_utils import *
 from functools import wraps
 import builtins
 
-class StaticAutonomicityChecksFailed(FunctionAutonomicityError):
+class StaticAutonomicityChecksFailed(PythagorasException):
     pass
 
 class autonomous:
