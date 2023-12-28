@@ -28,8 +28,8 @@ Decorators @autonomous, @loosely_autonomous, and @strictly_autonomous
 allow to inform Pythagoras that a function is intended to be autonomous,
 and to enforce autonomicity requirements for the function.
 """
-from pythagoras._autonomous.function_dependency_analyzer import *
-from pythagoras._autonomous.autonomicity_utils import *
+from pythagoras._utils.function_dependency_analyzer import *
+from pythagoras._autonomous.autonomicity_checks import *
 from functools import wraps
 import builtins
 
