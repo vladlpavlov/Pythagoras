@@ -1,11 +1,16 @@
 import subprocess
 import importlib
 import sys
+from typing import Optional
+
 
 class PackageInstallerError(Exception):
     pass
 
-def install_package(package_name, upgrade=False, version=None):
+def install_package(package_name:str
+        , upgrade:bool=False
+        , version:Optional[str]=None
+        ) -> None:
     """Install package using pip."""
     command = [sys.executable, "-m", "pip", "install"]
 
@@ -30,18 +35,19 @@ def install_package(package_name, upgrade=False, version=None):
             f"Failed to validate package installation'{package_spec}'. "
             +f"Error output:\n{result.stdout}")
 
-def uninstall_package(package_name):
+def uninstall_package(package_name:str)->None:
     """Uninstall package using pip."""
     command = [sys.executable, "-m", "pip", "uninstall", "-y", package_name]
     try:
-        result = subprocess.run(command, check=True, stdout=subprocess.PIPE
+        subprocess.run(command, check=True, stdout=subprocess.PIPE
             , stderr=subprocess.STDOUT, text=True)
     except subprocess.CalledProcessError as e:
         raise PackageInstallerError(
             f"Failed to uninstall package '{package_name}'. "
             +f"Error output:\n{e.stdout}")
     try:
-        importlib.reload(package_name)
+        package = importlib.import_module(package_name)
+        importlib.reload(package)
     except:
         pass
     else:

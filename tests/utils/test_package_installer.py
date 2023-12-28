@@ -1,3 +1,4 @@
+import importlib
 import random
 import string
 
@@ -7,18 +8,26 @@ from pythagoras._utils.package_installer import (install_package
     , uninstall_package, PackageInstallerError)
 
 def test_actual_package():
-    """Test the package installer.
+    """Test if package installer installs a package.
     """
     actual_package_name = "nothing"
 
+    uninstall_package(actual_package_name)
+    uninstall_package(actual_package_name)
+
     install_package(actual_package_name)
     install_package(actual_package_name)
 
+    package = importlib.import_module(actual_package_name)
+    importlib.reload(package)
+
     uninstall_package(actual_package_name)
-    uninstall_package(actual_package_name)
+
+    with pytest.raises(ModuleNotFoundError):
+        importlib.reload(package)
 
 def test_nonexisting_package():
-    """Test the package installer.
+    """Test if package installer throws an exception for nonexistent packages.
     """
     nonexisting_package_name = ""
     for i in range(20):
