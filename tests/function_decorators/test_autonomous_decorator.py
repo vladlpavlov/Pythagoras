@@ -1,7 +1,7 @@
 import pytest
 
 from pythagoras import PythagorasException
-from pythagoras.autonomous.autonomous_decorators import *
+from pythagoras.function_decorators.autonomous_decorators import *
 
 import sys
 

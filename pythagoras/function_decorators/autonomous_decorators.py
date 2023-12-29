@@ -29,7 +29,7 @@ allow to inform Pythagoras that a function is intended to be autonomous,
 and to enforce autonomicity requirements for the function.
 """
 from pythagoras._function_src_code_processing.names_usage_analyzer import *
-from pythagoras.autonomous.autonomicity_checks import *
+from pythagoras.function_decorators.autonomicity_checks import *
 from functools import wraps
 import builtins
 

@@ -8,4 +8,4 @@ in a shorter time with smaller budgets.
 """
 
 from pythagoras.utils import *
-from pythagoras.autonomous import *
+from pythagoras.function_decorators import *

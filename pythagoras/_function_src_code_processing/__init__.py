@@ -1,4 +1,5 @@
-from pythagoras._function_src_code_processing.long_infoname import get_long_infoname
+from pythagoras._function_src_code_processing.long_infoname import (
+    get_long_infoname)
 
 from pythagoras._function_src_code_processing.code_normalizer import (
     get_normalized_function_source
