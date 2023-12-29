@@ -28,7 +28,7 @@ Decorators @autonomous, @loosely_autonomous, and @strictly_autonomous
 allow to inform Pythagoras that a function is intended to be autonomous,
 and to enforce autonomicity requirements for the function.
 """
-from pythagoras._source_code_processing.function_dependency_analyzer import *
+from pythagoras._function_src_code_processing.names_usage_analyzer import *
 from pythagoras.autonomous.autonomicity_checks import *
 from functools import wraps
 import builtins
@@ -86,7 +86,7 @@ class autonomous:
             raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__} "
                 + f"is already autonomous, it can't be made autonomous twice.")
 
-        analyzer = analyze_function_dependencies(a_func)["analyzer"]
+        analyzer = analyze_names_in_function(a_func)["analyzer"]
 
         if len(analyzer.names.explicitly_nonlocal_unbound_deep):
             raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__}"

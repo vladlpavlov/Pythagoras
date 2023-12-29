@@ -22,7 +22,7 @@ import astor
 import autopep8
 
 from pythagoras.utils import *
-from pythagoras._source_code_processing import *
+from pythagoras._function_src_code_processing import *
 
 
 class FunctionSourceNormalizationError(PythagorasException):

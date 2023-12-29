@@ -1,4 +1,4 @@
-from pythagoras._source_code_processing.function_code_normalization import *
+from pythagoras._function_src_code_processing.code_normalizer import *
 
 class FunctionDependencyAnalysisError(PythagorasException):
     """Custom class for exceptions in this module."""
@@ -6,6 +6,7 @@ class FunctionDependencyAnalysisError(PythagorasException):
 
 class NamesUsedInFunction:
     def __init__(self):
+        self.function = None # name of the function
         self.explicitly_global_unbound_deep = set() # names, explicitly marked as global inside the function and/or called subfunctions, yet not bound to any object
         self.explicitly_nonlocal_unbound_deep = set() # names, explicitly marked as nonlocal inside the function and/or called subfunctions, yet not bound to any object
         self.local = set() # local variables in a function
@@ -13,7 +14,7 @@ class NamesUsedInFunction:
         self.unclassified_deep = set() # names, used inside the function and/or called subfunctions, while not explicitly imported, amd not explicitly marked as nonlocal / global
         self.accessible = set() # all names, currently accessable within the function
 
-class FunctionDependencyAnalyzer(ast.NodeVisitor):
+class NamesUsageAnalyzer(ast.NodeVisitor):
     """Collect data needed to analyze function autonomy.
 
     This class is a visitor of an AST (Abstract Syntax Tree) that collects data
@@ -28,6 +29,7 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         if self.func_nesting_level == 0:
+            self.names.function = node.name
             self.func_nesting_level += 1
             for arg in node.args.args:
                 self.names.local |= {arg.arg}
@@ -39,7 +41,7 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
             self.generic_visit(node)
             self.func_nesting_level -= 1
         else:
-            nested = FunctionDependencyAnalyzer()
+            nested = NamesUsageAnalyzer()
             nested.visit(node)
             self.imported_packages_deep |= nested.imported_packages_deep
             nested.names.explicitly_nonlocal_unbound_deep -= self.names.accessible
@@ -140,13 +142,14 @@ class FunctionDependencyAnalyzer(ast.NodeVisitor):
         self.names.accessible |= globals
         self.generic_visit(node)
 
-def analyze_function_dependencies(
+def analyze_names_in_function(
         a_func: Callable
         ):
-    """Analyze function dependencies.
+    """Analyze names used in a function.
 
-    It returns an instance of FunctionDependencyAnalyzer class,
-    which contains all the data needed to analyze function autonomy.
+    It returns an instance of NamesUsageAnalyzer class,
+    which contains all the data needed to analyze
+    names, used by the function.
     """
     if not callable(a_func):
         raise FunctionDependencyAnalysisError("This acton can only"
@@ -175,7 +178,7 @@ def analyze_function_dependencies(
         raise FunctionDependencyAnalysisError(f"Only one high lever"
             + f" function definition is allowed to be processed."
             + f" The following code is not allowed: {source}")
-    analyzer = FunctionDependencyAnalyzer()
+    analyzer = NamesUsageAnalyzer()
     analyzer.visit(tree)
     result = dict(tree=tree, analyzer=analyzer)
     return result

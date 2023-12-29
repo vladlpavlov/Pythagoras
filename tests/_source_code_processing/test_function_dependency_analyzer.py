@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from pythagoras._source_code_processing.function_dependency_analyzer import *
+from pythagoras._function_src_code_processing.names_usage_analyzer import *
 
 def sample_from_x_import_y(x):
     from math import sqrt as sq
@@ -13,7 +13,7 @@ def sample_from_x_import_y(x):
     return [str(i)+y for i in [sq(x),apv,fabs(2)]]
 def test_from_x_import_y_s():
     sample_from_x_import_y(3)
-    analyzer = analyze_function_dependencies(sample_from_x_import_y)["analyzer"]
+    analyzer = analyze_names_in_function(sample_from_x_import_y)["analyzer"]
     assert analyzer.imported_packages_deep == {"math", "sys"}
     assert analyzer.names.accessible == {"sq", "apv", "x", "y","i", "fabs", "str"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
@@ -32,7 +32,8 @@ def sample_import_y_as(a, *args, **kwargs):
 
 def test_import_y_as():
     sample_import_y_as(3, 4, 5)
-    analyzer = analyze_function_dependencies(sample_import_y_as)["analyzer"]
+    analyzer = analyze_names_in_function(sample_import_y_as)["analyzer"]
+    assert analyzer.names.function == "sample_import_y_as"
     assert analyzer.imported_packages_deep == {"math","sys"}
     assert analyzer.names.accessible == {"a", "args", "kwargs", "math","s","b","x","y","len","str"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
@@ -46,7 +47,7 @@ def sample_good_list_comprecension(x):
 
 def test_good_list_comprencension():
     sample_good_list_comprecension(3)
-    analyzer = analyze_function_dependencies(sample_good_list_comprecension)["analyzer"]
+    analyzer = analyze_names_in_function(sample_good_list_comprecension)["analyzer"]
     assert analyzer.imported_packages_deep == set()
     assert analyzer.names.accessible == {"i", "x", "range"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
@@ -63,7 +64,7 @@ def sample_bad_list_comprecension(x):
 def test_bad_list_comprencension():
     with pytest.raises(Exception):
         sample_bad_list_comprecension(3)
-    analyzer = analyze_function_dependencies(sample_bad_list_comprecension)["analyzer"]
+    analyzer = analyze_names_in_function(sample_bad_list_comprecension)["analyzer"]
     assert analyzer.imported_packages_deep == set()
     assert analyzer.names.accessible == {"i", "x", "range", "n"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
@@ -82,7 +83,7 @@ def sample_for_loop(x):
 
 def test_for_loop():
     sample_for_loop(3)
-    dependencies = analyze_function_dependencies(sample_for_loop)
+    dependencies = analyze_names_in_function(sample_for_loop)
     analyzer = dependencies["analyzer"]
     assert analyzer.imported_packages_deep == set()
     assert analyzer.names.accessible == {"total","i", "x", "y", "range", "enumerate"}
@@ -100,7 +101,7 @@ def simple_nested(x):
 
 def test_simple_nested():
     assert simple_nested(4) == 2
-    analyzer = analyze_function_dependencies(simple_nested)["analyzer"]
+    analyzer = analyze_names_in_function(simple_nested)["analyzer"]
     assert analyzer.imported_packages_deep == {"math"}
     assert analyzer.names.accessible == {"nested", "x"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
@@ -119,7 +120,7 @@ def bad_simple_nested(x):
 def test_bad_simple_nested():
     with pytest.raises(Exception):
         bad_simple_nested(4)
-    analyzer = analyze_function_dependencies(bad_simple_nested)["analyzer"]
+    analyzer = analyze_names_in_function(bad_simple_nested)["analyzer"]
     assert analyzer.imported_packages_deep == set()
     assert analyzer.names.accessible == {"nested", "x", "sys"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
@@ -137,7 +138,7 @@ def simple_nested_2(x):
 
 def test_simple_nested_2():
     assert simple_nested_2(4) == 2
-    analyzer = analyze_function_dependencies(simple_nested_2)["analyzer"]
+    analyzer = analyze_names_in_function(simple_nested_2)["analyzer"]
     assert analyzer.imported_packages_deep == {"math"}
     assert analyzer.names.accessible == {"nested", "x", "math"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
@@ -156,7 +157,7 @@ def simple_nonlocal(x):
 
 def test_simple_nonlocal():
     assert simple_nonlocal(4) == 4
-    analyzer = analyze_function_dependencies(simple_nonlocal)["analyzer"]
+    analyzer = analyze_names_in_function(simple_nonlocal)["analyzer"]
     assert analyzer.imported_packages_deep == {"math"}
     assert analyzer.names.accessible == {"nested", "x", "z", "mmm"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
@@ -176,7 +177,7 @@ def simple_global(x):
 
 def test_simple_global():
     assert simple_global(4) == 4
-    analyzer = analyze_function_dependencies(simple_global)["analyzer"]
+    analyzer = analyze_names_in_function(simple_global)["analyzer"]
     assert analyzer.imported_packages_deep == {"math"}
     assert analyzer.names.accessible == {"nested", "x", "m"}
     assert analyzer.names.explicitly_global_unbound_deep == {"float"}
@@ -205,7 +206,7 @@ def simple_deep(x):
 
 def test_simple_deep():
     assert simple_deep(4) == "8"
-    analyzer = analyze_function_dependencies(simple_deep)
+    analyzer = analyze_names_in_function(simple_deep)
     tree = analyzer["tree"]
     analyzer = analyzer["analyzer"]
     assert analyzer.imported_packages_deep == {"math","ast", "pandas"}
@@ -234,7 +235,7 @@ def nested_yeld(x):
     return nested(x)(x)
 
 def test_nested_yeld():
-    analyzer = analyze_function_dependencies(simple_deep)
+    analyzer = analyze_names_in_function(simple_deep)
     tree = analyzer["tree"]
     analyzer = analyzer["analyzer"]
     assert analyzer.n_yelds == 0
@@ -247,7 +248,7 @@ def simple_yeld(x):
         yield x
 
 def test_simple_yeld():
-    analyzer = analyze_function_dependencies(simple_yeld)
+    analyzer = analyze_names_in_function(simple_yeld)
     tree = analyzer["tree"]
     analyzer = analyzer["analyzer"]
     assert analyzer.n_yelds == 2
@@ -262,7 +263,7 @@ def simple_exceptioms():
 
 def test_simple_exceptioms():
     simple_exceptioms()
-    analyzer = analyze_function_dependencies(simple_exceptioms)
+    analyzer = analyze_names_in_function(simple_exceptioms)
     tree = analyzer["tree"]
     analyzer = analyzer["analyzer"]
     assert analyzer.imported_packages_deep == set()
@@ -280,7 +281,7 @@ def simple_with():
 
 def test_simple_with():
     simple_with()
-    analyzer = analyze_function_dependencies(simple_with)
+    analyzer = analyze_names_in_function(simple_with)
     tree = analyzer["tree"]
     analyzer = analyzer["analyzer"]
     assert analyzer.imported_packages_deep == {"contextlib"}

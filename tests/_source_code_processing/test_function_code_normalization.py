@@ -1,5 +1,5 @@
 from functools import cache
-from pythagoras._source_code_processing.function_code_normalization import *
+from pythagoras._function_src_code_processing.code_normalizer import *
 
 def f_docstring():
     """ This is a CRAZY docstring"""
