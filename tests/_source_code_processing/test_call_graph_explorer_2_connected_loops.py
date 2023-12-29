@@ -5,7 +5,7 @@ def a(*args
         , return_shallow:bool=False
         , return_deep:bool=False)-> Set[str]:
     assert return_name + return_shallow + return_deep == 1
-    nested_calls = []
+    nested_calls = [all_together]
     nested_calls = set(nested_calls)
     my_name = inspect.stack()[0].function
     result = {my_name}
@@ -16,7 +16,7 @@ def a(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -39,7 +39,7 @@ def b(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -63,7 +63,7 @@ def c(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -87,7 +87,7 @@ def d(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -111,7 +111,7 @@ def e(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -124,7 +124,7 @@ def aa(*args
         , return_shallow:bool=False
         , return_deep:bool=False)-> Set[str]:
     assert return_name + return_shallow + return_deep == 1
-    nested_calls = []
+    nested_calls = [all_together]
     nested_calls = set(nested_calls)
     my_name = inspect.stack()[0].function
     result = {my_name}
@@ -135,7 +135,7 @@ def aa(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -158,7 +158,7 @@ def bb(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -182,7 +182,7 @@ def cc(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -206,7 +206,7 @@ def dd(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -230,7 +230,7 @@ def ee(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -253,7 +253,7 @@ def all_together(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else:  # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:

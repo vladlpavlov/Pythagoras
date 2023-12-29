@@ -16,7 +16,7 @@ def a(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -39,7 +39,7 @@ def b(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -63,7 +63,7 @@ def c(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -87,7 +87,7 @@ def d(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -111,7 +111,7 @@ def e(*args
         result |= {f.__name__ for f in nested_calls}
         return result
     else: # return_deep == True
-        if nested_calls & set(args):
+        if my_name in args:
             return args
         else:
             for f in nested_calls:
@@ -125,3 +125,4 @@ def test_long_chain():
             {f.__name__: f(return_shallow=True) for f in all_funcs})
     assert (explore_call_graph_deep(all_funcs) ==
             {f.__name__: f(return_deep=True) for f in all_funcs})
+    
