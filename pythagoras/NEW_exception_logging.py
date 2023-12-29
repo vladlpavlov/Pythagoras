@@ -6,7 +6,7 @@ from typing import Optional, Callable
 from IPython import get_ipython
 from persidict import PersiDict
 
-from pythagoras._utils.basic_utils import get_long_infoname
+from pythagoras._source_code_processing.basic_utils import get_long_infoname
 
 # TODO: add unit tests for this module
 

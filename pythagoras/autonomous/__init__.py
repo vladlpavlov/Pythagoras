@@ -37,15 +37,12 @@ is_loosely_autonomous(), and is_strictly_autonomous().
 Applying a decorator to a function ensures both static and dynamic autonomicity
 checks are performed for the function. Static checks happen at the time
 of decoration, while dynamic checks happen at the time of function call.
-
 """
 
-from pythagoras._autonomous import autonomous
-from pythagoras._autonomous import loosely_autonomous
-from pythagoras._autonomous import strictly_autonomous
+from pythagoras.autonomous.autonomous_decorators import autonomous
+from pythagoras.autonomous.autonomous_decorators import loosely_autonomous
+from pythagoras.autonomous.autonomous_decorators import strictly_autonomous
 
-from pythagoras._autonomous import is_autonomous
-from pythagoras._autonomous import is_loosely_autonomous
-from pythagoras._autonomous import is_strictly_autonomous
-
-from pythagoras._autonomous import FunctionAutonomicityError
+from pythagoras.autonomous.autonomicity_checks import is_autonomous
+from pythagoras.autonomous.autonomicity_checks import is_loosely_autonomous
+from pythagoras.autonomous.autonomicity_checks import is_strictly_autonomous

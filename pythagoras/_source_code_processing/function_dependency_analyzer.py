@@ -1,4 +1,4 @@
-from pythagoras._utils.function_code_normalization import *
+from pythagoras._source_code_processing.function_code_normalization import *
 
 class FunctionDependencyAnalysisError(PythagorasException):
     """Custom class for exceptions in this module."""

@@ -1,4 +1,5 @@
-from pythagoras.autonomous import *
+from pythagoras.autonomous.autonomous_decorators import *
+from pythagoras.autonomous.autonomicity_checks import *
 
 @strictly_autonomous()
 def f(a:int):

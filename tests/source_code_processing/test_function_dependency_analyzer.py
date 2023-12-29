@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from pythagoras._utils import *
+from pythagoras._source_code_processing.function_dependency_analyzer import *
 
 def sample_from_x_import_y(x):
     from math import sqrt as sq
@@ -290,5 +290,3 @@ def test_simple_with():
     assert analyzer.names.imported == {"contextlib"}
     assert analyzer.names.local == {"suppressed"}
     assert analyzer.names.unclassified_deep == {"Exception"}
-
-

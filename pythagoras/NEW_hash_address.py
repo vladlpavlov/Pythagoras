@@ -8,7 +8,7 @@ from typing import Optional, Any, Type, TypeVar, Dict
 from joblib.hashing import NumpyHasher, Hasher
 from persidict import SafeStrTuple, PersiDict, replace_unsafe_chars
 
-from pythagoras._utils.basic_utils import get_long_infoname
+from pythagoras._source_code_processing import get_long_infoname
 
 T = TypeVar("T")
 

@@ -1,11 +1,8 @@
-import importlib
 import random
 import string
-
 import pytest
 
-from pythagoras._utils.package_installer import (install_package
-    , uninstall_package, PackageInstallerError)
+from pythagoras.utils.package_installer import *
 
 def test_actual_package():
     """Test if package installer installs a package.

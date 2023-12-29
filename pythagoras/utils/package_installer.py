@@ -3,8 +3,9 @@ import importlib
 import sys
 from typing import Optional
 
+from pythagoras.utils.basic_exceptions import PythagorasException
 
-class PackageInstallerError(Exception):
+class PackageInstallerError(PythagorasException):
     pass
 
 def install_package(package_name:str

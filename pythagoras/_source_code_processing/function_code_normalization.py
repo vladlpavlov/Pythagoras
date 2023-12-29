@@ -21,8 +21,8 @@ from typing import Callable
 import astor
 import autopep8
 
-from pythagoras._utils.basic_utils import get_long_infoname
-from pythagoras._utils.basic_exceptions import PythagorasException
+from pythagoras.utils import *
+from pythagoras._source_code_processing import *
 
 
 class FunctionSourceNormalizationError(PythagorasException):

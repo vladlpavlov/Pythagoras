@@ -7,8 +7,5 @@ while allowing them to solve more complex problems
 in a shorter time with smaller budgets.
 """
 
-# from pythagoras.OLD_utils import *
-# from pythagoras.OLD_persistent_dicts import *
-# from pythagoras.OLD_p_cloud import *
 from pythagoras.utils import *
 from pythagoras.autonomous import *
