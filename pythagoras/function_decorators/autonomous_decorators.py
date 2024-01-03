@@ -86,7 +86,9 @@ class autonomous:
             raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__} "
                 + f"is already autonomous, it can't be made autonomous twice.")
 
-        analyzer = analyze_names_in_function(a_func)["analyzer"]
+        analyzer = analyze_names_in_function(a_func)
+        normalized_source = analyzer["normalized_source"]
+        analyzer = analyzer["analyzer"]
 
         if len(analyzer.names.explicitly_nonlocal_unbound_deep):
             raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__}"
@@ -127,18 +129,20 @@ class autonomous:
                 result = a_func(*args, **kwargs)
                 return result
             except:
-                wrapper.__autonomous__ = False
+                wrapper.__pth_autonomous__ = False
                 raise
             finally:
                 for obj_name in old_globals:
                     a_func.__globals__[obj_name] = old_globals[obj_name]
 
-        wrapper.__autonomous__ = True
+        wrapper.__pth_autonomous__ = True
+        wrapper.__pth_func_name__ = a_func.__name__
+        wrapper.__pth_func_source__ = normalized_source
 
         if self.allow_idempotent:
-            wrapper.__loosely_autonomous__ = True
+            wrapper.__pth_loosely_autonomous__ = True
         else:
-            wrapper.__strictly_autonomous__ = True
+            wrapper.__pth_strictly_autonomous__ = True
         return wrapper
 
 class strictly_autonomous(autonomous):

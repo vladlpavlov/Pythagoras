@@ -48,6 +48,11 @@ def get_normalized_function_source(a_func:Callable) -> str:
             f"Function {a_func_name} can't be an instance or a class method,"
             + " only regular functions are allowed")
 
+    if hasattr(a_func, "__closure__") and a_func.__closure__ is not None:
+        raise FunctionSourceNormalizationError(
+            f"Function {a_func_name} can't be a closure,"
+            + " only regular functions are allowed.")
+
     code = inspect.getsource(a_func)
 
     if (isinstance(a_func, type(lambda: None))

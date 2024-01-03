@@ -5,7 +5,7 @@ def is_autonomous(a_func: Callable) -> bool:
     """Check if a function is autonomous."""
     assert callable(a_func)
     try:
-        return a_func.__autonomous__
+        return a_func.__pth_autonomous__
     except AttributeError:
         return False
 
@@ -16,7 +16,7 @@ def is_loosely_autonomous(a_func: Callable) -> bool:
     """
     assert callable(a_func)
     try:
-        return a_func.__autonomous__ and a_func.__loosely_autonomous__
+        return a_func.__pth_autonomous__ and a_func.__pth_loosely_autonomous__
     except AttributeError:
         return False
 
@@ -24,6 +24,6 @@ def is_strictly_autonomous(a_func: Callable) -> bool:
     """Check if a function is strictly autonomous."""
     assert callable(a_func)
     try:
-        return a_func.__autonomous__ and a_func.__strictly_autonomous__
+        return a_func.__pth_autonomous__ and a_func.__pth_strictly_autonomous__
     except AttributeError:
         return False

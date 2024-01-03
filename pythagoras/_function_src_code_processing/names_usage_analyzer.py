@@ -20,7 +20,7 @@ class NamesUsageAnalyzer(ast.NodeVisitor):
     This class is a visitor of an AST (Abstract Syntax Tree) that collects data
     needed to analyze function autonomy.
     """
-
+    # TODO: add support for structural pattern matching
     def __init__(self):
         self.names = NamesUsedInFunction()
         self.imported_packages_deep = set()
@@ -28,6 +28,10 @@ class NamesUsageAnalyzer(ast.NodeVisitor):
         self.n_yelds = 0
 
     def visit_FunctionDef(self, node):
+        if is_reserved_identifier(node.name):
+            raise PythagorasException(f"Name {node.name} is not allowed "
+                + "to be used inside an autonomous /idempotent function, "
+                + "because it is a Pythagoras reserved identifier.")
         if self.func_nesting_level == 0:
             self.names.function = node.name
             self.func_nesting_level += 1
@@ -55,6 +59,10 @@ class NamesUsageAnalyzer(ast.NodeVisitor):
             # self.n_yelds is not changing
 
     def visit_Name(self, node):
+        if is_reserved_identifier(node.id):
+            raise PythagorasException(f"Name {node.id} is not allowed "
+                + "to be used inside an autonomous /idempotent function, "
+                + "because it is a Pythagoras reserved identifier.")
         if isinstance(node.ctx, ast.Load):
             if node.id not in self.names.accessible:
                 self.names.unclassified_deep |= {node.id}
@@ -63,6 +71,13 @@ class NamesUsageAnalyzer(ast.NodeVisitor):
             if node.id not in self.names.accessible:
                 self.names.local |= {node.id}
                 self.names.accessible |= {node.id}
+        self.generic_visit(node)
+
+    def visit_Attribute(self, node):
+        if is_reserved_identifier(node.attr):
+            raise PythagorasException(f"Name {node.attr} is not allowed "
+                + "to be used inside an autonomous /idempotent function, "
+                + "because it is a Pythagoras reserved identifier.")
         self.generic_visit(node)
 
     def visit_Yield(self, node):
@@ -158,27 +173,28 @@ def analyze_names_in_function(
         raise FunctionDependencyAnalysisError("This action can only"
             + " be applied to conventional functions,"
             + " not to class methods.")
-    source = get_normalized_function_source(a_func)
-    if not source.startswith("def "):
+    normalized_source = get_normalized_function_source(a_func)
+    if not normalized_source.startswith("def "):
         raise FunctionDependencyAnalysisError("This action can only"
             + " be applied to conventional functions,"
             + " not to instances of callable classes, "
             + " not to lambda functions, "
             + " not to async functions.")
-    tree = ast.parse(source)
+    tree = ast.parse(normalized_source)
     if not isinstance(tree, ast.Module):
         raise FunctionDependencyAnalysisError(f"Only one high lever"
             + f" function definition is allowed to be processed."
-            + f" The following code is not allowed: {source}")
+            + f" The following code is not allowed: {normalized_source}")
     if not isinstance(tree.body[0], ast.FunctionDef):
         raise FunctionDependencyAnalysisError(f"Only one high lever"
             + f" function definition is allowed to be processed."
-            + f" The following code is not allowed: {source}")
+            + f" The following code is not allowed: {normalized_source}")
     if not len(tree.body)==1:
         raise FunctionDependencyAnalysisError(f"Only one high lever"
             + f" function definition is allowed to be processed."
-            + f" The following code is not allowed: {source}")
+            + f" The following code is not allowed: {normalized_source}")
     analyzer = NamesUsageAnalyzer()
     analyzer.visit(tree)
-    result = dict(tree=tree, analyzer=analyzer)
+    result = dict(tree=tree, analyzer=analyzer
+        , normalized_source=normalized_source)
     return result
