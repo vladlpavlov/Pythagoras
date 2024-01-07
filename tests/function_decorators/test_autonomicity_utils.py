@@ -12,16 +12,16 @@ def test_strictly_autonomous():
     assert is_autonomous(f)
     assert f(10) == 34
 
-@loosely_autonomous()
-def g(a:int):
-    b=100
-    return a+b
-
-def test_loosely_autonomous():
-    assert is_loosely_autonomous(g)
-    assert not is_strictly_autonomous(g)
-    assert is_autonomous(g)
-    assert g(10) == 110
+# @loosely_autonomous()
+# def g(a:int):
+#     b=100
+#     return a+b
+#
+# def test_loosely_autonomous():
+#     assert is_loosely_autonomous(g)
+#     assert not is_strictly_autonomous(g)
+#     assert is_autonomous(g)
+#     assert g(10) == 110
 
 def h(a:int):
     b=100

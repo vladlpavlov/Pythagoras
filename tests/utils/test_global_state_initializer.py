@@ -2,10 +2,10 @@ import pythagoras as pth
 
 
 def test_local_initialization(tmp_path):
-    pth.utils.global_state_initializer._clean_global_state()
+    pth.misc_utils.global_state_management._clean_global_state()
 
     init_params = dict(
-        cloud_type="local",base_dir=tmp_path, island_name="kuku")
+        cloud_type="local",base_dir=tmp_path, default_island_name="kuku")
 
     pth.initialize(**init_params)
 
@@ -15,12 +15,12 @@ def test_local_initialization(tmp_path):
     assert pth.initialization_parameters == init_params
     assert len(pth.value_store) == 0
     assert len(pth.crash_history) == 0
-    assert pth.island_name == "kuku"
+    assert pth.default_island_name == "kuku"
 
 def test_corrupt_value_store(tmp_path):
-    pth.utils.global_state_initializer._clean_global_state()
+    pth.misc_utils.global_state_management._clean_global_state()
     init_params = dict(
-        cloud_type="local", base_dir=tmp_path, island_name="kuku")
+        cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
 
     pth.initialize(**init_params)
     pth.value_store = None
@@ -29,9 +29,9 @@ def test_corrupt_value_store(tmp_path):
     assert not pth.is_unitialized()
 
 def test_corrupt_crash_history(tmp_path):
-    pth.utils.global_state_initializer._clean_global_state()
+    pth.misc_utils.global_state_management._clean_global_state()
     init_params = dict(
-        cloud_type="local", base_dir=tmp_path, island_name="kuku")
+        cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
 
     pth.initialize(**init_params)
     pth.crash_history = 42
@@ -40,9 +40,9 @@ def test_corrupt_crash_history(tmp_path):
     assert not pth.is_unitialized()
 
 def test_corrupt_cloudized_functions(tmp_path):
-    pth.utils.global_state_initializer._clean_global_state()
+    pth.misc_utils.global_state_management._clean_global_state()
     init_params = dict(
-        cloud_type="local", base_dir=tmp_path, island_name="kuku")
+        cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
 
     pth.initialize(**init_params)
     pth.cloudized_functions = "To be, or not to be, that is the question"
@@ -51,13 +51,12 @@ def test_corrupt_cloudized_functions(tmp_path):
     assert not pth.is_unitialized()
 
 def test_corrupt_island_name(tmp_path):
-    pth.utils.global_state_initializer._clean_global_state()
+    pth.misc_utils.global_state_management._clean_global_state()
     init_params = dict(
-        cloud_type="local", base_dir=tmp_path, island_name="kuku")
+        cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
 
     pth.initialize(**init_params)
-    pth.island_name = "new name"
+    pth.default_island_name = "new name"
     assert not pth.is_global_state_correct()
     assert not pth.is_correctly_initialized()
     assert not pth.is_unitialized()
-

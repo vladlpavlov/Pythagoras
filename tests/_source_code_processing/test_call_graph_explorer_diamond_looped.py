@@ -1,4 +1,4 @@
-from pythagoras._function_src_code_processing.call_graph_explorer import *
+from pythagoras.python_utils.call_graph_explorer import *
 
 def a():
     return {"a"} | i()

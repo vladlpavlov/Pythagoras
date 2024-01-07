@@ -1,5 +1,5 @@
 from functools import cache
-from pythagoras._function_src_code_processing.code_normalizer import *
+from pythagoras.python_utils.code_normalizer import *
 
 def f_docstring():
     """ This is a CRAZY docstring"""
@@ -37,10 +37,11 @@ def test_basics():
     assert no_comments != autopep8.fix_code(inspect.getsource(f_comments))
     assert no_comments == autopep8.fix_code(no_comments)
 
-    no_decorator = get_normalized_function_source(f_with_decorator)
+    normalized_source = get_normalized_function_source(f_with_decorator)
     assert "cache" in inspect.getsource(f_with_decorator)
-    assert "cache" not in no_decorator
+    assert "cache" in normalized_source
 
+@cache
 def a2(x): # a sample function to test
     print(10 # why i sit here?
         ,20)

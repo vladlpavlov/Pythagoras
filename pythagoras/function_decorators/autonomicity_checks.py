@@ -1,13 +1,12 @@
 from typing import Callable
 
+from pythagoras.function_decorators.autonomous_funcs import (
+    AutonomousFunction, LooselyAutonomousFunction, StrictlyAutonomousFunction)
 
 def is_autonomous(a_func: Callable) -> bool:
     """Check if a function is autonomous."""
     assert callable(a_func)
-    try:
-        return a_func.__pth_autonomous__
-    except AttributeError:
-        return False
+    return isinstance(a_func, AutonomousFunction)
 
 
 def is_loosely_autonomous(a_func: Callable) -> bool:
@@ -15,15 +14,10 @@ def is_loosely_autonomous(a_func: Callable) -> bool:
 
     """
     assert callable(a_func)
-    try:
-        return a_func.__pth_autonomous__ and a_func.__pth_loosely_autonomous__
-    except AttributeError:
-        return False
+    return isinstance(a_func, LooselyAutonomousFunction)
+
 
 def is_strictly_autonomous(a_func: Callable) -> bool:
     """Check if a function is strictly autonomous."""
     assert callable(a_func)
-    try:
-        return a_func.__pth_autonomous__ and a_func.__pth_strictly_autonomous__
-    except AttributeError:
-        return False
+    return isinstance(a_func, StrictlyAutonomousFunction)

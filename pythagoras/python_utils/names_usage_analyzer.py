@@ -1,4 +1,5 @@
-from pythagoras._function_src_code_processing.code_normalizer import *
+from pythagoras.python_utils.code_normalizer import *
+from pythagoras.misc_utils.id_examiner import is_reserved_identifier
 
 class FunctionDependencyAnalysisError(PythagorasException):
     """Custom class for exceptions in this module."""
@@ -158,7 +159,7 @@ class NamesUsageAnalyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
 def analyze_names_in_function(
-        a_func: Callable
+        a_func: Union[Callable,str]
         ):
     """Analyze names used in a function.
 
@@ -166,15 +167,14 @@ def analyze_names_in_function(
     which contains all the data needed to analyze
     names, used by the function.
     """
-    if not callable(a_func):
-        raise FunctionDependencyAnalysisError("This acton can only"
-            + " be applied to functions.")
-    if inspect.ismethod(a_func):
-        raise FunctionDependencyAnalysisError("This action can only"
-            + " be applied to conventional functions,"
-            + " not to class methods.")
+
     normalized_source = get_normalized_function_source(a_func)
-    if not normalized_source.startswith("def "):
+
+    lines, line_num = normalized_source.splitlines(), 0
+    while lines[line_num].startswith("@"):
+        line_num+=1
+
+    if not lines[line_num].startswith("def "):
         raise FunctionDependencyAnalysisError("This action can only"
             + " be applied to conventional functions,"
             + " not to instances of callable classes, "

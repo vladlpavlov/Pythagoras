@@ -1,14 +1,14 @@
 from typing import List, Dict, Set, Any
 
-from pythagoras._function_src_code_processing.code_normalizer import *
-from pythagoras._function_src_code_processing.names_usage_analyzer import *
+from pythagoras.python_utils.code_normalizer import *
+from pythagoras.python_utils.names_usage_analyzer import *
 
-def get_referenced_names(function:Callable)->Dict[str,Set[str]]:
+def get_referenced_names(function:Union[Callable,str])->Dict[str,Set[str]]:
     """ Discover all external names referenced from within a function.
 
     Parameters
     ----------
-    function: Callable
+    function: Callable or str
         a function for which we are discovering dependencies
 
     Returns
@@ -32,7 +32,7 @@ def get_referenced_names(function:Callable)->Dict[str,Set[str]]:
 
     return result
 
-def explore_call_graph_shallow(functions:List[Callable]) -> Dict[str, Set[str]]:
+def explore_call_graph_shallow(functions:List[Union[Callable,str]]) -> Dict[str, Set[str]]:
     """ Discover all direct dependencies between functions.
 
     Parameters
@@ -61,7 +61,7 @@ def explore_call_graph_shallow(functions:List[Callable]) -> Dict[str, Set[str]]:
 
     return all_dependencies
 
-def explore_call_graph_deep(all_funcs:List[Callable]) -> Dict[str, Set[str]]:
+def explore_call_graph_deep(all_funcs:List[Union[Callable,str]]) -> Dict[str, Set[str]]:
     """ Discover all direct and indirect dependencies between functions.
 
     Parameters

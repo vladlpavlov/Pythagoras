@@ -87,8 +87,7 @@ def buid_context(file_path:str=None, time_zone=None)-> Dict:
     """
 
     result = dict(
-        date_time = datetime.datetime.now(time_zone)
-        ,hostname = socket.gethostname()
+        hostname = socket.gethostname()
         ,user = getuser()
         ,pid = os.getpid()
         ,platform = platform.platform()
@@ -99,7 +98,6 @@ def buid_context(file_path:str=None, time_zone=None)-> Dict:
         ,cpu_load_avg = psutil.getloadavg()
         ,disk_usage = psutil.disk_usage(file_path)
         ,virtual_memory = psutil.virtual_memory()
-        ,available_packages = pkg_resources.working_set
         )
 
     return result

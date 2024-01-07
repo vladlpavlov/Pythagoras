@@ -2,6 +2,8 @@ import sys
 import io
 import logging
 
+# TODO: see if we can use https://capturer.readthedocs.io/en/latest/index.html
+
 class OutputCapturer:
     """
     Captures all output sent to stdout, stderr, and the logging system into a single stream.

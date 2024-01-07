@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from pythagoras._function_src_code_processing.names_usage_analyzer import *
+from pythagoras.python_utils.names_usage_analyzer import *
 
 def sample_from_x_import_y(x):
     from math import sqrt as sq

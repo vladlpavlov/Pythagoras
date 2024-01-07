@@ -13,23 +13,28 @@ exception for errors specific to function normalization.
 External libraries `ast`, `astor`, and `autopep8` are used for
 parsing and formatting. Internal utilities from `pythagoras` are also utilized.
 """
-
+import re
 import ast
 import inspect
 import types
-from typing import Callable
+from typing import Callable, Union
 import astor
 import autopep8
 
-from pythagoras.utils import *
-from pythagoras._function_src_code_processing import *
+from pythagoras.misc_utils import *
+from pythagoras.python_utils import *
 
 
 class FunctionSourceNormalizationError(PythagorasException):
     """Custom class for exceptions in this module."""
     pass
 
-def get_normalized_function_source(a_func:Callable) -> str:
+
+
+def get_normalized_function_source(
+        a_func:Union[Callable,str]
+        , drop_decorators:bool=False
+        ) -> str:
     """Return function's source code in a 'canonical' form.
 
     Remove all decorators, comments, docstrings and empty lines;
@@ -37,31 +42,35 @@ def get_normalized_function_source(a_func:Callable) -> str:
 
     Only regular functions are supported; methods and lambdas are not supported.
     """
-    a_func_name = get_long_infoname(a_func)
+    a_func_name = None
+    if callable(a_func):
+        a_func_name = get_long_infoname(a_func)
+        if isinstance(a_func, types.MethodType):
+            raise FunctionSourceNormalizationError(
+                f"Function {a_func_name} can't be an instance or a class method,"
+                + " only regular functions are allowed")
 
-    if not callable(a_func):
-        raise FunctionSourceNormalizationError(
-           f"Function {a_func_name} must be callable.")
+        if hasattr(a_func, "__closure__") and a_func.__closure__ is not None:
+            raise FunctionSourceNormalizationError(
+                f"Function {a_func_name} can't be a closure,"
+                + " only regular functions are allowed.")
 
-    if isinstance(a_func, types.MethodType):
-        raise FunctionSourceNormalizationError(
-            f"Function {a_func_name} can't be an instance or a class method,"
-            + " only regular functions are allowed")
+        code = inspect.getsource(a_func)
 
-    if hasattr(a_func, "__closure__") and a_func.__closure__ is not None:
-        raise FunctionSourceNormalizationError(
-            f"Function {a_func_name} can't be a closure,"
-            + " only regular functions are allowed.")
+        if (isinstance(a_func, type(lambda: None))
+                and a_func.__name__ == (lambda: None).__name__):
+            raise FunctionSourceNormalizationError(
+                f"Function {code}, named {a_func_name}, can't be lambda,"
+                + " only regular functions are allowed.")
 
-    code = inspect.getsource(a_func)
+    elif isinstance(a_func, str):
+        code = a_func
+    else:
+        print(f"\n{type(a_func)=}")
+        print(f"\n{a_func=}\n")
+        assert False
 
-    if (isinstance(a_func, type(lambda: None))
-            and a_func.__name__ == (lambda: None).__name__):
-        raise FunctionSourceNormalizationError(
-            f"Function {code}, named {a_func_name}, can't be lambda,"
-            + " only regular functions are allowed.")
-
-    code_lines = code.split("\n")
+    code_lines = code.splitlines()
 
     code_no_empty_lines = []
     for line in code_lines:
@@ -81,6 +90,10 @@ def get_normalized_function_source(a_func:Callable) -> str:
         code_clean_version.append(cleaned_line)
 
     code_clean_version = "\n".join(code_clean_version)
+    if a_func_name is None:
+        match = re.search(r"\bdef\s+(\w+)", code_clean_version)
+        assert match
+        a_func_name = match.group(1)
     code_ast = ast.parse(code_clean_version)
 
     assert isinstance(code_ast, ast.Module)
@@ -92,7 +105,8 @@ def get_normalized_function_source(a_func:Callable) -> str:
         raise FunctionSourceNormalizationError(
             f"Function {a_func_name} can't have multiple decorators,"
             + " only one decorator is allowed.")
-    code_ast.body[0].decorator_list = []
+    if drop_decorators:
+        code_ast.body[0].decorator_list = []
 
     # Remove docstrings.
     for node in ast.walk(code_ast):
@@ -120,7 +134,11 @@ def get_normalized_function_source(a_func:Callable) -> str:
         result = astor.to_source(code_ast)
     result = autopep8.fix_code(result)
 
-    if not result.startswith("def "):
+    lines, line_num = result.splitlines(), 0
+    while lines[line_num].startswith("@"):
+        line_num+=1
+
+    if not lines[line_num].startswith("def "):
         raise FunctionSourceNormalizationError(
             f"Function {a_func_name} must be a regular functions ")
 

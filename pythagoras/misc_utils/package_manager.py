@@ -3,7 +3,7 @@ import importlib
 import sys
 from typing import Optional
 
-from pythagoras.utils.basic_exceptions import PythagorasException
+from pythagoras.misc_utils.basic_exceptions import PythagorasException
 
 class PackageInstallerError(PythagorasException):
     pass

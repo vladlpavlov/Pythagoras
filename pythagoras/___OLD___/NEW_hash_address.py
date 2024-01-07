@@ -1,30 +1,33 @@
 from __future__ import annotations
 
 import sys
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from copy import deepcopy
-from typing import Any, Optional, Type, TypeVar, Dict, List, Callable
+from typing import Optional, Any, Type, TypeVar, Dict
 
-from persidict import SafeStrTuple, replace_unsafe_chars
+from joblib.hashing import NumpyHasher, Hasher
+from persidict import SafeStrTuple, PersiDict, replace_unsafe_chars
 
-import pythagoras as pth
-from pythagoras._function_src_code_processing import get_long_infoname
-from pythagoras.utils import *
+from pythagoras.python_utils import get_long_infoname
 
 T = TypeVar("T")
 
-class HashAddress(SafeStrTuple, ABC):
-    """A globally unique hash-based address of an object.
+# value_store:Optional[PersiDict] = None
 
-    Two objects with exactly the same type and value will always have
-    exactly the same HashAddress-es.
+def set_value_store(store:PersiDict) -> None:
+    """Set a global value store."""
+    global value_store
+    value_store = store
 
-    A HashAddress consists of 2 strings: a prefix, and a hash.
-    A prefix contains human-readable information about an object's type.
-    A hash string contains the object's hash signature. It may begin with
-    an optional descriptor, which provides additional human-readable
-    information about the object's structure / value.
+class HashAddress(SafeStrTuple):
+    """A globally unique hash-based address.
+
+    Consists of 2 strings. Includes a human-readable prefix, and a hash.
+    A hash string may begin an optional descriptor,
+    which provides additional human-readable information about the object.
     """
+
+    _hash_type: str = "sha256"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -41,29 +44,51 @@ class HashAddress(SafeStrTuple, ABC):
     def _build_prefix(x: Any) -> str:
         """Create a short human-readable summary of an object."""
 
-        prfx = get_long_infoname(x).lower()
+        prfx = get_long_infoname(x)
 
         return prfx
+
+    @staticmethod
+    def _build_descriptor(x: Any) -> Optional[str]:
+        """Create a short summary of object's length/shape."""
+
+        dscrptr = ""
+
+        #### FROM OLD CODE #############################
+        # if isinstance(x,PFunctionCallSignature):
+        #     # TODO: replace with proper OOP approach
+        #     dscrptr = x.get_snpsht_id()
+        ################################################
+
+        if (hasattr(x, "shape")
+            and hasattr(x.shape, "__iter__")
+            and callable(x.shape.__iter__)
+            and not callable(x.shape)):
+
+            dscrptr = "shape_"
+            for n in x.shape:
+                dscrptr += str(n) + "_x_"
+            dscrptr = dscrptr[:-3]
+
+        elif (hasattr(x, "__len__")
+              and callable(x.__len__)):
+            dscrptr = "len_" + str(len(x))
+
+        return replace_unsafe_chars(dscrptr, replace_with="_")
 
 
     @staticmethod
     def _build_hash_value(x: Any) -> str:
         """Create a URL-safe hashdigest for an object."""
 
-        if (hasattr(x, "shape") and hasattr(x.shape, "__iter__")
-                and callable(x.shape.__iter__) and not callable(x.shape)):
-            descriptor, connector = "shape_", "_x_"
-            for n in x.shape:
-                descriptor += str(n) + connector
-            descriptor = descriptor[:-len(connector)] + "_"
-        elif hasattr(x, "__len__") and callable(x.__len__):
-            descriptor = "len_" + str(len(x)) + "_"
+        if 'numpy' in sys.modules:
+            hasher = NumpyHasher(hash_name=HashAddress._hash_type)
         else:
-            descriptor = ""
+            hasher = Hasher(hash_name=HashAddress._hash_type)
+        raw_hash_value = hasher.hash(x) #TODO: switch to Base32
 
-        descriptor = replace_unsafe_chars(descriptor, replace_with="_")
-        raw_hash_signature = get_hash_signature(x)
-        hash_value = descriptor + raw_hash_signature
+        descriptor = HashAddress._build_descriptor(x)
+        hash_value = descriptor + "_" + raw_hash_value
 
         return hash_value
 
@@ -103,10 +128,6 @@ class HashAddress(SafeStrTuple, ABC):
         """Return self==other. """
         return type(self) == type(other) and self.str_chain == other.str_chain
 
-    def __ne__(self, other) -> bool:
-        """Return self!=other. """
-        return not (self == other)
-
 
 class ValueAddress(HashAddress):
     """A globally unique address of an immutable value.
@@ -122,6 +143,7 @@ class ValueAddress(HashAddress):
     """
 
     def __init__(self, data: Any, push_to_cloud:bool=True, *args, **kwargs):
+        global value_store
         assert len(args) == 0
         assert len(kwargs) == 0
 
@@ -138,17 +160,17 @@ class ValueAddress(HashAddress):
 
         super().__init__(prefix, hash_value)
 
-        if push_to_cloud and not (self in pth.value_store):
-            pth.value_store[self] = data
+        if push_to_cloud and not (self in value_store):
+            value_store[self] = data
 
     def ready(self):
         """Check if address points to a value that is ready to be retrieved."""
-        return self in pth.value_store
+        return self in value_store
 
 
     def get(self, timeout:Optional[int] = None) -> Any:
         """Retrieve value, referenced by the address"""
-        return pth.value_store[self]
+        return value_store[self]
 
     def get_typed(self
             ,expected_type:Type[T]
@@ -184,91 +206,5 @@ class PackedKwArgs(dict):
         """ Restore values based on their hash addresses."""
         unpacked_copy = dict()
         for k,v in self.items():
-            unpacked_copy[k] = pth.value_store[v]
+            unpacked_copy[k] = value_store[v]
         return unpacked_copy
-
-
-class CloudizedFunction:
-    def __init__(self,a_func:Callable):
-        if not pth.is_autonomous(a_func):
-            a_func = pth.loosely_autonomous()(a_func)
-        self.__pth_func_source__ = a_func.__pth_func_source__
-        self.__pth_func_name__ = a_func.__pth_func_name__
-        source_to_execute = self.__pth_func_source__
-        source_to_execute += (f"\n__pth_result__={self.__pth_func_name__}"
-            + "(**__pth_kwargs__)\n")
-        self.__pth_extended_func_code__ = compile(
-            source_to_execute, "<string>", "exec")
-
-    def _inprocess(self, **kwargs) -> Any:
-
-        # use https://capturer.readthedocs.io/en/latest/index.html
-
-        local_variables = dict(
-            __pth_kwargs__ = PackedKwArgs(**kwargs).unpack())
-        global_variables = dict()
-
-        exec(self.__pth_extended_func_code__
-             , global_variables
-             ,local_variables)
-
-        result= local_variables["__pth_result__"]
-        return result
-
-
-    # @property
-    # def island_name(self)->str:
-    #     pass
-    #
-    # @property
-    # def function_name(self) -> str:
-    #     pass
-    #
-    # @property
-    # def validator_src(self) -> str:
-    #     pass
-    #
-    # @property
-    # def corrector_src(self) -> str:
-    #     pass
-    #
-    # @property
-    # def function_src(self) -> str:
-    #     return self.__normaized_f_source__
-    #
-    # @property
-    # def subisland_src(self) -> str:
-    #     pass
-
-
-
-    #
-    #
-    # def _inprocess_many(self, *args) -> List[Any]:
-    #     pass
-    #
-    #
-    # def _subprocess(self, **kwargs) -> Any:
-    #     pass
-    #
-    #
-    # def _subprocess_many(self, *args) -> List[Any]:
-    #     pass
-
-
-    # def _enqueue(self, **kwargs) -> CloudFuncOutputAddress:
-    #     pass
-    #
-    #
-    # def _enqueue_many(self, *args) -> List[CloudFuncOutputAddress]:
-    #     pass
-    #
-    # def parallel(self, args) -> List[Any]:
-    #     pass
-    #
-    # def __call__(self,**kwargs) -> Any:
-    #     return self._inprocess(**kwargs)
-    #
-    # def __getstate__(self):
-    #     self.subisland_src
-    #     return self.__dict__

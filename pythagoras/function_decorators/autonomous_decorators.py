@@ -28,13 +28,12 @@ Decorators @autonomous, @loosely_autonomous, and @strictly_autonomous
 allow to inform Pythagoras that a function is intended to be autonomous,
 and to enforce autonomicity requirements for the function.
 """
-from pythagoras._function_src_code_processing.names_usage_analyzer import *
-from pythagoras.function_decorators.autonomicity_checks import *
+from pythagoras.function_decorators.autonomous_funcs import (
+    LooselyAutonomousFunction, StrictlyAutonomousFunction)
+from pythagoras.python_utils.names_usage_analyzer import *
 from functools import wraps
 import builtins
 
-class StaticAutonomicityChecksFailed(PythagorasException):
-    pass
 
 class autonomous:
     """Decorator for enforcing autonomicity requirements for functions.
@@ -80,69 +79,10 @@ class autonomous:
         all possible violations of function autonomy requirements.
         """
 
-        # Static checks
-
-        if is_autonomous(a_func):
-            raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__} "
-                + f"is already autonomous, it can't be made autonomous twice.")
-
-        analyzer = analyze_names_in_function(a_func)
-        normalized_source = analyzer["normalized_source"]
-        analyzer = analyzer["analyzer"]
-
-        if len(analyzer.names.explicitly_nonlocal_unbound_deep):
-            raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__}"
-                + f" is not autonomous, it uses external nonlocal"
-                + f" objects: {analyzer.names.explicitly_nonlocal_unbound_deep}")
-
-        builtin_names = set(dir(builtins))
-        import_required = analyzer.names.explicitly_global_unbound_deep
-        import_required |= analyzer.names.unclassified_deep
-        import_required -= builtin_names
-        if import_required:
-            raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__}"
-                + f" is not autonomous, it uses global"
-                + f" objects {import_required}"
-                + f" without importing them inside the function body")
-
-        if analyzer.n_yelds:
-            raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__}"
-                + f" is not autonomous, it uses yield statements")
-
-        if len(a_func.__code__.co_freevars): #TODO: will ASTs serve better here?
-            raise StaticAutonomicityChecksFailed(f"Function {a_func.__name__}"
-                + f" is not autonomous, it uses non-global"
-                + f" objects: {a_func.__code__.co_freevars}")
-
-        @wraps(a_func)
-        def wrapper(*args, **kwargs):
-
-            old_globals = {}
-            global_names = list(a_func.__globals__.keys())
-
-            # Dynamic checks
-            for obj_name in global_names:
-                if not (obj_name.startswith("__") or obj_name.startswith("@")):
-                    old_globals[obj_name] = a_func.__globals__[obj_name]
-                    del a_func.__globals__[obj_name]
-            try:
-                result = a_func(*args, **kwargs)
-                return result
-            except:
-                wrapper.__pth_autonomous__ = False
-                raise
-            finally:
-                for obj_name in old_globals:
-                    a_func.__globals__[obj_name] = old_globals[obj_name]
-
-        wrapper.__pth_autonomous__ = True
-        wrapper.__pth_func_name__ = a_func.__name__
-        wrapper.__pth_func_source__ = normalized_source
-
         if self.allow_idempotent:
-            wrapper.__pth_loosely_autonomous__ = True
+            wrapper =  LooselyAutonomousFunction(a_func)
         else:
-            wrapper.__pth_strictly_autonomous__ = True
+            wrapper = StrictlyAutonomousFunction(a_func)
         return wrapper
 
 class strictly_autonomous(autonomous):

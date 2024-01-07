@@ -1,7 +1,9 @@
 from persidict import replace_unsafe_chars
 
-from pythagoras.utils.hash_signature_and_random_id import (
-    convert_base16_to_base32, convert_base_32_to_int, get_random_id)
+from pythagoras.misc_utils.base_16_32_convertors import (
+    convert_base16_to_base32, convert_base_32_to_int, )
+
+from pythagoras.misc_utils.random_safe_str_creator import get_random_safe_str
 
 def test_small_range():
     for i in range(1000):
@@ -28,7 +30,7 @@ def test_random_id():
     all_random_ids = set()
     n_iterations = 20_000
     for i in range(n_iterations):
-        random_id = get_random_id()
+        random_id = get_random_safe_str()
         assert random_id == replace_unsafe_chars(random_id, replace_with="_")
         all_random_ids.add(random_id)
     assert len(all_random_ids) == n_iterations
