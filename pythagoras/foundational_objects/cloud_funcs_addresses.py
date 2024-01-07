@@ -10,8 +10,8 @@ from typing import Callable, Any, Optional
 
 from pythagoras.function_decorators.autonomous_funcs import (
     LooselyAutonomousFunction, AutonomousFunction)
-from pythagoras.python_utils import explore_call_graph_deep, \
-    get_normalized_function_source
+from pythagoras.python_utils import (explore_call_graph_deep,
+    get_normalized_function_source)
 
 
 class CloudizedFunction:

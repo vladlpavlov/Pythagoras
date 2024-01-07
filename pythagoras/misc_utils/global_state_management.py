@@ -4,6 +4,9 @@ from typing import Callable
 
 from persidict import FileDirDict, PersiDict
 import pythagoras as pth
+from pythagoras.python_utils.isinstance_txt import isinstance_txt
+
+
 def initialize(cloud_type:str, base_dir:str, default_island_name:str) -> None:
     """ Initialize Pythagoras.
     """
@@ -131,7 +134,7 @@ def get_cloudized_function(function_name:str, island_name:str=None):
 
 
 def register_cloudized_function(function:Callable):
-    assert type(function).__name__ == "CloudizedFunction"
+    assert isinstance_txt(function, "CloudizedFunction")
     island_name = function.island_name
     function_name = function.function_name
     if island_name not in pth.cloudized_functions:
