@@ -31,3 +31,25 @@ def test_init_checks(tmpdir):
     initialize(base_dir=tmpdir, default_island_name="test", cloud_type="local")
 
     idempotent()(f)
+
+def f_nstd():
+    return 5
+
+def g_nstd():
+    return f_nstd()
+
+def test_nested_calls(tmpdir):
+    _clean_global_state()
+    initialize(base_dir=tmpdir, default_island_name="test", cloud_type="local")
+
+    global f_nstd, g_nstd
+
+    assert not is_idempotent(f_nstd)
+    assert not is_idempotent(g_nstd)
+    assert g_nstd() == 5
+    g_nstd = idempotent()(g_nstd)
+    f_nstd = idempotent()(f_nstd)
+
+    assert is_idempotent(f_nstd)
+    assert is_idempotent(g_nstd)
+    assert g_nstd() == 5

@@ -10,6 +10,7 @@ from random import Random
 from persidict import PersiDict
 
 from pythagoras.misc_utils import *
+from pythagoras.python_utils import *
 from pythagoras.foundational_objects import *
 from pythagoras.function_decorators import *
 
