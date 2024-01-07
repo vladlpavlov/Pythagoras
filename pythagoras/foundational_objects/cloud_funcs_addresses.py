@@ -20,6 +20,7 @@ class CloudizedFunction:
             island_name = pth.default_island_name
         self.island_name = island_name
         assert callable(a_func)
+        assert not pth.accepts_unlimited_positional_args(a_func)
         if not isinstance(a_func, AutonomousFunction):
             a_func = LooselyAutonomousFunction(a_func, island_name)
         self.autonomous_function = a_func
@@ -63,6 +64,7 @@ class CloudizedFunction:
 
     def _build_augmented_function_code(self) -> None:
         # TODO: check this  vvvvvv
+        # We probably need to add Pythagoras imports somewhere
         source_to_execute = self._augmented_function_source
         source_to_execute += (f"\n__pth_result__={self.function_name}"
                               + "(**__pth_kwargs__)\n")
@@ -108,6 +110,9 @@ class CloudizedFunction:
         exec(self.augmented_function_code,variables,variables)
         result= variables["__pth_result__"]
         return result
+
+    def __call__(self,**kwargs) -> Any:
+        return self._naked_call(**kwargs)
 
 
     # @property
@@ -160,8 +165,6 @@ class CloudizedFunction:
     # def parallel(self, args) -> List[Any]:
     #     pass
     #
-    # def __call__(self,**kwargs) -> Any:
-    #     return self._inprocess(**kwargs)
     #
     # def __getstate__(self):
     #     self.subisland_src

@@ -28,6 +28,7 @@ Decorators @autonomous, @loosely_autonomous, and @strictly_autonomous
 allow to inform Pythagoras that a function is intended to be autonomous,
 and to enforce autonomicity requirements for the function.
 """
+import pythagoras as pth
 from pythagoras.function_decorators.autonomous_funcs import (
     LooselyAutonomousFunction, StrictlyAutonomousFunction)
 from pythagoras.python_utils.names_usage_analyzer import *
@@ -50,8 +51,9 @@ class autonomous:
     or a loosely autonomous.
     """
     def __init__(self, allow_idempotent: bool = False):
+        # TODO: Uncomment the below
+        # assert pth.is_correctly_initialized()
         self.allow_idempotent = allow_idempotent
-        pass
 
     def __call__(self, a_func: Callable) -> Callable:
         """Decorator for autonomous functions.
