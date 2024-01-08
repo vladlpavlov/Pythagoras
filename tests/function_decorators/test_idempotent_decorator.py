@@ -40,8 +40,7 @@ def g_nstd():
 
 def test_nested_calls(tmpdir):
     _clean_global_state()
-    # initialize(base_dir=tmpdir, default_island_name="test", cloud_type="local")
-    initialize(base_dir="_V_V_V_V_V_", default_island_name="test", cloud_type="local")
+    initialize(base_dir=tmpdir, default_island_name="test", cloud_type="local")
 
     global f_nstd, g_nstd
 
