@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from pythagoras import get_hash_signature
 from pythagoras.misc_utils.global_state_management import (
     get_all_cloudized_function_names, get_cloudized_function
     , register_cloudized_function)
@@ -32,8 +34,8 @@ class CloudizedFunction:
 
     def _build_augmented_source_and_code(self) -> None:
 
-        assert (self._augmented_function_source is None) == (
-            self._augmented_function_code is None)
+        # assert (self._augmented_function_source is None) == (
+        #     self._augmented_function_code is None)
         if self._augmented_function_source is not None:
             return
 
@@ -59,18 +61,22 @@ class CloudizedFunction:
                 new_src = get_normalized_function_source(
                     new_src, drop_decorators=True)
             self._augmented_function_source += new_src + "\n"
+        self._augmented_function_source += f"\n_={self.function_name}(**_)"
+
         self._build_augmented_function_code()
+        name= self.function_name.lower()
+        location = (name, self._augmented_function_filename)
+        pth.function_source_repository[location] = self._augmented_function_source
 
 
     def _build_augmented_function_code(self) -> None:
-        # TODO: check this  vvvvvv
-        # We probably need to add Pythagoras imports somewhere
+        name = self.function_name.lower()
+        filename = get_hash_signature(self)[:8] + "_" + name
+        self._augmented_function_filename = filename
         source_to_execute = self._augmented_function_source
-        source_to_execute += (f"\n__pth_result__={self.function_name}"
-                              + "(**__pth_kwargs__)\n")
         self._augmented_function_code = compile(
-            source_to_execute, f"AUGMENTED:{self.function_name}", "exec")
-        # TODO: check this  ^^^^^^
+            source_to_execute, f"{filename}.py", "exec")
+
 
     @property
     def augmented_function_source(self) -> str:
@@ -106,9 +112,9 @@ class CloudizedFunction:
 
     def _naked_call(self, **kwargs) -> Any:
         kw_args = PackedKwArgs(**kwargs).unpack()
-        variables = dict(__pth_kwargs__ = kw_args)
+        variables = dict(_ = kw_args)
         exec(self.augmented_function_code,variables,variables)
-        result= variables["__pth_result__"]
+        result= variables["_"]
         return result
 
     def __call__(self,**kwargs) -> Any:

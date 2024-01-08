@@ -15,7 +15,9 @@ from pythagoras.foundational_objects import *
 from pythagoras.function_decorators import *
 
 value_store:Optional[PersiDict] = None
-func_output_store:Optional[PersiDict] = None
+function_garage:Optional[PersiDict] = None
+function_source_repository:Optional[PersiDict] = None
+function_output_store:Optional[PersiDict] = None
 crash_history: Optional[PersiDict] = None
 cloudized_functions:Optional[Dict[str,Dict[str,CloudizedFunction]]] = None
 default_island_name: Optional[str] = None
