@@ -19,6 +19,7 @@ function_garage:Optional[PersiDict] = None
 function_source_repository:Optional[PersiDict] = None
 function_output_store:Optional[PersiDict] = None
 crash_history: Optional[PersiDict] = None
+swarming_requests: Optional[PersiDict] = None
 cloudized_functions:Optional[Dict[str,Dict[str,CloudizedFunction]]] = None
 default_island_name: Optional[str] = None
 entropy_infuser: Optional[Random] = None

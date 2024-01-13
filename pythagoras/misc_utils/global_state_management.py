@@ -39,6 +39,8 @@ def initialize(cloud_type:str, base_dir:str, default_island_name:str) -> None:
         , digest_len=0, file_type="json")
     func_output_store_dir = os.path.join(base_dir, "func_output_store")
     pth.function_output_store = dict_type(func_output_store_dir, digest_len=0)
+    swarming_requests_dir = os.path.join(base_dir, "swarming_requests")
+    pth.swarming_requests = dict_type(swarming_requests_dir, digest_len=0)
     pth.default_island_name = default_island_name
     pth.cloudized_functions = dict()
     pth.cloudized_functions[default_island_name] = dict()
@@ -59,6 +61,7 @@ def is_unitialized():
     result &= pth.crash_history is None
     result &= pth.default_island_name is None
     result &= pth.cloudized_functions is None
+    result &= pth.swarming_requests is None
     result &= pth.initialization_parameters is None
     result &= pth.entropy_infuser is None
     return result
@@ -116,6 +119,7 @@ def _clean_global_state():
     pth.function_output_store = None
     pth.crash_history = None
     pth.cloudized_functions = None
+    pth.swarming_requests = None
     pth.default_island_name = None
     pth.initialization_parameters = None
     pth.entropy_infuser = None

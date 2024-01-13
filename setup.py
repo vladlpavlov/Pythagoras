@@ -5,11 +5,11 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.4.6"
+    ,version="0.5.0"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
-    ,description= "Simple and inexpensive way to create, deploy and run " 
-        "cloud-scale algorithms from within local Python scripts and notebooks."
+    ,description= "Simple framework for planet-scale "
+                  + "idempotent computations in Python."
     ,long_description=long_description
     ,long_description_content_type="text/markdown"
     ,url="https://github.com/vladlpavlov/pythagoras"
@@ -32,6 +32,8 @@ setuptools.setup(
     ,python_requires='>=3.9'
     ,install_requires=[
         'astor'
+        , "lz4"
+        , 'joblib'
         , 'isort'
         , 'numpy'
         , 'scipy'
@@ -42,7 +44,6 @@ setuptools.setup(
         , 'boto3'
         , 'moto'
         , 'pytest'
-        , 'hypothesis'
     ]
 
 )
