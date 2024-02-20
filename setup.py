@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.6.0"
+    ,version="0.6.1"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description= "Simple framework for planet-scale "
@@ -31,8 +31,7 @@ setuptools.setup(
               ', machine-learning, deep-learning, pythagoras'
     ,python_requires='>=3.10'
     ,install_requires=[
-        'astor'
-        , "lz4"
+         "lz4"
         , 'joblib'
         , 'isort'
         , 'numpy'

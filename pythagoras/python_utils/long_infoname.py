@@ -2,7 +2,6 @@ import ast
 import inspect
 from typing import Any, Callable
 
-import astor
 import autopep8
 from persidict import replace_unsafe_chars
 

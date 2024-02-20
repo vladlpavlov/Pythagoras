@@ -10,7 +10,7 @@ can not be passed as an argument to get_normalized_function_source.
 The module also defines `FunctionSourceNormalizationError`, a custom
 exception for errors specific to function normalization.
 
-External libraries `ast`, `astor`, and `autopep8` are used for
+External libraries `ast`, and `autopep8` are used for
 parsing and formatting. Internal utilities from `pythagoras` are also utilized.
 """
 import re
@@ -18,7 +18,6 @@ import ast
 import inspect
 import types
 from typing import Callable, Union
-import astor
 import autopep8
 
 from pythagoras.misc_utils import *
@@ -127,11 +126,8 @@ def get_normalized_function_source(
             node.body.append(ast.Pass())
         # TODO: compare with the source for ast.candidate_docstring()
 
-    # Convert back from AST to text and format it according to PEP 8.
-    if hasattr(ast,"unparse"):
-        result = ast.unparse(code_ast)
-    else: # ast.unparse() is only available starting from Python 3.9
-        result = astor.to_source(code_ast)
+
+    result = ast.unparse(code_ast)
     result = autopep8.fix_code(result)
 
     lines, line_num = result.splitlines(), 0
