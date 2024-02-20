@@ -64,9 +64,6 @@ class CloudizedFunction:
         self._augmented_function_source += f"\n_={self.function_name}(**_)"
 
         self._build_augmented_function_code()
-        name= self.function_name.lower()
-        location = (name, self._augmented_function_filename)
-        pth.function_source_repository[location] = self._augmented_function_source
 
 
     def _build_augmented_function_code(self) -> None:
@@ -76,6 +73,10 @@ class CloudizedFunction:
         source_to_execute = self._augmented_function_source
         self._augmented_function_code = compile(
             source_to_execute, f"{filename}.py", "exec")
+        name = self.function_name.lower()
+        location = (name, self._augmented_function_filename)
+        pth.function_source_repository[
+            location] = self._augmented_function_source
 
 
     @property

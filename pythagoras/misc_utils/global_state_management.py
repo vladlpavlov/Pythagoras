@@ -10,7 +10,7 @@ from pythagoras.python_utils.isinstance_txt import isinstance_txt
 def initialize(cloud_type:str, base_dir:str, default_island_name:str) -> None:
     """ Initialize Pythagoras.
     """
-    assert pth.is_unitialized()
+    assert pth.is_unitialized(), "You can only initialize pythagoras once."
 
     assert cloud_type in {"local","aws"}
 
@@ -26,8 +26,6 @@ def initialize(cloud_type:str, base_dir:str, default_island_name:str) -> None:
         os.mkdir(base_dir)
     assert os.path.isdir(base_dir)
 
-    assert pth.value_store is None, ( #TODO? add more of these ?!?
-        "You can only initialize pythagoras once.")
     value_store_dir = os.path.join(base_dir, "value_store")
     pth.value_store = dict_type(value_store_dir, digest_len=0)
     func_garage_dir = os.path.join(base_dir, "func_garage")
@@ -114,7 +112,7 @@ def is_global_state_correct():
 
 def _clean_global_state():
     pth.value_store = None
-    pth.function_garage = None
+    pth.function_garage = None #???
     pth.function_source_repository = None
     pth.function_output_store = None
     pth.crash_history = None
