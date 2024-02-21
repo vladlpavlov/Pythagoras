@@ -12,6 +12,7 @@ from persidict import PersiDict
 from pythagoras.misc_utils import *
 from pythagoras.python_utils import *
 from pythagoras.foundational_objects import *
+from pythagoras.ordinary_functions import *
 from pythagoras.function_decorators import *
 
 value_store:Optional[PersiDict] = None
@@ -20,7 +21,7 @@ function_source_repository:Optional[PersiDict] = None
 function_output_store:Optional[PersiDict] = None
 crash_history: Optional[PersiDict] = None
 swarming_requests: Optional[PersiDict] = None
-cloudized_functions:Optional[Dict[str,Dict[str,CloudizedFunction]]] = None
+cloudized_functions:Optional[Dict[str,Dict[str,IdempotentFunction]]] = None
 default_island_name: Optional[str] = None
 entropy_infuser: Optional[Random] = None
 initialization_parameters: Optional[dict] = None

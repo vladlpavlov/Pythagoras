@@ -1,0 +1,1 @@
+from pythagoras.ordinary_functions.assert_ordinarity import assert_ordinarity
