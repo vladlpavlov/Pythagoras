@@ -3,6 +3,8 @@ from typing import Callable
 import inspect
 
 import pythagoras as pth
+from pythagoras._02_ordinary_functions.check_n_positional_args import (
+    accepts_unlimited_positional_args)
 
 
 def assert_ordinarity(a_func:Callable) -> None:
@@ -46,4 +48,9 @@ def assert_ordinarity(a_func:Callable) -> None:
     assert a_func.__name__ != "<lambda>", (
         f"The function {name} can't be lambda,"
         " only regular functions are allowed."
+        )
+
+    assert not accepts_unlimited_positional_args(a_func), (
+        "Pythagoras only allows functions with named arguments."
+        f" But {name} accepts unlimited (nameless) positional arguments."
         )
