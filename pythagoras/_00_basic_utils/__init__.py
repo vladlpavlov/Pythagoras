@@ -15,3 +15,6 @@ from pythagoras._00_basic_utils.output_capturer import (
 
 from pythagoras._00_basic_utils.isinstance_txt import (
     isinstance_txt)
+
+from pythagoras._00_basic_utils.function_name import (
+    get_function_name_from_source)

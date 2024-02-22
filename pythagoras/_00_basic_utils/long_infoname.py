@@ -1,6 +1,5 @@
 from typing import Any
 
-import autopep8
 from persidict import replace_unsafe_chars
 
 

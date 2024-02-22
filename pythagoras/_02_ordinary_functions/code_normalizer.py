@@ -19,6 +19,7 @@ import inspect
 from typing import Callable, Union
 import autopep8
 
+from pythagoras import get_function_name_from_source
 from pythagoras._00_basic_utils import get_long_infoname
 from pythagoras._01_foundational_objects import PythagorasException
 from pythagoras._02_ordinary_functions import assert_ordinarity
@@ -72,9 +73,7 @@ def get_normalized_function_source(
 
     code_clean_version = "\n".join(code_clean_version)
     if a_func_name is None:
-        match = re.search(r"\bdef\s+(\w+)", code_clean_version)
-        assert match
-        a_func_name = match.group(1)
+        a_func_name = get_function_name_from_source(code_clean_version)
     code_ast = ast.parse(code_clean_version)
 
     assert isinstance(code_ast, ast.Module)

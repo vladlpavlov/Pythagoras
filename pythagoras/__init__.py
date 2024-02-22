@@ -14,8 +14,8 @@ from pythagoras._01_foundational_objects import *
 from pythagoras._02_ordinary_functions import *
 from pythagoras._03_autonomous_functions import *
 from pythagoras._04_idempotent_functions import *
-
 from pythagoras._05_mission_control import *
+
 from pythagoras.python_utils import *
 
 value_store:Optional[PersiDict] = None
