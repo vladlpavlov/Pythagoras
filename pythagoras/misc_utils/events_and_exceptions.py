@@ -1,5 +1,4 @@
 import os
-import platform
 import importlib.metadata
 from getpass import getuser
 import socket
@@ -12,7 +11,7 @@ import pythagoras as pth
 
 from datetime import datetime, timezone
 
-from pythagoras.misc_utils.random_safe_str_creator import get_random_safe_str
+from pythagoras._00_basic_utils.random_safe_str_creator import get_random_safe_str
 
 
 T = TypeVar("T")

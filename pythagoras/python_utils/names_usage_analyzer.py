@@ -1,4 +1,9 @@
-from pythagoras.python_utils.code_normalizer import *
+import ast
+from typing import Callable, Union
+
+from pythagoras._01_foundational_objects import PythagorasException
+from pythagoras._02_ordinary_functions import get_normalized_function_source
+
 from pythagoras.misc_utils.id_examiner import is_reserved_identifier
 
 class FunctionDependencyAnalysisError(PythagorasException):

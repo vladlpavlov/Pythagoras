@@ -1,7 +1,7 @@
-from typing import List, Dict, Set, Any
+from typing import List, Dict, Set, Union, Callable
 
-from pythagoras.python_utils.code_normalizer import *
-from pythagoras.python_utils.names_usage_analyzer import *
+from pythagoras.python_utils.names_usage_analyzer import (
+    analyze_names_in_function)
 
 def get_referenced_names(function:Union[Callable,str])->Dict[str,Set[str]]:
     """ Discover all external names referenced from within a function.

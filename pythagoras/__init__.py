@@ -9,11 +9,14 @@ from typing import Optional, Callable, Dict
 from random import Random
 from persidict import PersiDict
 
+from pythagoras._00_basic_utils import *
+from pythagoras._01_foundational_objects import *
+from pythagoras._02_ordinary_functions import *
+from pythagoras._03_autonomous_functions import *
+from pythagoras._04_idempotent_functions import *
+
 from pythagoras.misc_utils import *
 from pythagoras.python_utils import *
-from pythagoras.foundational_objects import *
-from pythagoras.ordinary_functions import *
-from pythagoras.function_decorators import *
 
 value_store:Optional[PersiDict] = None
 function_garage:Optional[PersiDict] = None # ????

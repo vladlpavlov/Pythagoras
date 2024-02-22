@@ -93,7 +93,7 @@ def is_correctly_initialized():
                     return False
                 if not isinstance(
                         pth.cloudized_functions[island_name][function_name]
-                        ,pth.CloudizedFunction):
+                        ,pth.IdempotentFunction):
                     return False
     if not isinstance(pth.initialization_parameters, dict):
         return False
@@ -148,7 +148,7 @@ def get_cloudized_function(function_name:str, island_name:str=None):
 
 
 def register_cloudized_function(function:Callable):
-    assert isinstance_txt(function, "CloudizedFunction")
+    assert isinstance_txt(function, "IdempotentFunction")
     island_name = function.island_name
     function_name = function.function_name
     if island_name not in pth.cloudized_functions:

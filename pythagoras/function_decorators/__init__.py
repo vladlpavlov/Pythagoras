@@ -39,8 +39,3 @@ checks are performed for the function. Static checks happen at the time
 of decoration, while dynamic checks happen at the time of function call.
 """
 
-from pythagoras.function_decorators.autonomous_decorators import (
-    autonomous, loosely_autonomous, strictly_autonomous)
-
-from pythagoras.function_decorators.autonomicity_checks import (
-    is_autonomous, is_loosely_autonomous, is_strictly_autonomous)

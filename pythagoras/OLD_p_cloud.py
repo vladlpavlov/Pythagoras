@@ -20,8 +20,8 @@ import traceback
 from typing import Any, Optional, Callable, List, Union, Dict, TypeVar, Type
 from joblib.hashing import NumpyHasher, Hasher
 
-from pythagoras.___OLD___.OLD_dependency_discovery import _all_dependencies_one_func
-from pythagoras.___OLD___.OLD_persistent_dicts import FileDirDict, SimplePersistentDict
+from pythagoras.________OLD________.OLD_dependency_discovery import _all_dependencies_one_func
+from pythagoras.________OLD________.OLD_persistent_dicts import FileDirDict, SimplePersistentDict
 from pythagoras.OLD_utils import get_long_infoname, replace_unsafe_chars \
     ,get_normalized_function_source ,detect_local_variable_in_callstack
 
