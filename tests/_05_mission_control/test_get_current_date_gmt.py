@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from pythagoras.misc_utils.events_and_exceptions import get_current_date_gmt
+from pythagoras._05_mission_control.events_and_exceptions import get_current_date_gmt
 
 def test_return_type():
     """ Test if the return type is a tuple of three strings """

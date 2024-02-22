@@ -1,5 +1,5 @@
 import pytest
-from pythagoras.misc_utils.events_and_exceptions import detect_local_variable_in_callstack
+from pythagoras._05_mission_control.events_and_exceptions import detect_local_variable_in_callstack
 
 class TestClass:
     def __init__(self,a):

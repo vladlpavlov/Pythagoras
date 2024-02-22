@@ -1,5 +1,5 @@
 import sys, logging
-from pythagoras.misc_utils import OutputCapturer  # Replace with the actual module name
+from pythagoras._00_basic_utils.output_capturer import OutputCapturer
 
 def test_capture_stdout():
     with OutputCapturer() as capturer:

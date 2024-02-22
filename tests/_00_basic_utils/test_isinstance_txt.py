@@ -1,6 +1,4 @@
-import pytest
-
-from pythagoras.python_utils.isinstance_txt import isinstance_txt
+from pythagoras._00_basic_utils.isinstance_txt import isinstance_txt
 
 def test_builtins():
     assert isinstance_txt(5, "int")

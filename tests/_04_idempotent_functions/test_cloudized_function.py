@@ -3,7 +3,7 @@ from persidict import FileDirDict
 
 import pythagoras as pth
 from pythagoras._04_idempotent_functions.cloud_funcs_addresses import IdempotentFunction
-from pythagoras.misc_utils.global_state_management import (
+from pythagoras._05_mission_control.global_state_management import (
     initialize, _clean_global_state)
 
 def simple_func_0():

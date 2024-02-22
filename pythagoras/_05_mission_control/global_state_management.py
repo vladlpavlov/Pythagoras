@@ -4,7 +4,7 @@ from typing import Callable
 
 from persidict import FileDirDict, PersiDict
 import pythagoras as pth
-from pythagoras.python_utils.isinstance_txt import isinstance_txt
+from pythagoras._00_basic_utils.isinstance_txt import isinstance_txt
 
 
 def initialize(cloud_type:str, base_dir:str, default_island_name:str) -> None:

@@ -1,5 +1,4 @@
-import pytest
-from pythagoras.python_utils.isinstance_txt import find_in_stack
+from pythagoras._00_basic_utils.isinstance_txt import find_in_stack
 
 # Test variables
 global_var = "global_value"
@@ -71,6 +70,5 @@ def test_find_in_stack_advanced_recursion():
     assert len(objects) == 7
 
 def test_import():
-    import pytest
     r = find_in_stack("pytest")
     assert len(r) == 1

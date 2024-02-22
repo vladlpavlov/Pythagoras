@@ -1,7 +1,7 @@
 import builtins
 from typing import Callable
 
-from pythagoras.misc_utils.global_state_management import get_all_cloudized_function_names
+from pythagoras._05_mission_control.global_state_management import get_all_cloudized_function_names
 from pythagoras.python_utils.names_usage_analyzer import analyze_names_in_function
 from pythagoras._01_foundational_objects.basic_exceptions import PythagorasException
 import pythagoras as pth
@@ -66,7 +66,7 @@ class AutonomousFunction:
 
         if analyzer.n_yelds:
             raise StaticAutonomicityChecksFailed(f"Function {self.function_name}"
-                                                 + f" is not autonomous, it uses yield statements")
+                + f" is not autonomous, it uses yield statements")
 
         if len(self.function.__code__.co_freevars):  # TODO: will ASTs serve better here?
             raise StaticAutonomicityChecksFailed(f"Function {self.function_name}"

@@ -9,3 +9,9 @@ from pythagoras._00_basic_utils.random_safe_str_creator import (
 
 from pythagoras._00_basic_utils.package_manager import (
     install_package, uninstall_package)
+
+from pythagoras._00_basic_utils.output_capturer import (
+    OutputCapturer)
+
+from pythagoras._00_basic_utils.isinstance_txt import (
+    isinstance_txt)

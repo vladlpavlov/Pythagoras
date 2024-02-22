@@ -1,4 +1,4 @@
-from pythagoras.misc_utils.global_state_management import (
+from pythagoras._05_mission_control.global_state_management import (
     initialize
     , is_global_state_correct
     , is_correctly_initialized
@@ -10,6 +10,4 @@ from pythagoras.misc_utils.global_state_management import (
     , get_cloudized_function
     )
 
-from pythagoras.misc_utils.output_capturer import OutputCapturer
-
-from pythagoras.misc_utils.id_examiner import is_reserved_identifier
+from pythagoras._05_mission_control.id_examiner import is_reserved_identifier
