@@ -1,11 +1,24 @@
-from pythagoras._02_ordinary_functions.assert_ordinarity import (
-    assert_ordinarity)
+"""Decorators and utilities to work with ordinary functions.
 
-from pythagoras._02_ordinary_functions.code_normalizer import (
-    get_normalized_function_source)
+An 'ordinary' function is just a regular Python function that accepts
+only named (keyword) arguments.
 
-from pythagoras._02_ordinary_functions.check_n_positional_args import (
-    accepts_unlimited_positional_args)
+Lambda functions, class methods, asynchronous functions and closures
+are not ordinary functions.
+
+Ordinary functions are not allowed to have decorators, except for ones that
+are part of Pythagoras (e.g. @autonomous or @idempotent))
+
+Pythagoras transforms source code of ordinary functions into a normalised
+form: a string that represents the function's source code, with all
+decorators, docstrings, and comments removed, and the resulting code
+formatted according to PEP8. This way, Pythagoras can later compare the source
+code of two functions to check if they are equivalent.
+"""
+from __future__ import annotations
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
     OrdinaryFunction)
+
+from pythagoras._02_ordinary_functions.code_normalizer import (
+    get_normalized_function_source)

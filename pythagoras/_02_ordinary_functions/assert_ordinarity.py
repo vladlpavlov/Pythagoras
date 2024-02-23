@@ -54,3 +54,8 @@ def assert_ordinarity(a_func:Callable) -> None:
         "Pythagoras only allows functions with named arguments."
         f" But {name} accepts unlimited (nameless) positional arguments."
         )
+
+    assert not inspect.iscoroutinefunction(a_func), (
+        f"The function {name} can't be an async function,"
+        " only regular functions are allowed."
+        )

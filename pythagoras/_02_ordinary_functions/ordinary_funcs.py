@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Callable
 from pythagoras._00_basic_utils.function_name import (
     get_function_name_from_source)
-from pythagoras._02_ordinary_functions.code_normalizer import (
-    get_normalized_function_source)
+from pythagoras._02_ordinary_functions.code_normalizer_implementation import (
+    __get_normalized_function_source__)
 
 
 class OrdinaryFunction:
-    naked_source:str
+    naked_source_code:str
     name:str
 
     def __init__(self, a_func: Callable | str | OrdinaryFunction, **_):
@@ -17,7 +17,7 @@ class OrdinaryFunction:
             self.name = a_func.name
         else:
             assert callable(a_func) or isinstance(a_func, str)
-            self.naked_source_code = get_normalized_function_source(
+            self.naked_source_code = __get_normalized_function_source__(
                 a_func, drop_pth_decorators=True)
             self.name = get_function_name_from_source(self.naked_source_code)
 
@@ -33,6 +33,9 @@ class OrdinaryFunction:
 
     def __call__(self, **kwargs):
         return self._call_naked_code(**kwargs)
+
+
+
 
 
 

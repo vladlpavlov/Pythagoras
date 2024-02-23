@@ -1,5 +1,5 @@
 import pytest
-from pythagoras._02_ordinary_functions import assert_ordinarity
+from pythagoras._02_ordinary_functions.assert_ordinarity import assert_ordinarity
 
 
 
@@ -55,3 +55,10 @@ def test_builtin_functions():
         assert_ordinarity(print)
     with pytest.raises(AssertionError):
         assert_ordinarity(len)
+
+def test_async_functions():
+    async def async_function():
+        pass
+
+    with pytest.raises(AssertionError):
+        assert_ordinarity(async_function)

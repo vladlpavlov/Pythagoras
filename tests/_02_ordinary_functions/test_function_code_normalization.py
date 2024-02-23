@@ -1,5 +1,6 @@
-from functools import cache
-from pythagoras._02_ordinary_functions.code_normalizer import *
+import inspect, autopep8
+from pythagoras._02_ordinary_functions.code_normalizer import get_normalized_function_source
+from pythagoras._02_ordinary_functions.ordinary_funcs import OrdinaryFunction
 
 def f_docstring():
     """ This is a CRAZY docstring"""
@@ -35,7 +36,6 @@ def test_basics():
     assert no_comments == autopep8.fix_code(no_comments)
 
 
-
 def a2(x): # a sample function to test
     print(10 # Why do I sit here?
         ,20)
@@ -55,6 +55,7 @@ def test_inclosed():
     new_a2 = get_normalized_function_source(a2)
     assert old_a2 == new_a2
     assert new_a2 == autopep8.fix_code(new_a2)
+
 
 def a3(x): # a sample function to test
     if x>0: return x*x*x
@@ -80,3 +81,19 @@ def test_inclosed2():
     assert old_a3 == new_a3
     assert new_a3 == autopep8.fix_code(new_a3)
 
+
+def test_different():
+    all_funcs = [f_docstring, f_comments, test_basics, test_inclosed
+                , test_inclosed2, a2, a3, test_different]
+    for f1 in all_funcs:
+        for f2 in all_funcs:
+            if f1 is f2:
+                assert (get_normalized_function_source(f1)
+                        == get_normalized_function_source(f2))
+                assert (get_normalized_function_source(OrdinaryFunction(f1))
+                        == get_normalized_function_source(f2))
+            else:
+                assert (get_normalized_function_source(f1)
+                        != get_normalized_function_source(f2))
+                assert (get_normalized_function_source(OrdinaryFunction(f1))
+                        != get_normalized_function_source(f2))
