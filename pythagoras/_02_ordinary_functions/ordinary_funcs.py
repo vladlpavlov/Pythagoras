@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from typing import Callable
-from pythagoras._00_basic_utils.function_name import get_function_name_from_source
-from pythagoras._02_ordinary_functions.code_normalizer import get_normalized_function_source
+from pythagoras._00_basic_utils.function_name import (
+    get_function_name_from_source)
+from pythagoras._02_ordinary_functions.code_normalizer import (
+    get_normalized_function_source)
 
 
 class OrdinaryFunction:
