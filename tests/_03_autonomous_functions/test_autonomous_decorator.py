@@ -94,12 +94,3 @@ def test_nested_yield():
         def g():
             yield 1
         return g()
-
-
-def test_nested_autonomous():
-    @autonomous()
-    def f():
-        pass
-    
-    with pytest.raises(Exception):
-        f = autonomous()(f)

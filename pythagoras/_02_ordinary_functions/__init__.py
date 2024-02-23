@@ -6,3 +6,6 @@ from pythagoras._02_ordinary_functions.code_normalizer import (
 
 from pythagoras._02_ordinary_functions.check_n_positional_args import (
     accepts_unlimited_positional_args)
+
+from pythagoras._02_ordinary_functions.ordinary_funcs import (
+    OrdinaryFunction)

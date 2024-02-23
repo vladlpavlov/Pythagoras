@@ -125,9 +125,9 @@ def _clean_global_state():
     assert pth.is_global_state_correct()
 
 
-def get_all_island_names():
+def get_all_island_names() -> set[str]:
     """ Get all islands."""
-    return list(pth.cloudized_functions.keys())
+    return set(pth.cloudized_functions.keys())
 
 def get_all_cloudized_function_names(island_name:str=None):
     """ Get all cloudized functions."""

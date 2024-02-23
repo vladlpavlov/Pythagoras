@@ -33,12 +33,13 @@ class FunctionSourceNormalizationError(PythagorasException):
 
 def get_normalized_function_source(
         a_func:Callable|str
-        , drop_decorators:bool = False
+        , drop_pth_decorators:bool = False
         ) -> str:
     """Return function's source code in a 'canonical' form.
 
-    Remove all decorators, comments, docstrings and empty lines;
+    Remove all comments, docstrings and empty lines;
     standardize code formatting based on PEP 8.
+    If drop_pth_decorators == True, remove Pythogaras decorators.
 
     Only regular functions are supported; methods and lambdas are not supported.
     """
@@ -81,11 +82,14 @@ def get_normalized_function_source(
         f"{type(code_ast.body[0])=}"
     )
     #TODO: add support for multiple decorators
-    if len(code_ast.body[0].decorator_list) > 1:
+    decorator_list = code_ast.body[0].decorator_list
+    if len(decorator_list) > 1:
         raise FunctionSourceNormalizationError(
             f"Function {a_func_name} can't have multiple decorators,"
             + " only one decorator is allowed.")
-    if drop_decorators:
+    if drop_pth_decorators and len(decorator_list):
+        assert decorator_list[0].func.id in {
+            "autonomous", "idempotent", "strictly_autonomous"}
         code_ast.body[0].decorator_list = []
 
     # Remove docstrings.

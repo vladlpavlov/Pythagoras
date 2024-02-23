@@ -28,10 +28,12 @@ Decorators @autonomous, @loosely_autonomous, and @strictly_autonomous
 allow to inform Pythagoras that a function is intended to be autonomous,
 and to enforce autonomicity requirements for the function.
 """
-from typing import Callable
+from typing import Callable, Optional
 
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
-    LooselyAutonomousFunction, StrictlyAutonomousFunction)
+     AutonomousFunction, StrictlyAutonomousFunction)
+
+import pythagoras as pth
 
 
 class autonomous:
@@ -48,10 +50,13 @@ class autonomous:
     allow_idempotent parameter indicates whether a function is a strictly
     or a loosely autonomous.
     """
-    def __init__(self, allow_idempotent: bool = False):
+    def __init__(self, island_name:Optional[str] = None):
         # TODO: Uncomment the below
         # assert pth.is_correctly_initialized()
-        self.allow_idempotent = allow_idempotent
+        assert isinstance(island_name, str) or island_name is None
+        if isinstance(island_name, str):
+            assert island_name in pth.get_all_island_names()
+        self.island_name = island_name
 
     def __call__(self, a_func: Callable) -> Callable:
         """Decorator for autonomous functions.
@@ -79,8 +84,8 @@ class autonomous:
         all possible violations of function autonomy requirements.
         """
 
-        if self.allow_idempotent:
-            wrapper =  LooselyAutonomousFunction(a_func)
+        if self.island_name is not None:
+            wrapper =  AutonomousFunction(a_func, self.island_name)
         else:
             wrapper = StrictlyAutonomousFunction(a_func)
         return wrapper
@@ -107,29 +112,4 @@ class strictly_autonomous(autonomous):
     all possible violations of strict function autonomicity requirements.
     """
     def __init__(self):
-        super().__init__(allow_idempotent=False)
-
-class loosely_autonomous(autonomous):
-    """Decorator for enforcing loose autonomicity requirements for functions.
-
-    It does both static and dynamic checks for loosely autonomous functions.
-
-    Static checks: it checks whether the function uses any global
-    non-built-in / non-idempotent objects which do not have associated
-    import statements inside the function. It also checks whether the function
-    is using any non-local objects variables, and whether the function
-    has yield / yield from statements in its code. If static checks fail,
-    the decorator throws a FunctionAutonomicityError exception.
-
-    Dynamic checks: during the execution time it hides all the global
-    and non-local objects from the function,
-    except the built-in and idempotent ones.
-    If a function tries to use a non-built-in/non-idempotent object
-    without explicitly importing it inside the function body,
-    it will result in raising an exception.
-
-    Currently, neither static nor dynamic checks are guaranteed to catch
-    all possible violations of loose function autonomicity requirements.
-    """
-    def __init__(self):
-        super().__init__(allow_idempotent=True)
+        super().__init__(island_name=None)

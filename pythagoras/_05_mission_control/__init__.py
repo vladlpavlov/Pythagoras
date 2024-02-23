@@ -10,4 +10,3 @@ from pythagoras._05_mission_control.global_state_management import (
     , get_cloudized_function
     )
 
-from pythagoras._05_mission_control.id_examiner import is_reserved_identifier

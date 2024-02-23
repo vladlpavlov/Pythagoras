@@ -6,7 +6,7 @@ import pythagoras as pth
 from pythagoras._01_foundational_objects.hash_addresses import get_hash_signature
 from pythagoras._04_idempotent_functions.kw_args import PackedKwArgs, UnpackedKwArgs
 from pythagoras._03_autonomous_functions import (
-    AutonomousFunction, LooselyAutonomousFunction)
+    AutonomousFunction)
 
 from pythagoras._05_mission_control import (
     register_cloudized_function
@@ -25,7 +25,7 @@ class IdempotentFunction:
         assert callable(a_func)
         assert not pth.accepts_unlimited_positional_args(a_func)
         if not isinstance(a_func, AutonomousFunction):
-            a_func = LooselyAutonomousFunction(a_func, island_name)
+            a_func = AutonomousFunction(a_func, island_name)
         # self.autonomous_function = a_func
         self.function_source = a_func.function_source
         self.function_name = a_func.function_name
