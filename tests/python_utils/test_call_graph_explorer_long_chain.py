@@ -1,15 +1,16 @@
+import inspect
 from pythagoras.python_utils.call_graph_explorer import *
 
-def a(*args
-        , return_name:bool = False
-        , return_shallow:bool=False
-        , return_deep:bool=False)-> Set[str]:
+def a(return_name:bool = False
+    , return_shallow:bool=False
+    , return_deep:bool=False
+    , **kwargs)-> Set[str]:
     assert return_name + return_shallow + return_deep == 1
     nested_calls = []
     nested_calls = set(nested_calls)
     my_name = inspect.stack()[0].function
     result = {my_name}
-    args = set(args)
+    args = set(kwargs.values())
     if return_name:
         return result
     elif return_shallow:
@@ -20,19 +21,21 @@ def a(*args
             return args
         else:
             for f in nested_calls:
-                result |= f(*args, my_name, return_deep=True)
+                kwargs[my_name] = my_name
+                result |= f(**kwargs, return_deep=True)
             return result
 
-def b(*args
-        , return_name:bool = False
+def b(
+        return_name:bool = False
         , return_shallow:bool=False
-        , return_deep:bool=False)-> Set[str]:
+        , return_deep:bool=False
+        , **kwargs)-> Set[str]:
     assert return_name + return_shallow + return_deep == 1
     nested_calls = [a]
     nested_calls = set(nested_calls)
     my_name = inspect.stack()[0].function
     result = {my_name}
-    args = set(args)
+    args = set(kwargs.values())
     if return_name:
         return result
     elif return_shallow:
@@ -43,20 +46,22 @@ def b(*args
             return args
         else:
             for f in nested_calls:
-                result |= f(*args, my_name, return_deep=True)
+                kwargs[my_name] = my_name
+                result |= f(**kwargs, return_deep=True)
             return result
 
 
-def c(*args
-        , return_name:bool = False
+def c(
+        return_name:bool = False
         , return_shallow:bool=False
-        , return_deep:bool=False)-> Set[str]:
+        , return_deep:bool=False
+        , **kwargs)-> Set[str]:
     assert return_name + return_shallow + return_deep == 1
     nested_calls = [b]
     nested_calls = set(nested_calls)
     my_name = inspect.stack()[0].function
     result = {my_name}
-    args = set(args)
+    args = set(kwargs.values())
     if return_name:
         return result
     elif return_shallow:
@@ -67,20 +72,22 @@ def c(*args
             return args
         else:
             for f in nested_calls:
-                result |= f(*args, my_name, return_deep=True)
+                kwargs[my_name] = my_name
+                result |= f(**kwargs, return_deep=True)
             return result
 
 
-def d(*args
-        , return_name:bool = False
+def d(
+        return_name:bool = False
         , return_shallow:bool=False
-        , return_deep:bool=False)-> Set[str]:
+        , return_deep:bool=False
+        , **kwargs)-> Set[str]:
     assert return_name + return_shallow + return_deep == 1
     nested_calls = [c]
     nested_calls = set(nested_calls)
     my_name = inspect.stack()[0].function
     result = {my_name}
-    args = set(args)
+    args = set(kwargs.values())
     if return_name:
         return result
     elif return_shallow:
@@ -91,20 +98,22 @@ def d(*args
             return args
         else:
             for f in nested_calls:
-                result |= f(*args, my_name, return_deep=True)
+                kwargs[my_name] = my_name
+                result |= f(**kwargs, return_deep=True)
             return result
 
 
-def e(*args
-        , return_name:bool = False
+def e(
+        return_name:bool = False
         , return_shallow:bool=False
-        , return_deep:bool=False)-> Set[str]:
+        , return_deep:bool=False
+        , **kwargs)-> Set[str]:
     assert return_name + return_shallow + return_deep == 1
     nested_calls = [d]
     nested_calls = set(nested_calls)
     my_name = inspect.stack()[0].function
     result = {my_name}
-    args = set(args)
+    args = set(kwargs.values())
     if return_name:
         return result
     elif return_shallow:
@@ -115,7 +124,8 @@ def e(*args
             return args
         else:
             for f in nested_calls:
-                result |= f(*args, my_name, return_deep=True)
+                kwargs[my_name] = my_name
+                result |= f(**kwargs, return_deep=True)
             return result
 
 

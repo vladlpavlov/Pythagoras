@@ -22,24 +22,24 @@ def test_from_x_import_y_s():
     assert analyzer.names.local == {"x", "y","i"}
     assert analyzer.names.unclassified_deep == { "str"}
 
-def sample_import_y_as(a, *args, **kwargs):
+def sample_import_y_as(a, **kwargs):
     import math
     import sys as s
-    b = a + len(args) + len(kwargs)
+    b = a + len(kwargs)
     x = math.sqrt(math.fabs(b))
     y = s.version
     return str(x) + str(y)
 
 def test_import_y_as():
-    sample_import_y_as(3, 4, 5)
+    sample_import_y_as(3, ttt=4, bbb=5)
     analyzer = analyze_names_in_function(sample_import_y_as)["analyzer"]
     assert analyzer.names.function == "sample_import_y_as"
     assert analyzer.imported_packages_deep == {"math","sys"}
-    assert analyzer.names.accessible == {"a", "args", "kwargs", "math","s","b","x","y","len","str"}
+    assert analyzer.names.accessible == {"a", "kwargs", "math","s","b","x","y","len","str"}
     assert analyzer.names.explicitly_global_unbound_deep == set()
     assert analyzer.names.explicitly_nonlocal_unbound_deep == set()
     assert analyzer.names.imported == {"math","s"}
-    assert analyzer.names.local == {'kwargs', 'x', 'a', 'args', 'y', 'b'}
+    assert analyzer.names.local == {'kwargs', 'x', 'a', 'y', 'b'}
     assert analyzer.names.unclassified_deep == {"len","str"}
 
 def sample_good_list_comprecension(x):
