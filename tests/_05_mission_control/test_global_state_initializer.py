@@ -1,8 +1,9 @@
 import pythagoras as pth
+from pythagoras._05_mission_control.global_state_management import _clean_global_state
 
 
 def test_local_initialization(tmp_path):
-    pth.misc_utils.global_state_management._clean_global_state()
+    _clean_global_state()
 
     init_params = dict(
         cloud_type="local",base_dir=tmp_path, default_island_name="kuku")
@@ -18,7 +19,7 @@ def test_local_initialization(tmp_path):
     assert pth.default_island_name == "kuku"
 
 def test_corrupt_value_store(tmp_path):
-    pth.misc_utils.global_state_management._clean_global_state()
+    _clean_global_state()
     init_params = dict(
         cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
 
@@ -29,7 +30,7 @@ def test_corrupt_value_store(tmp_path):
     assert not pth.is_unitialized()
 
 def test_corrupt_crash_history(tmp_path):
-    pth.misc_utils.global_state_management._clean_global_state()
+    _clean_global_state()
     init_params = dict(
         cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
 
@@ -40,7 +41,7 @@ def test_corrupt_crash_history(tmp_path):
     assert not pth.is_unitialized()
 
 def test_corrupt_cloudized_functions(tmp_path):
-    pth.misc_utils.global_state_management._clean_global_state()
+    _clean_global_state()
     init_params = dict(
         cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
 
@@ -51,7 +52,7 @@ def test_corrupt_cloudized_functions(tmp_path):
     assert not pth.is_unitialized()
 
 def test_corrupt_island_name(tmp_path):
-    pth.misc_utils.global_state_management._clean_global_state()
+    _clean_global_state()
     init_params = dict(
         cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
 
