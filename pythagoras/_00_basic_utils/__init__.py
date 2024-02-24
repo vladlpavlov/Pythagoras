@@ -18,3 +18,6 @@ from pythagoras._00_basic_utils.isinstance_txt import (
 
 from pythagoras._00_basic_utils.function_name import (
     get_function_name_from_source)
+
+from pythagoras._00_basic_utils.default_island_singleton import (
+    DefaultIsland, DefaultIslandType)
