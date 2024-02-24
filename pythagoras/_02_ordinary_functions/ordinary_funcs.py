@@ -34,6 +34,10 @@ class OrdinaryFunction:
     def __call__(self, **kwargs):
         return self._call_naked_code(**kwargs)
 
+    @property
+    def decorator(self):
+        return "@pth.ordinary()"
+
 
 
 

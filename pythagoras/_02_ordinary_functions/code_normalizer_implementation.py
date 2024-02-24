@@ -90,8 +90,23 @@ def __get_normalized_function_source__(
             f"Function {a_func_name} can't have multiple decorators,"
             + " only one decorator is allowed.")
     if drop_pth_decorators and len(decorator_list):
-        assert decorator_list[0].func.id in {
-            "autonomous", "idempotent", "strictly_autonomous"}
+        decorator = decorator_list[0].func
+        pth_dec_counter = 0
+        for candidate in  {
+            "ordinary","autonomous", "idempotent", "strictly_autonomous"}:
+            try:
+                if decorator.id == candidate:
+                    pth_dec_counter += 1
+                    break
+            except:
+                pass
+            try:
+                if decorator.attr == candidate:
+                    pth_dec_counter += 1
+                    break
+            except:
+                pass
+        assert pth_dec_counter == 1
         code_ast.body[0].decorator_list = []
 
     # Remove docstrings.

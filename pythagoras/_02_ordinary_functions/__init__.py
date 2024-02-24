@@ -15,10 +15,12 @@ decorators, docstrings, and comments removed, and the resulting code
 formatted according to PEP8. This way, Pythagoras can later compare the source
 code of two functions to check if they are equivalent.
 """
-from __future__ import annotations
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
     OrdinaryFunction)
 
 from pythagoras._02_ordinary_functions.code_normalizer import (
     get_normalized_function_source)
+
+from pythagoras._02_ordinary_functions.ordinary_decorator import (
+    ordinary)
