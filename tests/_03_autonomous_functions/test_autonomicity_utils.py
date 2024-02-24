@@ -13,7 +13,6 @@ def test_strictly_autonomous():
     assert f(a=10) == 34
 
 
-
 def h(a:int):
     b=100
     return a+b

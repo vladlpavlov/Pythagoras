@@ -1,11 +1,11 @@
 import builtins
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
+
+from pythagoras._00_basic_utils.default_island_singleton import (
+    DefaultIslandType, DefaultIsland)
 
 from pythagoras._01_foundational_objects.basic_exceptions import (
     PythagorasException)
-
-from pythagoras._02_ordinary_functions import (
-    get_normalized_function_source, OrdinaryFunction)
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
     OrdinaryFunction)
@@ -29,10 +29,15 @@ class AutonomousFunction(OrdinaryFunction):
     checks_passed:Optional[bool]
 
     def __init__(self, a_func: Callable | str | OrdinaryFunction
-                 , island_name:Optional[str]=None):
+                 , island_name:str | None | DefaultIslandType = DefaultIsland):
 
         super().__init__(a_func)
-        if island_name is not None:
+
+        if island_name is DefaultIsland:
+            island_name = pth.default_island_name
+
+        if not island_name is None:
+            assert isinstance(island_name, str)
             assert island_name in pth.get_all_island_names()
 
         if isinstance(a_func, AutonomousFunction):
@@ -45,7 +50,7 @@ class AutonomousFunction(OrdinaryFunction):
 
         self.check_autonomous_requirements()
 
-    def _call_naked_code(self, **kwargs):
+    def _call_naked_code(self, **kwargs) -> Any:
         names_dict = dict(globals())
         names_dict.update(locals())
         names_dict["__pth_kwargs"] = kwargs
@@ -57,6 +62,16 @@ class AutonomousFunction(OrdinaryFunction):
         exec(source_to_exec, names_dict, names_dict)
         result = names_dict["__pth_result"]
         return result
+
+    @property
+    def decorator(self) -> str:
+        decorator_str =""
+        if self.island_name is None:
+            decorator_str = "@strictly_autonomous()"
+        else:
+            decorator_str = f"@autonomous(island_name={self.island_name})"
+        return decorator_str
+
 
     def check_autonomous_requirements(self)-> None:
         """

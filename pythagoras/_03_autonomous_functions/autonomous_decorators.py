@@ -30,6 +30,8 @@ and to enforce autonomicity requirements for the function.
 """
 from typing import Callable, Optional
 
+from pythagoras._00_basic_utils.default_island_singleton import (
+    DefaultIslandType, DefaultIsland)
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
      AutonomousFunction, StrictlyAutonomousFunction)
 
@@ -50,10 +52,12 @@ class autonomous:
     allow_idempotent parameter indicates whether a function is a strictly
     or a loosely autonomous.
     """
-    def __init__(self, island_name:Optional[str] = None):
+    def __init__(self, island_name: str | None |DefaultIslandType = None):
         # TODO: Uncomment the below
         # assert pth.is_correctly_initialized()
-        assert isinstance(island_name, str) or island_name is None
+        assert (isinstance(island_name, str)
+                or island_name is None
+                or island_name is DefaultIsland)
         if isinstance(island_name, str):
             assert island_name in pth.get_all_island_names()
         self.island_name = island_name
