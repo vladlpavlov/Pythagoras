@@ -1,12 +1,12 @@
 import inspect
-from pythagoras.python_utils.call_graph_explorer import *
+from pythagoras._03_autonomous_functions.call_graph_explorer import *
 
 def a(return_name:bool = False
         , return_shallow:bool=False
         , return_deep:bool=False
         , **kwargs)-> Set[str]:
     assert return_name + return_shallow + return_deep == 1
-    nested_calls = []
+    nested_calls = [all_together]
     nested_calls = set(nested_calls)
     my_name = inspect.stack()[0].function
     result = {my_name}

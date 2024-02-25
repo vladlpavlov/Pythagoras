@@ -4,7 +4,3 @@ from pythagoras.python_utils.names_usage_analyzer import (
     , FunctionDependencyAnalysisError
     )
 
-from pythagoras.python_utils.call_graph_explorer import (
-    explore_call_graph_deep
-    )
-

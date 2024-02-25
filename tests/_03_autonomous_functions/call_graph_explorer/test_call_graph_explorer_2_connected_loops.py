@@ -1,5 +1,5 @@
 import inspect
-from pythagoras.python_utils.call_graph_explorer import *
+from pythagoras._03_autonomous_functions.call_graph_explorer import *
 
 def a(return_name:bool = False
         , return_shallow:bool=False

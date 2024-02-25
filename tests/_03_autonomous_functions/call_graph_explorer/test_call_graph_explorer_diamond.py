@@ -1,7 +1,7 @@
-from pythagoras.python_utils.call_graph_explorer import *
+from pythagoras._03_autonomous_functions.call_graph_explorer import *
 
 def a():
-    return {"a"} | i()
+    return {"a"}
 
 def b():
     return a() | {"b"}
@@ -25,11 +25,11 @@ def h():
     return g() | {"h"}
 
 def i():
-    return h() | e() | {"i"}
+    return h() | d() | {"i"}
 
 def test_diamond():
     assert get_referenced_names(a) == {
-        "a":{"a","i"}}
+        "a":{"a"}}
     assert get_referenced_names(b) == {
         "b":{"b","a"}}
     assert get_referenced_names(c) == {
@@ -45,13 +45,13 @@ def test_diamond():
     assert get_referenced_names(h) == {
         "h":{"h","g"}}
     assert get_referenced_names(i) == {
-        "i":{"i","h","e"}}
+        "i":{"i","h","d"}}
     assert explore_call_graph_shallow([a, b, c, d, e, f, g, h, i]) == {
-        "a":{"a","i"},"b":{"b","a"},"c":{"c","b"},"d":{"d","c"}
+        "a":{"a"},"b":{"b","a"},"c":{"c","b"},"d":{"d","c"}
         ,"e":{"e","d"},"f":{"f","a"},"g":{"g","f"},"h":{"h","g"}
-        ,"i":{"i","h","e"}}
+        ,"i":{"i","h","d"}}
     all_funcs = [a, b, c, d, e, f, g, h, i]
     all_names = {"a", "b", "c", "d", "e", "f", "g", "h", "i"}
     deep_graph = explore_call_graph_deep([a, b, c, d, e, f, g, h, i])
     for fnk in all_funcs:
-        assert deep_graph[fnk.__name__] == all_names
+        assert deep_graph[fnk.__name__] == fnk()

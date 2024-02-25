@@ -5,14 +5,14 @@ from typing import Callable, Optional, Any
 import pythagoras as pth
 from pythagoras._01_foundational_objects.hash_addresses import get_hash_signature
 from pythagoras._03_autonomous_functions import AutonomousFunction
-from pythagoras._04_idempotent_functions.kw_args import PackedKwArgs, UnpackedKwArgs
+from pythagoras._04_idempotent_functions.kw_args import UnpackedKwArgs
 
 # from pythagoras._05_mission_control import (
 #     register_idempotent_function
 #     , get_all_cloudized_function_names
 #     , get_cloudized_function)
 
-from pythagoras.python_utils.call_graph_explorer import (
+from pythagoras._03_autonomous_functions.call_graph_explorer import (
     explore_call_graph_deep)
 
 class IdempotentFunction:
