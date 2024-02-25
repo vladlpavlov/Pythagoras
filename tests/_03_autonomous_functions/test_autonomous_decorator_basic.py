@@ -1,11 +1,6 @@
 
 from pythagoras._03_autonomous_functions import *
-import pythagoras as pth
-from pythagoras._03_autonomous_functions.default_island_singleton import DefaultIsland
 
-from persidict import FileDirDict
-
-pth.function_source_repository = FileDirDict("___FileDirDict___")
 
 @strictly_autonomous()
 def f(a:int):

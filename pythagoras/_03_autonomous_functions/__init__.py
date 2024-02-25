@@ -1,3 +1,6 @@
+from pythagoras._03_autonomous_functions.default_island_singleton import (
+    DefaultIsland, DefaultIslandType)
+
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
     AutonomousFunction, StrictlyAutonomousFunction)
 
