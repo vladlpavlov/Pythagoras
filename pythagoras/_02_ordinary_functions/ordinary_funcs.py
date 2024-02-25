@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import inspect
 from typing import Callable
-from pythagoras._00_basic_utils.function_name import (
+from pythagoras._99_misc_utils.function_name import (
     get_function_name_from_source)
 from pythagoras._02_ordinary_functions.code_normalizer_implementation import (
     __get_normalized_function_source__)
+from pythagoras._99_misc_utils.long_infoname import get_long_infoname
 
 
 class OrdinaryFunction:
@@ -21,7 +23,8 @@ class OrdinaryFunction:
                 a_func, drop_pth_decorators=True)
             self.name = get_function_name_from_source(self.naked_source_code)
 
-    def _call_naked_code(self, **kwargs):
+
+    def __call__(self, **kwargs):
         names_dict = dict(globals())
         names_dict.update(locals())
         names_dict["__pth_kwargs"] = kwargs
@@ -31,8 +34,6 @@ class OrdinaryFunction:
         result = names_dict["__pth_result"]
         return result
 
-    def __call__(self, **kwargs):
-        return self._call_naked_code(**kwargs)
 
     @property
     def decorator(self):

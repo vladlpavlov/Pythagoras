@@ -1,6 +1,6 @@
 from persidict import replace_unsafe_chars
 
-from pythagoras._00_basic_utils.base_16_32_convertors import (
+from pythagoras._99_misc_utils.base_16_32_convertors import (
     convert_base16_to_base32, convert_base_32_to_int)
 
 

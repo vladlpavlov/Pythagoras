@@ -1,4 +1,4 @@
-from pythagoras._00_basic_utils.default_island_singleton import (
+from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIsland, DefaultIslandType)
 
 def test_singleton_instance():

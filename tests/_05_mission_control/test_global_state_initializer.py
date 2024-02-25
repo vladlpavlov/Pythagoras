@@ -46,7 +46,7 @@ def test_corrupt_cloudized_functions(tmp_path):
         cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
 
     pth.initialize(**init_params)
-    pth.cloudized_functions = "To be, or not to be, that is the question"
+    pth.idempotent_functions = "To be, or not to be, that is the question"
     assert not pth.is_global_state_correct()
     assert not pth.is_correctly_initialized()
     assert not pth.is_unitialized()

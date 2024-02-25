@@ -2,7 +2,7 @@ import random
 import string
 import pytest
 
-from pythagoras._00_basic_utils.package_manager import *
+from pythagoras._99_misc_utils.package_manager import *
 
 def test_actual_package():
     """Test if package installer installs a package.

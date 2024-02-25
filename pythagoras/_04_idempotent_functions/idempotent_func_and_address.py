@@ -4,18 +4,16 @@ from typing import Callable, Optional, Any
 
 import pythagoras as pth
 from pythagoras._01_foundational_objects.hash_addresses import get_hash_signature
+from pythagoras._03_autonomous_functions import AutonomousFunction
 from pythagoras._04_idempotent_functions.kw_args import PackedKwArgs, UnpackedKwArgs
-from pythagoras._03_autonomous_functions import (
-    AutonomousFunction)
 
 from pythagoras._05_mission_control import (
-    register_cloudized_function
+    register_idempotent_function
     , get_all_cloudized_function_names
     , get_cloudized_function)
 
 from pythagoras.python_utils.call_graph_explorer import (
     explore_call_graph_deep)
-
 
 class IdempotentFunction:
     def __init__(self,a_func:Callable, island_name:Optional[str]=None):
@@ -31,7 +29,11 @@ class IdempotentFunction:
         self.function_name = a_func.function_name
         self._augmented_function_source = None
         self._augmented_function_code = None
-        register_cloudized_function(self)
+        register_idempotent_function(self)
+
+    @property
+    def decorator(self) -> str:
+        return f"@pth.idempotent(island_name={self.island_name})"
 
     def _build_augmented_source_and_code(self) -> None:
 
@@ -114,7 +116,7 @@ class IdempotentFunction:
         self._augmented_function_source = state["augmented_function_source"]
         self._build_augmented_function_code()
         self.autonomous_function = None
-        register_cloudized_function(self)
+        register_idempotent_function(self)
 
 
     def _call_bare_original(self, **kwargs) -> Any:

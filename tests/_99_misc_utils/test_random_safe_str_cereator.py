@@ -1,6 +1,6 @@
 from persidict import replace_unsafe_chars
 
-from pythagoras._00_basic_utils.random_safe_str_creator import get_random_safe_str
+from pythagoras._99_misc_utils.random_safe_str_creator import get_random_safe_str
 
 def test_random_id():
     all_random_ids = set()

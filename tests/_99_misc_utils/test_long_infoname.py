@@ -1,4 +1,4 @@
-from pythagoras._00_basic_utils import get_long_infoname
+from pythagoras._99_misc_utils import get_long_infoname
 from persidict import FileDirDict
 
 

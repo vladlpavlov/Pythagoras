@@ -1,7 +1,7 @@
 from typing import Callable
 
 from pythagoras._02_ordinary_functions.code_normalizer_implementation import (
-    __get_normalized_function_source__, FunctionSourceNormalizationError)
+    __get_normalized_function_source__)
 from pythagoras._02_ordinary_functions.ordinary_funcs import OrdinaryFunction
 
 def get_normalized_function_source(a_func:OrdinaryFunction|Callable|str) -> str:

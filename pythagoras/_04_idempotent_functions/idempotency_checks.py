@@ -1,10 +1,7 @@
-import pythagoras as pth
+from pythagoras._04_idempotent_functions.idempotent_func_and_address import (
+    IdempotentFunction)
 
 
 def is_idempotent(a_func):
-    assert isinstance(a_func, type(is_idempotent))
-    if not hasattr(a_func, "__pth_cloudized_function__"):
-        return False
-    if not isinstance(a_func.__pth_cloudized_function__, pth.IdempotentFunction):
-        return False
-    return True
+    assert callable(a_func)
+    return isinstance(a_func, IdempotentFunction)

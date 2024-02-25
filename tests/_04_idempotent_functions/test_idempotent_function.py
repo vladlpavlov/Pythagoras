@@ -2,7 +2,7 @@ import pytest
 from persidict import FileDirDict
 
 import pythagoras as pth
-from pythagoras._04_idempotent_functions.cloud_funcs_addresses import IdempotentFunction
+from pythagoras._04_idempotent_functions.idempotent_func_and_address import IdempotentFunction
 from pythagoras._05_mission_control.global_state_management import (
     initialize, _clean_global_state)
 

@@ -90,7 +90,7 @@ def test_yield():
 
 def test_nested_yield():
     @autonomous()
-    def f():
+    def f_y():
         def g():
             yield 1
         return g()

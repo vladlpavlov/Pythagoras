@@ -1,4 +1,4 @@
-from pythagoras._00_basic_utils.id_examiner import is_reserved_identifier
+from pythagoras._99_misc_utils.id_examiner import is_reserved_identifier
 
 def test_is_reserved_identifier():
     assert is_reserved_identifier("__pth_") == True

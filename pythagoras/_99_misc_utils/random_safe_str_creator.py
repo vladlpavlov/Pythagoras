@@ -1,5 +1,5 @@
 import uuid
-from pythagoras._00_basic_utils.base_16_32_convertors import (
+from pythagoras._99_misc_utils.base_16_32_convertors import (
     convert_int_to_base32)
 
 def get_random_safe_str() -> str:

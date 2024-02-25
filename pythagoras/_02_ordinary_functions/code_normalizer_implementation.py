@@ -20,15 +20,11 @@ from typing import Callable, Union
 import autopep8
 
 from pythagoras import isinstance_txt
-from pythagoras._00_basic_utils.function_name import get_function_name_from_source
-from pythagoras._00_basic_utils.long_infoname import get_long_infoname
+from pythagoras._99_misc_utils.function_name import get_function_name_from_source
+from pythagoras._99_misc_utils.long_infoname import get_long_infoname
+from pythagoras._99_misc_utils.decorator_names import get_all_decorator_names
 from pythagoras._01_foundational_objects.basic_exceptions import PythagorasException
 from pythagoras._02_ordinary_functions.assert_ordinarity import assert_ordinarity
-
-
-class FunctionSourceNormalizationError(PythagorasException):
-    """Custom class for exceptions in this module."""
-    pass
 
 
 def __get_normalized_function_source__(
@@ -81,19 +77,17 @@ def __get_normalized_function_source__(
 
     assert isinstance(code_ast, ast.Module)
     assert isinstance(code_ast.body[0], ast.FunctionDef),(
-        f"{type(code_ast.body[0])=}"
-    )
+        f"{type(code_ast.body[0])=}")
+
     #TODO: add support for multiple decorators
     decorator_list = code_ast.body[0].decorator_list
-    if len(decorator_list) > 1:
-        raise FunctionSourceNormalizationError(
+    assert len(decorator_list) <= 1, (
             f"Function {a_func_name} can't have multiple decorators,"
             + " only one decorator is allowed.")
     if drop_pth_decorators and len(decorator_list):
         decorator = decorator_list[0].func
         pth_dec_counter = 0
-        for candidate in  {
-            "ordinary","autonomous", "idempotent", "strictly_autonomous"}:
+        for candidate in get_all_decorator_names():
             try:
                 if decorator.id == candidate:
                     pth_dec_counter += 1
@@ -128,16 +122,7 @@ def __get_normalized_function_source__(
             node.body.append(ast.Pass())
         # TODO: compare with the source for ast.candidate_docstring()
 
-
     result = ast.unparse(code_ast)
     result = autopep8.fix_code(result)
-
-    lines, line_num = result.splitlines(), 0
-    while lines[line_num].startswith("@"):
-        line_num+=1
-
-    if not lines[line_num].startswith("def "):
-        raise FunctionSourceNormalizationError(
-            f"Function {a_func_name} must be a regular functions ")
 
     return result

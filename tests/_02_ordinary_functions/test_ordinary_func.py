@@ -1,10 +1,10 @@
 from pythagoras._02_ordinary_functions.ordinary_funcs import OrdinaryFunction
 
 
-def simple_fucntion(a:int,b:int) -> int:
+def simple_function(a:int,b:int) -> int:
     return a+b
 def test_ordinary_function():
-    f = OrdinaryFunction(simple_fucntion)
+    f = OrdinaryFunction(simple_function)
     result = f(a=1,b=2)
     assert result == 3
 

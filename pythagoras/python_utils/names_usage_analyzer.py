@@ -4,7 +4,7 @@ from typing import Callable, Union
 from pythagoras._01_foundational_objects import PythagorasException
 from pythagoras._02_ordinary_functions import get_normalized_function_source
 
-from pythagoras._00_basic_utils.id_examiner import is_reserved_identifier
+from pythagoras._99_misc_utils.id_examiner import is_reserved_identifier
 
 class FunctionDependencyAnalysisError(PythagorasException):
     """Custom class for exceptions in this module."""
