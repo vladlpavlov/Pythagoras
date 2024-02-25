@@ -50,7 +50,8 @@ class autonomous:
     allow_idempotent parameter indicates whether a function is a strictly
     or a loosely autonomous.
     """
-    def __init__(self, island_name: str | None |DefaultIslandType = None):
+    def __init__(self
+            , island_name: str | None | DefaultIslandType = DefaultIsland):
         # TODO: Uncomment the below
         # assert pth.is_correctly_initialized()
         assert (isinstance(island_name, str)
