@@ -6,7 +6,7 @@ from pythagoras._05_mission_control.global_state_management import (
     , get_all_island_names
     , get_island
     , get_all_cloudized_function_names
-    , register_cloudized_function
+    , register_idempotent_function
     , get_cloudized_function
     )
 

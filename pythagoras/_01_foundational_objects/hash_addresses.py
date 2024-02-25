@@ -5,7 +5,7 @@ from typing import Any, Optional, Type, TypeVar
 
 from persidict import SafeStrTuple, replace_unsafe_chars
 
-from pythagoras._00_basic_utils import get_long_infoname
+from pythagoras._99_misc_utils import get_long_infoname
 from pythagoras._01_foundational_objects.hash_signature import get_hash_signature
 
 T = TypeVar("T")

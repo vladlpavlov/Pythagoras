@@ -2,7 +2,7 @@ import sys
 from typing import Any
 
 import joblib.hashing
-from pythagoras._00_basic_utils.base_16_32_convertors import (
+from pythagoras._99_misc_utils.base_16_32_convertors import (
     convert_base16_to_base32)
 
 # TODO: split into a few files, add more unit-tests

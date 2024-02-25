@@ -4,7 +4,7 @@ from typing import Callable
 
 from persidict import FileDirDict, PersiDict
 import pythagoras as pth
-from pythagoras._00_basic_utils.isinstance_txt import isinstance_txt
+from pythagoras._99_misc_utils.isinstance_txt import isinstance_txt
 
 
 def initialize(cloud_type:str, base_dir:str, default_island_name:str) -> None:
@@ -40,8 +40,8 @@ def initialize(cloud_type:str, base_dir:str, default_island_name:str) -> None:
     swarming_requests_dir = os.path.join(base_dir, "swarming_requests")
     pth.swarming_requests = dict_type(swarming_requests_dir, digest_len=0)
     pth.default_island_name = default_island_name
-    pth.cloudized_functions = dict()
-    pth.cloudized_functions[default_island_name] = dict()
+    pth.idempotent_functions = dict()
+    pth.idempotent_functions[default_island_name] = dict()
 
     parameters = dict(cloud_type=cloud_type
         , base_dir=base_dir, default_island_name=default_island_name)
@@ -58,7 +58,7 @@ def is_unitialized():
     result &= pth.function_output_store is None
     result &= pth.crash_history is None
     result &= pth.default_island_name is None
-    result &= pth.cloudized_functions is None
+    result &= pth.idempotent_functions is None
     result &= pth.swarming_requests is None
     result &= pth.initialization_parameters is None
     result &= pth.entropy_infuser is None
@@ -78,21 +78,21 @@ def is_correctly_initialized():
         return False
     if not isinstance(pth.default_island_name, str):
         return False
-    if not isinstance(pth.cloudized_functions, dict):
+    if not isinstance(pth.idempotent_functions, dict):
         return False
     if not isinstance(pth.entropy_infuser, random.Random):
         return False
-    if len(pth.cloudized_functions) > 0: # TODO: rework later
-        for island_name in pth.cloudized_functions:
+    if len(pth.idempotent_functions) > 0: # TODO: rework later
+        for island_name in pth.idempotent_functions:
             if not isinstance(island_name, str):
                 return False
-            if not isinstance(pth.cloudized_functions[island_name], dict):
+            if not isinstance(pth.idempotent_functions[island_name], dict):
                 return False
-            for function_name in pth.cloudized_functions[island_name]:
+            for function_name in pth.idempotent_functions[island_name]:
                 if not isinstance(function_name, str):
                     return False
                 if not isinstance(
-                        pth.cloudized_functions[island_name][function_name]
+                        pth.idempotent_functions[island_name][function_name]
                         ,pth.IdempotentFunction):
                     return False
     if not isinstance(pth.initialization_parameters, dict):
@@ -116,7 +116,7 @@ def _clean_global_state():
     pth.function_source_repository = None
     pth.function_output_store = None
     pth.crash_history = None
-    pth.cloudized_functions = None
+    pth.idempotent_functions = None
     pth.swarming_requests = None
     pth.default_island_name = None
     pth.initialization_parameters = None
@@ -127,33 +127,34 @@ def _clean_global_state():
 
 def get_all_island_names() -> set[str]:
     """ Get all islands."""
-    return set(pth.cloudized_functions.keys())
+    return set(pth.idempotent_functions.keys())
 
 def get_all_cloudized_function_names(island_name:str=None):
     """ Get all cloudized functions."""
     if island_name is None:
         island_name = pth.default_island_name
-    return list(pth.cloudized_functions[island_name].keys())
+    return list(pth.idempotent_functions[island_name].keys())
 
 def get_island(island_name:str=None):
     if island_name is None:
         island_name = pth.default_island_name
-    return pth.cloudized_functions[island_name]
+    return pth.idempotent_functions[island_name]
 
 def get_cloudized_function(function_name:str, island_name:str=None):
     """ Get cloudized function."""
     if island_name is None:
         island_name = pth.default_island_name
-    return pth.cloudized_functions[island_name][function_name]
+    return pth.idempotent_functions[island_name][function_name]
 
 
-def register_cloudized_function(function:Callable):
-    assert isinstance_txt(function, "IdempotentFunction")
+def register_idempotent_function(function:Callable):
+    # TODO: Redfactor. Maybe use pth.IdempotentFunction
+    assert isinstance_txt(function, "IdempotentFunction") # !!!
     island_name = function.island_name
     function_name = function.function_name
-    if island_name not in pth.cloudized_functions:
-        pth.cloudized_functions[island_name] = dict()
+    if island_name not in pth.idempotent_functions:
+        pth.idempotent_functions[island_name] = dict()
     ## TODO: find better way to handle this vvvvvvvvv
-    assert function_name not in pth.cloudized_functions[island_name]
+    assert function_name not in pth.idempotent_functions[island_name]
     ## TODO: find better way to handle this ^^^^^^^^^
-    pth.cloudized_functions[island_name][function_name] = function
+    pth.idempotent_functions[island_name][function_name] = function

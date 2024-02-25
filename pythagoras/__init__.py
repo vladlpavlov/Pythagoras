@@ -9,7 +9,7 @@ from typing import Optional, Callable, Dict
 from random import Random
 from persidict import PersiDict
 
-from pythagoras._00_basic_utils import *
+from pythagoras._99_misc_utils import *
 from pythagoras._01_foundational_objects import *
 from pythagoras._02_ordinary_functions import *
 from pythagoras._03_autonomous_functions import *
@@ -24,7 +24,7 @@ function_source_repository:Optional[PersiDict] = None
 function_output_store:Optional[PersiDict] = None
 crash_history: Optional[PersiDict] = None
 swarming_requests: Optional[PersiDict] = None
-cloudized_functions:Optional[Dict[str,Dict[str,IdempotentFunction]]] = None
+idempotent_functions:Optional[Dict[str,Dict[str,IdempotentFunction]]] = None
 default_island_name: Optional[str] = None
 entropy_infuser: Optional[Random] = None
 initialization_parameters: Optional[dict] = None

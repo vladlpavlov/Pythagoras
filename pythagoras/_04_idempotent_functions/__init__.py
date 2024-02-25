@@ -1,7 +1,7 @@
 from pythagoras._04_idempotent_functions.kw_args import (
     SortedKwArgs, PackedKwArgs, UnpackedKwArgs)
 
-from pythagoras._04_idempotent_functions.cloud_funcs_addresses import (
+from pythagoras._04_idempotent_functions.idempotent_func_and_address import (
     IdempotentFunction)
 
 from pythagoras._04_idempotent_functions.idempotent_decorator import (
