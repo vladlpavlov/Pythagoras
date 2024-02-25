@@ -1,6 +1,7 @@
 from __future__ import annotations
 import builtins
 from typing import Callable, Optional, Any
+import pythagoras as pth
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
     OrdinaryFunction)
@@ -18,15 +19,15 @@ class AutonomousFunction(OrdinaryFunction):
     # naked_source_code: str
     # name: str
     island_name:Optional[str]
-    default_island_name: str = "Samos"
-    all_autonomous_functions: dict[str, dict[str,AutonomousFunction]] = dict()
+    # default_island_name: str = "Samos"
+    # all_autonomous_functions: dict[str, dict[str,AutonomousFunction]] = dict()
 
     def __init__(self, a_func: Callable | str | OrdinaryFunction
                  , island_name:str | None | DefaultIslandType = DefaultIsland):
         super().__init__(a_func)
 
         if island_name is DefaultIsland:
-            island_name = self.default_island_name
+            island_name = pth.default_island_name
 
         if isinstance(a_func, AutonomousFunction):
             assert island_name == a_func.island_name
@@ -35,10 +36,10 @@ class AutonomousFunction(OrdinaryFunction):
             assert isinstance(island_name, str)
             # TODO: Add checks for island_name (should be a safe str)
 
-        if island_name not in self.all_autonomous_functions:
-            self.all_autonomous_functions[island_name] = dict()
+        if island_name not in pth.all_autonomous_functions:
+            pth.all_autonomous_functions[island_name] = dict()
 
-        island = self.all_autonomous_functions[island_name]
+        island = pth.all_autonomous_functions[island_name]
         if self.name in island:
             existing_func = island[self.name]
             assert existing_func.naked_source_code == self.naked_source_code, (
@@ -60,15 +61,15 @@ class AutonomousFunction(OrdinaryFunction):
         if self.island_name is None:
             assert self.runtime_autonomicity_checks()
 
-        assert island_name in self.all_autonomous_functions
-        assert self.name in self.all_autonomous_functions[island_name]
+        assert island_name in pth.all_autonomous_functions
+        assert self.name in pth.all_autonomous_functions[island_name]
         assert self.naked_source_code == (
-            self.all_autonomous_functions[island_name][self.name].naked_source_code)
-        assert hasattr(self.all_autonomous_functions[island_name][self.name]
+            pth.all_autonomous_functions[island_name][self.name].naked_source_code)
+        assert hasattr(pth.all_autonomous_functions[island_name][self.name]
                        ,"_static_checks_passed")
-        assert hasattr(self.all_autonomous_functions[island_name][self.name]
+        assert hasattr(pth.all_autonomous_functions[island_name][self.name]
                        ,"_runtime_checks_passed")
-        if self is not self.all_autonomous_functions[island_name][self.name]:
+        if self is not pth.all_autonomous_functions[island_name][self.name]:
             assert not hasattr(self,"_static_checks_passed")
             assert not hasattr(self,"_runtime_checks_passed")
 
@@ -84,7 +85,7 @@ class AutonomousFunction(OrdinaryFunction):
         return decorator_str
 
     def static_autonomicity_checks(self)-> bool:
-        island = self.all_autonomous_functions[self.island_name]
+        island = pth.all_autonomous_functions[self.island_name]
         name = self.name
         if island[name]._static_checks_passed is not None:
             assert isinstance(island[name]._static_checks_passed, bool)
@@ -110,7 +111,7 @@ class AutonomousFunction(OrdinaryFunction):
         return True
 
     def runtime_autonomicity_checks(self)-> bool:
-        island = self.all_autonomous_functions[self.island_name]
+        island = pth.all_autonomous_functions[self.island_name]
         name = self.name
 
         if island[name]._runtime_checks_passed is not None:
@@ -128,7 +129,7 @@ class AutonomousFunction(OrdinaryFunction):
         builtin_names = set(dir(builtins))
         import_required -= builtin_names
         if self.island_name is not None:
-            island = self.all_autonomous_functions[self.island_name]
+            island = pth.all_autonomous_functions[self.island_name]
             import_required -= set(island)
 
         assert len(import_required) ==0, (f"Function {self.name}"
@@ -146,7 +147,7 @@ class AutonomousFunction(OrdinaryFunction):
         names_dict.update(locals())
         names_dict["__pth_kwargs"] = kwargs
         if self.island_name is not None:
-            island = self.all_autonomous_functions[self.island_name]
+            island = pth.all_autonomous_functions[self.island_name]
             names_dict.update(island)
         else:
             names_dict[self.name] = self
@@ -175,9 +176,9 @@ class AutonomousFunction(OrdinaryFunction):
         f = AutonomousFunction(state["naked_source_code"]
             , island_name=state["island_name"])
         assert f.name == state["name"]
-        self.name = f["name"]
-        self.naked_source_code = f["naked_source_code"]
-        self.island_name = f["island_name"]
+        self.name = f.name
+        self.naked_source_code = f.naked_source_code
+        self.island_name = f.island_name
 
 
 

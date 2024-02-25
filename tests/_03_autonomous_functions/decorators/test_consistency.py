@@ -1,7 +1,14 @@
 from pythagoras._03_autonomous_functions import *
 import pytest
+from pythagoras._05_mission_control.global_state_management import (
+    _clean_global_state, initialize)
+import pythagoras as pth
 
-def test_2_didderent_functions_same_name():
+
+
+def test_2_didderent_functions_same_name(tmpdir):
+    _clean_global_state()
+    initialize(tmpdir)
     def f():
         return 1
     f_1 = autonomous(island_name="Moon")(f)
@@ -19,7 +26,9 @@ def test_2_didderent_functions_same_name():
     with pytest.raises(Exception):
         f_20 = strictly_autonomous()(f)
 
-def test_2_similar_functions_same_name():
+def test_2_similar_functions_same_name(tmpdir):
+    _clean_global_state()
+    initialize(tmpdir)
     def f():
         return 100
     f_1 = autonomous(island_name="Moon")(f)

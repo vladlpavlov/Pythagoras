@@ -48,7 +48,7 @@ def test_closure():
         return i
 
     with pytest.raises(AssertionError):
-        assert_ordinarity(inner_function())
+        assert_ordinarity(inner_function)
 
 def test_builtin_functions():
     with pytest.raises(AssertionError):
