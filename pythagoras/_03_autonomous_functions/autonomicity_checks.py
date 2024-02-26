@@ -1,7 +1,7 @@
 from typing import Callable
 
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
-    AutonomousFunction, StrictlyAutonomousFunction)
+    AutonomousFunction)
 
 def is_autonomous(a_func: Callable) -> bool:
     """Check if a function is autonomous."""

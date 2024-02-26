@@ -209,8 +209,3 @@ def register_autonomous_function(f: AutonomousFunction):
         assert not hasattr(f, "_static_checks_passed")
         assert not hasattr(f, "_runtime_checks_passed")
         assert not hasattr(f, "_dependencies")
-
-
-class StrictlyAutonomousFunction(AutonomousFunction):
-    def __init__(self,a_func: Callable | str | OrdinaryFunction):
-        super().__init__(a_func, island_name=None)

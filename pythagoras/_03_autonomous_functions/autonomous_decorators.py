@@ -33,7 +33,7 @@ from typing import Callable
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
-     AutonomousFunction, StrictlyAutonomousFunction)
+     AutonomousFunction)
 
 
 class autonomous:
@@ -50,6 +50,9 @@ class autonomous:
     allow_idempotent parameter indicates whether a function is a strictly
     or a loosely autonomous.
     """
+
+    island_name: str | None
+
     def __init__(self
             , island_name: str | None | DefaultIslandType = DefaultIsland):
         # TODO: Uncomment the below
@@ -85,10 +88,7 @@ class autonomous:
         all possible violations of function autonomy requirements.
         """
 
-        if self.island_name is not None:
-            wrapper =  AutonomousFunction(a_func, self.island_name)
-        else:
-            wrapper = StrictlyAutonomousFunction(a_func)
+        wrapper = AutonomousFunction(a_func, self.island_name)
         return wrapper
 
 class strictly_autonomous(autonomous):

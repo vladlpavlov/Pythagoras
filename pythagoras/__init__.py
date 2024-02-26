@@ -16,7 +16,6 @@ from pythagoras._03_autonomous_functions import *
 from pythagoras._04_idempotent_functions import *
 from pythagoras._05_mission_control import *
 
-from pythagoras.python_utils import *
 
 value_store:Optional[PersiDict] = None
 function_garage:Optional[PersiDict] = None # ????
