@@ -16,8 +16,10 @@ def f_3():
     return f_2()*10
 
 
+f_4_as_str ="""
 def f_4():
     return f_3()*10
+"""
 
 
 def f_5():
@@ -31,12 +33,12 @@ def f_6():
 def test_chained(tmpdir):
     _clean_global_state()
     initialize(tmpdir)
-    global f_1, f_2, f_3, f_4, f_5, f_6
+    global f_1, f_2, f_3, f_4_as_str, f_5, f_6
 
     f_1 = autonomous(island_name="Moon")(f_1)
     f_2 = autonomous(island_name="Moon")(f_2)
     f_3 = autonomous(island_name="Moon")(f_3)
-    f_4 = autonomous(island_name="Moon")(f_4)
+    f_4 = autonomous(island_name="Moon")(f_4_as_str)
     f_5 = autonomous(island_name="Moon")(f_5)
     f_6 = autonomous(island_name="Moon")(f_6)
 

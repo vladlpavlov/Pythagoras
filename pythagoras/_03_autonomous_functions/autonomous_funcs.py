@@ -22,8 +22,7 @@ class AutonomousFunction(OrdinaryFunction):
     # naked_source_code: str
     # name: str
     island_name:Optional[str]
-    # default_island_name: str = "Samos"
-    # all_autonomous_functions: dict[str, dict[str,AutonomousFunction]] = dict()
+
 
     def __init__(self, a_func: Callable | str | OrdinaryFunction
                  , island_name:str | None | DefaultIslandType = DefaultIsland):
@@ -39,43 +38,10 @@ class AutonomousFunction(OrdinaryFunction):
             assert isinstance(island_name, str)
             # TODO: Add checks for island_name (should be a safe str)
 
-        if island_name not in pth.all_autonomous_functions:
-            pth.all_autonomous_functions[island_name] = dict()
-
-        island = pth.all_autonomous_functions[island_name]
-        if self.name in island:
-            existing_func = island[self.name]
-            assert existing_func.naked_source_code == self.naked_source_code, (
-                f"Function {self.name} is already "
-                + "defined in island {island_name}"
-                + f" with different source code. You cannot redefine it within"
-                + f" one session of the program.")
-            a_func = existing_func
-        else:
-            self._static_checks_passed = None
-            self._runtime_checks_passed = None
-            self._dependencies = None
-
         self.island_name = island_name
 
-        if self.name not in island:
-            island[self.name] = self
-
-        assert self.static_autonomicity_checks()
-        if self.island_name is None:
-            assert self.runtime_autonomicity_checks()
-
-        assert island_name in pth.all_autonomous_functions
-        assert self.name in pth.all_autonomous_functions[island_name]
-        assert self.naked_source_code == (
-            pth.all_autonomous_functions[island_name][self.name].naked_source_code)
-        assert hasattr(pth.all_autonomous_functions[island_name][self.name]
-                       ,"_static_checks_passed")
-        assert hasattr(pth.all_autonomous_functions[island_name][self.name]
-                       ,"_runtime_checks_passed")
-        if self is not pth.all_autonomous_functions[island_name][self.name]:
-            assert not hasattr(self,"_static_checks_passed")
-            assert not hasattr(self,"_runtime_checks_passed")
+        if self.__class__.__name__ == AutonomousFunction.__name__:
+            register_autonomous_function(self)
 
 
 
@@ -97,7 +63,7 @@ class AutonomousFunction(OrdinaryFunction):
         assert len(island[name]._dependencies) >= 1
         return sorted(island[name]._dependencies)
 
-    def static_autonomicity_checks(self)-> bool:
+    def static_checks(self)-> bool:
         island = pth.all_autonomous_functions[self.island_name]
         name = self.name
         if island[name]._static_checks_passed is not None:
@@ -185,21 +151,64 @@ class AutonomousFunction(OrdinaryFunction):
     def __getstate__(self):
         draft_state = dict(name = self.name
             , naked_source_code = self.naked_source_code
-            , island_name = self.island_name)
+            , island_name = self.island_name
+            , class_name = self.__class__.__name__)
         state = dict()
         for key in sorted(draft_state):
             state[key] = draft_state[key]
         return state
 
     def __setstate__(self, state):
-        assert len(state) == 3
-        f = AutonomousFunction(state["naked_source_code"]
-            , island_name=state["island_name"])
-        assert f.name == state["name"]
-        self.name = f.name
-        self.naked_source_code = f.naked_source_code
-        self.island_name = f.island_name
+        assert len(state) == 4
+        assert state["class_name"] == AutonomousFunction.__name__
+        self.name = state["name"]
+        self.naked_source_code = state["naked_source_code"]
+        self.island_name = state["island_name"]
+        register_autonomous_function(self)
 
+
+def register_autonomous_function(f: AutonomousFunction):
+    island_name = f.island_name
+    name = f.name
+    if island_name not in pth.all_autonomous_functions:
+        pth.all_autonomous_functions[island_name] = dict()
+    island = pth.all_autonomous_functions[island_name]
+    if name not in island:
+        island[name] = f
+        island[name]._static_checks_passed = None
+        island[name]._runtime_checks_passed = None
+        island[name]._dependencies = None
+    else:
+        assert f.naked_source_code == island[name].naked_source_code, (
+                f"Function {name} is already "
+                + "defined in island {island_name}"
+                + f" with different source code. You cannot redefine it within"
+                + f" one session of the program.")
+        assert f.decorator == island[f.name].decorator, (
+                f"Function {name} is already "
+                + "defined in island {island_name} with the same source code "
+                + f"but different decorator. You cannot redefine decorator "
+                + f"within one session of the program.")
+        assert type(f) == type(island[f.name])
+
+    assert f.static_checks()
+    if f.island_name is None:
+        assert f.runtime_autonomicity_checks()
+
+    assert f.island_name in pth.all_autonomous_functions
+    assert f.name in pth.all_autonomous_functions[island_name]
+    assert f.naked_source_code == (
+        pth.all_autonomous_functions[f.island_name][f.name].naked_source_code)
+    assert hasattr(pth.all_autonomous_functions[f.island_name][f.name]
+                   , "_static_checks_passed")
+    assert hasattr(pth.all_autonomous_functions[f.island_name][f.name]
+                   , "_runtime_checks_passed")
+    assert hasattr(pth.all_autonomous_functions[f.island_name][f.name]
+                   , "_dependencies")
+    if f is not pth.all_autonomous_functions[f.island_name][f.name]:
+        assert not hasattr(f, "_static_checks_passed")
+        assert not hasattr(f, "_runtime_checks_passed")
+        assert not hasattr(f, "_dependencies")
 
 
 class StrictlyAutonomousFunction(AutonomousFunction):
