@@ -9,6 +9,9 @@ from pythagoras._02_ordinary_functions.ordinary_funcs import (
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 
+from pythagoras._03_autonomous_functions.call_graph_explorer import (
+    explore_call_graph_deep)
+
 from pythagoras._99_misc_utils.decorator_names import get_all_decorator_names
 
 from pythagoras._03_autonomous_functions.names_usage_analyzer import (
@@ -51,6 +54,7 @@ class AutonomousFunction(OrdinaryFunction):
         else:
             self._static_checks_passed = None
             self._runtime_checks_passed = None
+            self._dependencies = None
 
         self.island_name = island_name
 
@@ -83,6 +87,15 @@ class AutonomousFunction(OrdinaryFunction):
         else:
             decorator_str = f"@pth.autonomous(island_name={self.island_name})"
         return decorator_str
+
+    @property
+    def dependencies(self) -> list[str]:
+        island = pth.all_autonomous_functions[self.island_name]
+        name = self.name
+        assert island[name]._dependencies is not None
+        assert isinstance(island[name]._dependencies,list)
+        assert len(island[name]._dependencies) >= 1
+        return sorted(island[name]._dependencies)
 
     def static_autonomicity_checks(self)-> bool:
         island = pth.all_autonomous_functions[self.island_name]
@@ -137,7 +150,13 @@ class AutonomousFunction(OrdinaryFunction):
             + f" objects {import_required}"
             + f" without importing them inside the function body")
 
-        self._runtime_checks_passed = True
+        all_functions_in_island = [f.naked_source_code for f in island.values()]
+        deep_dependencies = explore_call_graph_deep(all_functions_in_island)
+        dependencies = deep_dependencies[name]
+        assert isinstance(dependencies, set)
+        assert len(dependencies) >= 1
+        island[name]._dependencies = sorted(dependencies)
+        island[name]._runtime_checks_passed = True
         return True
 
 
@@ -145,12 +164,13 @@ class AutonomousFunction(OrdinaryFunction):
         assert self.runtime_autonomicity_checks()
         names_dict = dict(globals())
         names_dict.update(locals())
+        island = pth.all_autonomous_functions[self.island_name]
         names_dict["__pth_kwargs"] = kwargs
         if self.island_name is not None:
-            island = pth.all_autonomous_functions[self.island_name]
-            names_dict.update(island)
+            for f_name in self.dependencies:
+                names_dict[f_name] = island[f_name]
         else:
-            names_dict[self.name] = self
+            names_dict[self.name] = island[self.name]
 
         tmp_name = "__pth_tmp_" + self.name
         source_to_exec = self.naked_source_code + "\n"

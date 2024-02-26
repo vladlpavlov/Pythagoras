@@ -3,8 +3,6 @@ from pythagoras._05_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
 
-
-
 def f_2():
     return f_1()*10
 
@@ -13,10 +11,8 @@ def f_3():
     return f_2()*10
 
 
-
 def f_1():
     return 0
-
 
 
 def f_5():
@@ -31,7 +27,7 @@ def f_4():
     return 10
 
 
-def test_two_chains_with_errors(tmpdir):
+def test_two_chains_no_errors(tmpdir):
     _clean_global_state()
     initialize(tmpdir)
 

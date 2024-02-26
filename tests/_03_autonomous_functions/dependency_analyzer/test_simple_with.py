@@ -1,10 +1,5 @@
-import sys
-
-import pytest
 
 from pythagoras._03_autonomous_functions.names_usage_analyzer import *
-
-
 
 
 def simple_with():
