@@ -1,6 +1,6 @@
 import pytest
 import pythagoras as pth
-from pythagoras.python_utils.names_usage_analyzer import *
+from pythagoras._03_autonomous_functions.names_usage_analyzer import *
 
 def good_f(a,b,s):
     return a+b+s

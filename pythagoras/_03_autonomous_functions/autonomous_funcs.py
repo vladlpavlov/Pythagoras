@@ -11,7 +11,7 @@ from pythagoras._03_autonomous_functions.default_island_singleton import (
 
 from pythagoras._99_misc_utils.decorator_names import get_all_decorator_names
 
-from pythagoras.python_utils.names_usage_analyzer import (
+from pythagoras._03_autonomous_functions.names_usage_analyzer import (
     analyze_names_in_function)
 
 
