@@ -38,7 +38,7 @@ class HashAddress(SafeStrTuple, ABC):
     def _build_prefix(x: Any) -> str:
         """Create a short human-readable summary of an object."""
 
-        prfx = get_long_infoname(x).lower()
+        prfx = x.__class__.__name__.lower()
 
         return prfx
 

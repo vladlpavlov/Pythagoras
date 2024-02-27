@@ -109,6 +109,7 @@ class AutonomousFunction(OrdinaryFunction):
         import_required -= set(pth.primary_decorators)
         builtin_names = set(dir(builtins))
         import_required -= builtin_names
+        import_required -= {name}
         if self.island_name is not None:
             island = pth.all_autonomous_functions[self.island_name]
             import_required -= set(island)
@@ -130,8 +131,9 @@ class AutonomousFunction(OrdinaryFunction):
 
     def __call__(self, **kwargs) -> Any:
         assert self.runtime_checks()
-        names_dict = dict(globals())
-        names_dict.update(locals())
+        # names_dict = dict(globals())
+        # names_dict.update(locals())
+        names_dict = dict()
         island = pth.all_autonomous_functions[self.island_name]
         names_dict["__pth_kwargs"] = kwargs
         if self.island_name is not None:
@@ -145,7 +147,6 @@ class AutonomousFunction(OrdinaryFunction):
         source_to_exec = source_to_exec.replace(
             " "+self.name+"(", " "+tmp_name+"(",1)
         source_to_exec += f"\n__pth_result = {tmp_name}(**__pth_kwargs)\n"
-
         exec(source_to_exec, names_dict, names_dict)
         result = names_dict["__pth_result"]
         return result
