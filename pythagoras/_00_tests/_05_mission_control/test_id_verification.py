@@ -17,9 +17,9 @@ def __pth_bad_f_3(a,b,c):
 
 def test_id_verification_names_analyzer():
     analyze_names_in_function(good_f)
-    with pytest.raises(pth.PythagorasException):
+    with pytest.raises(Exception):
         analyze_names_in_function(bad_f_1)
-    with pytest.raises(pth.PythagorasException):
+    with pytest.raises(Exception):
         analyze_names_in_function(bad_f_2)
-    with pytest.raises(pth.PythagorasException):
+    with pytest.raises(Exception):
         analyze_names_in_function(__pth_bad_f_3)

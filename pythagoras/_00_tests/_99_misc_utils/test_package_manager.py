@@ -31,7 +31,7 @@ def test_nonexisting_package():
         nonexisting_package_name += random.choice(string.ascii_letters)
         nonexisting_package_name += random.choice(string.digits)
 
-    with pytest.raises(PackageInstallerError):
+    with pytest.raises(Exception):
         install_package(nonexisting_package_name)
 
     uninstall_package(nonexisting_package_name)

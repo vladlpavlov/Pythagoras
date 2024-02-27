@@ -19,11 +19,9 @@ import inspect
 from typing import Callable, Union
 import autopep8
 
-from pythagoras import isinstance_txt
 from pythagoras._99_misc_utils.function_name import get_function_name_from_source
 from pythagoras._99_misc_utils.long_infoname import get_long_infoname
 from pythagoras._99_misc_utils.decorator_names import get_all_decorator_names
-from pythagoras._01_foundational_objects.basic_exceptions import PythagorasException
 from pythagoras._02_ordinary_functions.assert_ordinarity import assert_ordinarity
 
 

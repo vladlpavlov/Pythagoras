@@ -1,14 +1,9 @@
 import ast
 from typing import Callable, Union
 
-from pythagoras._01_foundational_objects import PythagorasException
 from pythagoras._02_ordinary_functions import get_normalized_function_source
 
 from pythagoras._99_misc_utils.id_examiner import is_reserved_identifier
-
-class FunctionDependencyAnalysisError(PythagorasException):
-    """Custom class for exceptions in this module."""
-    pass
 
 class NamesUsedInFunction:
     def __init__(self):
@@ -34,10 +29,10 @@ class NamesUsageAnalyzer(ast.NodeVisitor):
         self.n_yelds = 0
 
     def visit_FunctionDef(self, node):
-        if is_reserved_identifier(node.name):
-            raise PythagorasException(f"Name {node.name} is not allowed "
-                + "to be used inside an autonomous /idempotent function, "
-                + "because it is a Pythagoras reserved identifier.")
+        assert not is_reserved_identifier(node.name), (
+            f"Name {node.name} is not allowed "
+            + "to be used inside an autonomous /idempotent function, "
+            + "because it is a Pythagoras reserved identifier.")
         if self.func_nesting_level == 0:
             self.names.function = node.name
             self.func_nesting_level += 1
@@ -65,10 +60,10 @@ class NamesUsageAnalyzer(ast.NodeVisitor):
             # self.n_yelds is not changing
 
     def visit_Name(self, node):
-        if is_reserved_identifier(node.id):
-            raise PythagorasException(f"Name {node.id} is not allowed "
-                + "to be used inside an autonomous /idempotent function, "
-                + "because it is a Pythagoras reserved identifier.")
+        assert not is_reserved_identifier(node.id),(
+            f"Name {node.id} is not allowed "
+            + "to be used inside an autonomous /idempotent function, "
+            + "because it is a Pythagoras reserved identifier.")
         if isinstance(node.ctx, ast.Load):
             if node.id not in self.names.accessible:
                 self.names.unclassified_deep |= {node.id}
@@ -80,10 +75,10 @@ class NamesUsageAnalyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Attribute(self, node):
-        if is_reserved_identifier(node.attr):
-            raise PythagorasException(f"Name {node.attr} is not allowed "
-                + "to be used inside an autonomous /idempotent function, "
-                + "because it is a Pythagoras reserved identifier.")
+        assert not is_reserved_identifier(node.attr),(
+            f"Name {node.attr} is not allowed "
+            + "to be used inside an autonomous /idempotent function, "
+            + "because it is a Pythagoras reserved identifier.")
         self.generic_visit(node)
 
     def visit_Yield(self, node):
@@ -179,23 +174,19 @@ def analyze_names_in_function(
     while lines[line_num].startswith("@"):
         line_num+=1
 
-    if not lines[line_num].startswith("def "):
-        raise FunctionDependencyAnalysisError("This action can only"
+    assert lines[line_num].startswith("def "),("This action can only"
             + " be applied to conventional functions,"
             + " not to instances of callable classes, "
             + " not to lambda functions, "
             + " not to async functions.")
     tree = ast.parse(normalized_source)
-    if not isinstance(tree, ast.Module):
-        raise FunctionDependencyAnalysisError(f"Only one high lever"
+    assert isinstance(tree, ast.Module), (f"Only one high lever"
             + f" function definition is allowed to be processed."
             + f" The following code is not allowed: {normalized_source}")
-    if not isinstance(tree.body[0], ast.FunctionDef):
-        raise FunctionDependencyAnalysisError(f"Only one high lever"
+    assert isinstance(tree.body[0], ast.FunctionDef), (f"Only one high lever"
             + f" function definition is allowed to be processed."
             + f" The following code is not allowed: {normalized_source}")
-    if not len(tree.body)==1:
-        raise FunctionDependencyAnalysisError(f"Only one high lever"
+    assert len(tree.body)==1, (f"Only one high lever"
             + f" function definition is allowed to be processed."
             + f" The following code is not allowed: {normalized_source}")
     analyzer = NamesUsageAnalyzer()
