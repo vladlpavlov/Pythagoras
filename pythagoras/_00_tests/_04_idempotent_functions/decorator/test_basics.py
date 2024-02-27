@@ -17,4 +17,5 @@ def test_basics(tmpdir):
     f_1 = idempotent()(f_ab)
     #
     assert is_idempotent(f_1)
-    assert f_1(a=1,b=2) == result
+    for i in range(3):
+        assert f_1(a=1,b=2) == result
