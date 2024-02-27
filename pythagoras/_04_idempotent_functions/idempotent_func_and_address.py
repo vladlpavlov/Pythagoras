@@ -14,6 +14,8 @@ from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 
 from pythagoras._04_idempotent_functions.kw_args import UnpackedKwArgs
+from pythagoras._04_idempotent_functions.process_augmented_func_src import (
+    process_augmented_func_src)
 
 class IdempotentFunction(AutonomousFunction):
     augmented_code_checked: bool
@@ -26,7 +28,7 @@ class IdempotentFunction(AutonomousFunction):
     @property
     def decorator(self) -> str:
         decorator_str = "@pth.idempotent("
-        decorator_str += f"island_name={self.island_name})"
+        decorator_str += f"island_name='{self.island_name}'"
         decorator_str += ")"
         return decorator_str
 
@@ -83,6 +85,7 @@ class IdempotentFunction(AutonomousFunction):
         self.name = state["name"]
         self.naked_source_code = state["naked_source_code"]
         self.island_name = state["island_name"]
+        self.augmented_code_checked = False
         register_idempotent_function(self)
 
         island_name = self.island_name
@@ -90,8 +93,10 @@ class IdempotentFunction(AutonomousFunction):
         name = self.name
         if island[name]._augmented_source_code is None:
             island[name]._augmented_source_code = state["augmented_source_code"]
+            process_augmented_func_src(state["augmented_source_code"])
         else:
-            assert state["augmented_source_code"] == self.augmented_source_code
+            assert state["augmented_source_code"] == (
+                island[name]._augmented_source_code)
 
         self.augmented_code_checked = True
 

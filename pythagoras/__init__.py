@@ -27,4 +27,7 @@ default_island_name: Optional[str] = None
 entropy_infuser: Optional[Random] = None
 initialization_parameters: Optional[dict] = None
 
+allowed_decorators = {d.__name__:d for d in [
+    idempotent, autonomous, strictly_autonomous]}
+
 
