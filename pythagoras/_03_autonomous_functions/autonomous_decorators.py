@@ -34,6 +34,8 @@ from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
      AutonomousFunction)
+from pythagoras._05_mission_control.global_state_management import (
+    is_correctly_initialized)
 
 
 class autonomous:
@@ -55,8 +57,6 @@ class autonomous:
 
     def __init__(self
             , island_name: str | None | DefaultIslandType = DefaultIsland):
-        # TODO: Uncomment the below
-        # assert pth.is_correctly_initialized()
         assert (isinstance(island_name, str)
                 or island_name is None
                 or island_name is DefaultIsland)

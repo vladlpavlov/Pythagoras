@@ -8,7 +8,7 @@ from pythagoras._05_mission_control.global_state_management import (
 
 def test_basics(tmpdir):
     _clean_global_state()
-    initialize(base_dir=tmpdir, default_island_name="test", cloud_type="local")
+    initialize(base_dir=tmpdir)
     def f_ab(a, b):
         return a + b
 
@@ -28,7 +28,7 @@ def test_init_checks(tmpdir):
         idempotent()(f)
 
     _clean_global_state()
-    initialize(base_dir=tmpdir, default_island_name="test", cloud_type="local")
+    initialize(base_dir=tmpdir)
 
     idempotent()(f)
 
@@ -40,7 +40,7 @@ def g_nstd():
 
 def test_nested_calls(tmpdir):
     _clean_global_state()
-    initialize(base_dir=tmpdir, default_island_name="test", cloud_type="local")
+    initialize(base_dir=tmpdir)
 
     global f_nstd, g_nstd
 

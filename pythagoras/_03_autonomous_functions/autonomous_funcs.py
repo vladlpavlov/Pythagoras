@@ -17,6 +17,9 @@ from pythagoras._99_misc_utils.decorator_names import get_all_decorator_names
 from pythagoras._03_autonomous_functions.names_usage_analyzer import (
     analyze_names_in_function)
 
+from pythagoras._05_mission_control.global_state_management import (
+    is_correctly_initialized)
+
 
 class AutonomousFunction(OrdinaryFunction):
     # naked_source_code: str
@@ -26,6 +29,7 @@ class AutonomousFunction(OrdinaryFunction):
 
     def __init__(self, a_func: Callable | str | OrdinaryFunction
                  , island_name:str | None | DefaultIslandType = DefaultIsland):
+        assert is_correctly_initialized()
         super().__init__(a_func)
 
         if island_name is DefaultIsland:
@@ -89,7 +93,7 @@ class AutonomousFunction(OrdinaryFunction):
         self._static_checks_passed = True
         return True
 
-    def runtime_autonomicity_checks(self)-> bool:
+    def runtime_checks(self)-> bool:
         island = pth.all_autonomous_functions[self.island_name]
         name = self.name
 
@@ -127,7 +131,7 @@ class AutonomousFunction(OrdinaryFunction):
 
 
     def __call__(self, **kwargs) -> Any:
-        assert self.runtime_autonomicity_checks()
+        assert self.runtime_checks()
         names_dict = dict(globals())
         names_dict.update(locals())
         island = pth.all_autonomous_functions[self.island_name]
@@ -167,7 +171,8 @@ class AutonomousFunction(OrdinaryFunction):
         register_autonomous_function(self)
 
 
-def register_autonomous_function(f: AutonomousFunction):
+def register_autonomous_function(f: AutonomousFunction) -> None:
+    assert isinstance(f, AutonomousFunction)
     island_name = f.island_name
     name = f.name
     if island_name not in pth.all_autonomous_functions:
@@ -193,7 +198,7 @@ def register_autonomous_function(f: AutonomousFunction):
 
     assert f.static_checks()
     if f.island_name is None:
-        assert f.runtime_autonomicity_checks()
+        assert f.runtime_checks()
 
     assert f.island_name in pth.all_autonomous_functions
     assert f.name in pth.all_autonomous_functions[island_name]
