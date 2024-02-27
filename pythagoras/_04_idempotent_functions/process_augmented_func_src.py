@@ -24,16 +24,16 @@ def process_augmented_func_src(input_src):
             + " exactly one decorator.")
 
         decorator = node.decorator_list[0]
-        assert decorator.func.attr in pth.allowed_decorators, (
+        assert decorator.func.attr in pth.primary_decorators, (
             "The only allowed decorators are: "
-            + ", ".join(["@pth."+ad+"()" for ad in pth.allowed_decorators]))
+            + ", ".join(["@pth." + ad +"()" for ad in pth.primary_decorators]))
 
         func_no_decorators = deepcopy(node)
         func_no_decorators.decorator_list = []
         decorator_name = decorator.func.attr
         decorator_kwargs = convert_astkeywords_to_dict(decorator.keywords)
         func_src = ast.unparse(func_no_decorators) # TODO: add ast passthrough
-        pth.allowed_decorators[decorator_name](**decorator_kwargs)(func_src)
+        pth.primary_decorators[decorator_name](**decorator_kwargs)(func_src)
 
 
 

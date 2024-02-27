@@ -31,21 +31,27 @@ def test_conflicted_chained_save_load(tmpdir):
     f1 = idempotent()(f1)
     f2 = idempotent()(f2)
     f3 = idempotent()(f3)
+    f4 = idempotent()(f4)
 
     assert f3() == 0
     assert f4() == 0
 
-    address_3 = ValueAddress(f3)
-    assert address_3.get()() == 0
+    address_2 = ValueAddress(f2)
+    address_4 = ValueAddress(f4)
+
+    assert address_2.get()() == 0
+    assert address_4.get()() == 0
 
     _clean_global_state()
     initialize(base_dir=tmpdir)
     del f1, f2, f3, f4
 
     @idempotent()
-    def f2():
+    def f3():
         return 2024
 
+    assert address_2.get()() == 0
+
     with pytest.raises(Exception):
-        address_3.get()
+        address_4.get()
 

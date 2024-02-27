@@ -21,8 +21,8 @@ import autopep8
 
 from pythagoras._99_misc_utils.function_name import get_function_name_from_source
 from pythagoras._99_misc_utils.long_infoname import get_long_infoname
-from pythagoras._99_misc_utils.decorator_names import get_all_decorator_names
 from pythagoras._02_ordinary_functions.assert_ordinarity import assert_ordinarity
+import pythagoras as pth
 
 
 def __get_normalized_function_source__(
@@ -85,7 +85,7 @@ def __get_normalized_function_source__(
     if drop_pth_decorators and len(decorator_list):
         decorator = decorator_list[0].func
         pth_dec_counter = 0
-        for candidate in get_all_decorator_names():
+        for candidate in pth.all_decorators:
             try:
                 if decorator.id == candidate:
                     pth_dec_counter += 1

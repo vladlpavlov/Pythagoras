@@ -12,8 +12,6 @@ from pythagoras._03_autonomous_functions.default_island_singleton import (
 from pythagoras._03_autonomous_functions.call_graph_explorer import (
     explore_call_graph_deep)
 
-from pythagoras._99_misc_utils.decorator_names import get_all_decorator_names
-
 from pythagoras._03_autonomous_functions.names_usage_analyzer import (
     analyze_names_in_function)
 
@@ -81,7 +79,7 @@ class AutonomousFunction(OrdinaryFunction):
 
 
         nonlocal_names = analyzer.names.explicitly_nonlocal_unbound_deep
-        nonlocal_names -= get_all_decorator_names()
+        nonlocal_names -= set(pth.all_decorators)
 
         assert len(nonlocal_names) == 0, (f"Function {self.name}"
             + f" is not autonomous, it uses external nonlocal"
@@ -108,7 +106,7 @@ class AutonomousFunction(OrdinaryFunction):
 
         import_required = analyzer.names.explicitly_global_unbound_deep
         import_required |= analyzer.names.unclassified_deep
-        import_required -= get_all_decorator_names()
+        import_required -= set(pth.primary_decorators)
         builtin_names = set(dir(builtins))
         import_required -= builtin_names
         if self.island_name is not None:
