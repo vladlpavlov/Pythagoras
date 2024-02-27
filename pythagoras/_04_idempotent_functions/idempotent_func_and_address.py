@@ -136,9 +136,9 @@ class FunctionCallSignature:
         self.args_addr = ValueAddress(arguments.pack())
 
 class FuncOutputAddress(HashAddress):
-    def __init__(self, f: IdempotentFunction, arguments:SortedKwArgs):
+    def __init__(self, f: IdempotentFunction, arguments:dict[str, Any]):
         assert isinstance(f, IdempotentFunction)
-        assert isinstance(arguments, SortedKwArgs)
+        arguments = SortedKwArgs(**arguments)
         signature = FunctionCallSignature(f,arguments)
         tmp = ValueAddress(signature)
         super().__init__(tmp.prefix, tmp.hash_value)
@@ -179,14 +179,14 @@ class FuncOutputAddress(HashAddress):
         return signature.f_addr.get()
 
     @property
-    def function_name(self) -> str:
+    def f_name(self) -> str:
         signature_addr = ValueAddress.from_strings(
             prefix=self.prefix, hash_value=self.hash_value)
         signature = signature_addr.get()
-        return signature.name
+        return signature.f_name
 
     @property
-    def arguments(self) -> str:
+    def arguments(self) -> SortedKwArgs:
         signature_addr = ValueAddress.from_strings(
             prefix=self.prefix, hash_value=self.hash_value)
         signature = signature_addr.get()
