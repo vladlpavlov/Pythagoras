@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.7.2"
+    ,version="0.7.3"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description= "Simple framework for planet-scale "
@@ -13,7 +13,14 @@ setuptools.setup(
     ,long_description=long_description
     ,long_description_content_type="text/markdown"
     ,url="https://github.com/vladlpavlov/pythagoras"
-    ,packages=["pythagoras"]
+    ,packages=["pythagoras"
+        ,"pythagoras._01_foundational_objects"
+        , "pythagoras._02_ordinary_functions"
+        , "pythagoras._03_autonomous_functions"
+        , "pythagoras._04_idempotent_functions"
+        , "pythagoras._05_mission_control"
+        , "pythagoras._99_misc_utils"
+        ]
     ,classifiers=[
         "Development Status :: 3 - Alpha"
         , "Intended Audience :: Developers"
