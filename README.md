@@ -22,6 +22,7 @@ at the Python package index at: https://pypi.org/project/pythagoras
 
 ## Dependencies
 
+* [persidict](https://pypi.org/project/persidict
 * [jsonpickle](https://jsonpickle.github.io)
 * [joblib](https://joblib.readthedocs.io)
 * [lz4](https://python-lz4.readthedocs.io)
