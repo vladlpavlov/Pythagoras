@@ -36,6 +36,7 @@ at the Python package index at: https://pypi.org/project/pythagoras
 * [scipy](https://www.scipy.org)
 * [jsonpickle](https://jsonpickle.github.io)
 * [scikit-learn](https://scikit-learn.org)
+* [autopep8](https://pypi.org/project/autopep8)
 
 ## Key Contacts
 

@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.7.3"
+    ,version="0.7.4"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description= "Simple framework for planet-scale "
@@ -51,6 +51,7 @@ setuptools.setup(
         , 'boto3'
         , 'moto'
         , 'pytest'
+        , 'autopep8'
     ]
 
 )
