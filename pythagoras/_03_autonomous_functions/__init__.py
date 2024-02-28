@@ -31,8 +31,8 @@ and to enforce autonomicity requirements:
 @autonomous and @strictly_autonomous.
 
 It also defines functions which are used to check whether a corresponding
-decorator was added earlier to another function: is_autonomous()
-and is_strictly_autonomous().
+decorator was added earlier to another function: is_autonomous(),
+is_loosely_autonomous(), and is_strictly_autonomous().
 
 Applying a decorator to a function ensures both static and runtime autonomicity
 checks are performed for the function. Static checks happen at the time

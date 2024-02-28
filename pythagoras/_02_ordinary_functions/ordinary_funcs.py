@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import inspect
 from typing import Callable
 from pythagoras._99_misc_utils.function_name import (
     get_function_name_from_source)
 from pythagoras._02_ordinary_functions.code_normalizer_implementation import (
     __get_normalized_function_source__)
-from pythagoras._99_misc_utils.long_infoname import get_long_infoname
 
 
 class OrdinaryFunction:
@@ -38,10 +36,3 @@ class OrdinaryFunction:
     @property
     def decorator(self):
         return "@pth.ordinary()"
-
-
-
-
-
-
-

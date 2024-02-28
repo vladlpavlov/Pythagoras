@@ -133,8 +133,6 @@ class AutonomousFunction(OrdinaryFunction):
 
     def __call__(self, **kwargs) -> Any:
         assert self.runtime_checks()
-        # names_dict = dict(globals())
-        # names_dict.update(locals())
         names_dict = dict()
         island = pth.all_autonomous_functions[self.island_name]
         names_dict["__pth_kwargs"] = kwargs

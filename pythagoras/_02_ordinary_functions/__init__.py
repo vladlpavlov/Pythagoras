@@ -7,7 +7,7 @@ Lambda functions, class methods, asynchronous functions and closures
 are not ordinary functions.
 
 Ordinary functions are not allowed to have decorators, except for ones that
-are part of Pythagoras (e.g. @autonomous or @idempotent))
+are part of Pythagoras (e.g. @autonomous or @idempotent).
 
 Pythagoras transforms source code of ordinary functions into a normalised
 form: a string that represents the function's source code, with all

@@ -1,6 +1,5 @@
-import types
+import types, inspect
 from typing import Callable
-import inspect
 
 import pythagoras as pth
 from pythagoras._02_ordinary_functions.check_n_positional_args import (
