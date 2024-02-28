@@ -29,11 +29,14 @@ allow to inform Pythagoras that a function is intended to be autonomous,
 and to enforce autonomicity requirements for the function.
 """
 from typing import Callable
+import logging
 
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
      AutonomousFunction)
+from pythagoras._05_mission_control.global_state_management import (
+    is_unitialized)
 
 
 class autonomous:
@@ -52,13 +55,16 @@ class autonomous:
     """
 
     island_name: str | None
+    require_pth: bool
 
     def __init__(self
-            , island_name: str | None | DefaultIslandType = DefaultIsland):
+            , island_name: str | None | DefaultIslandType = DefaultIsland
+            , require_pth : bool = True):
         assert (isinstance(island_name, str)
                 or island_name is None
                 or island_name is DefaultIsland)
         self.island_name = island_name
+        self.require_pth = require_pth
 
     def __call__(self, a_func: Callable) -> Callable:
         """Decorator for autonomous functions.
@@ -85,8 +91,14 @@ class autonomous:
         Currently, neither static nor dynamic checks are guaranteed to catch
         all possible violations of function autonomy requirements.
         """
-
-        wrapper = AutonomousFunction(a_func, self.island_name)
+        if not self.require_pth and is_unitialized():
+            wrapper = a_func
+            logging.warning(f"Decorator @{self.__class__.__name__}()"
+            + f" is used with function {a_func.__name__}"
+            + " before Pythagoras is initialized."
+            + " Pythagoras functionality is disabled for this function.")
+        else:
+            wrapper = AutonomousFunction(a_func, self.island_name)
         return wrapper
 
 class strictly_autonomous(autonomous):
@@ -110,5 +122,5 @@ class strictly_autonomous(autonomous):
     Currently, neither static nor dynamic checks are guaranteed to catch
     all possible violations of strict function autonomicity requirements.
     """
-    def __init__(self):
-        super().__init__(island_name=None)
+    def __init__(self, require_pth: bool = True):
+        super().__init__(island_name=None, require_pth=require_pth)
