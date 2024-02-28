@@ -1,5 +1,3 @@
-import pytest
-
 from pythagoras._03_autonomous_functions import autonomous
 from pythagoras._05_mission_control.global_state_management import (
     _clean_global_state, initialize)
