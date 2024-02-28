@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Callable
+
+
 from pythagoras._99_misc_utils.function_name import (
     get_function_name_from_source)
 from pythagoras._02_ordinary_functions.code_normalizer_implementation import (
@@ -12,6 +14,7 @@ class OrdinaryFunction:
     name:str
 
     def __init__(self, a_func: Callable | str | OrdinaryFunction, **_):
+
         if isinstance(a_func, OrdinaryFunction):
             self.naked_source_code = a_func.naked_source_code
             self.name = a_func.name

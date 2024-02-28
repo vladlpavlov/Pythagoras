@@ -8,3 +8,5 @@ from pythagoras._05_mission_control.global_state_management import (
     , get_all_autonomous_function_names
     , get_autonomous_function
     )
+
+from pythagoras._05_mission_control.summary import summary

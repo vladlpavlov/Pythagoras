@@ -33,7 +33,7 @@ def __get_normalized_function_source__(
 
     Remove all comments, docstrings and empty lines;
     standardize code formatting based on PEP 8.
-    If drop_pth_decorators == True, remove Pythogaras decorators.
+    If drop_pth_decorators == True, remove Pythagoras decorators.
 
     Only regular functions are supported; methods and lambdas are not supported.
     """
@@ -77,7 +77,7 @@ def __get_normalized_function_source__(
     assert isinstance(code_ast.body[0], ast.FunctionDef),(
         f"{type(code_ast.body[0])=}")
 
-    #TODO: add support for multiple decorators
+    #TODO: add support for multiple decorators???
     decorator_list = code_ast.body[0].decorator_list
     assert len(decorator_list) <= 1, (
             f"Function {a_func_name} can't have multiple decorators,"

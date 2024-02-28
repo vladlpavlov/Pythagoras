@@ -1,12 +1,11 @@
 import os
 import random
-from typing import Callable
+
 
 from persidict import FileDirDict, PersiDict
 import pythagoras as pth
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
-from pythagoras._99_misc_utils.isinstance_txt import isinstance_txt
 
 
 def initialize(base_dir:str

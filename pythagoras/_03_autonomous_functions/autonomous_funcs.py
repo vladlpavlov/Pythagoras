@@ -27,9 +27,11 @@ class AutonomousFunction(OrdinaryFunction):
 
     def __init__(self, a_func: Callable | str | OrdinaryFunction
                  , island_name:str | None | DefaultIslandType = DefaultIsland):
+
         assert is_correctly_initialized(), (
             "You should initialize Pythagoras by calling"
             + " pth.initialize() before using any of its features.")
+
         super().__init__(a_func)
 
         if island_name is DefaultIsland:
