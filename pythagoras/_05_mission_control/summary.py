@@ -1,4 +1,4 @@
-from pythagoras import is_unitialized, is_correctly_initialized
+from pythagoras._05_mission_control.global_state_management import is_unitialized, is_correctly_initialized
 import pythagoras as pth
 
 def summary():
@@ -9,8 +9,8 @@ def summary():
     if not is_correctly_initialized():
         return "Pythagoras is not correctly initialized."
 
-    divider = 40 * "=" + "\n"
-    result = divider
+    divider = 60 * "~" + "\n"
+    result = "\n\n"+divider
     result += "PERSISTENT STATE: \n"
     result += f"{len(pth.value_store)=} \n"
     result += f"{len(pth.function_output_store)=} \n"
@@ -19,9 +19,13 @@ def summary():
     result += "CURRENT SESSION: \n"
     result += f"{len(pth.all_autonomous_functions)=} \n"
     result += f"{[island for island in pth.all_autonomous_functions]=} \n"
-    default_island = None
-    result += f"{len(default_island:=pth.all_autonomous_functions[pth.default_island_name])=} \n"
+    result += f"{pth.default_island_name=} \n"
+    default_island = pth.all_autonomous_functions[pth.default_island_name]
+    result += f"{len(default_island)=} \n"
     result += f"{[func for func in default_island]=} \n"
 
+    result += divider + "\n\n"
+
+    print(result)
     return result
 
