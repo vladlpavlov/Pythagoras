@@ -1,7 +1,3 @@
-<div align="center">
-  <img src="http://vlpavlov.org/Pythagoras-Logo3.svg" alt="Pythagoras Logo"><br>
-</div>
-
 # Pythagoras
 
 Planet-scale idempotent computations in Python.
