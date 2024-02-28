@@ -185,13 +185,13 @@ def register_autonomous_function(f: AutonomousFunction) -> None:
     else:
         assert f.naked_source_code == island[name].naked_source_code, (
                 f"Function {name} is already "
-                + "defined in island {island_name}"
-                + f" with different source code. You cannot redefine it within"
+                + f"defined in island {island_name}"
+                + f" with different source code. You cannot change it within"
                 + f" one session of the program.")
         assert f.decorator == island[f.name].decorator, (
                 f"Function {name} is already "
-                + "defined in island {island_name} with the same source code "
-                + f"but different decorator. You cannot redefine decorator "
+                + f"defined in island {island_name} with the same source code "
+                + f"but different decorator. You cannot change decorator "
                 + f"within one session of the program.")
         assert type(f) == type(island[f.name])
 
