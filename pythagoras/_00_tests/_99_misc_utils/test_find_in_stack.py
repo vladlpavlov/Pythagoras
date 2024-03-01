@@ -1,4 +1,4 @@
-from pythagoras._99_misc_utils.isinstance_txt import find_in_stack
+from pythagoras._99_misc_utils.find_in_stack import find_in_stack
 
 # Test variables
 global_var = "global_value"
