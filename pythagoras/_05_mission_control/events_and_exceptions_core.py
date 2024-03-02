@@ -46,7 +46,7 @@ def log_uncaught_exception(**kwargs):
     # if len(callers) > 0:
     #     caller_name = callers[0].name + "_"
     logger = EventLogger(event_log = pth.crash_history
-        # , prefix = caller_name + "CRASH_"
+        , prefix = "CRASH_"
         , save_context = True)
     logger.log_event(**kwargs)
 
