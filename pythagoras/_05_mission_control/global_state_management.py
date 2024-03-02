@@ -8,6 +8,8 @@ from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 from pythagoras._05_mission_control.events_and_exceptions_core import (
     register_exception_handlers, unregister_exception_handlers, pth_excepthook)
+from pythagoras._99_misc_utils.notebook_checker import is_executed_in_notebook
+
 
 def initialize(base_dir:str
                , cloud_type:str = "local"
@@ -123,10 +125,9 @@ def is_correctly_initialized():
     if not (pth.initialization_parameters["default_island_name"]
                == pth.default_island_name):
         return False
-    if sys.excepthook != pth_excepthook:
-        return False
-    if sys.excepthook == sys.__excepthook__:
-        return False
+    if not is_executed_in_notebook():
+        if sys.excepthook != pth_excepthook:
+            return False
     return True
 
 def is_global_state_correct():
