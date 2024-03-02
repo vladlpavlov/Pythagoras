@@ -90,7 +90,6 @@ def register_exception_handlers() -> None:
         except:
             _previous_excepthook = sys.excepthook
             sys.excepthook = pth_excepthook
-            _previous_excepthook = None
 
 def unregister_exception_handlers() -> None:
 

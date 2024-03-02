@@ -8,8 +8,8 @@ def is_executed_in_notebook() -> bool:
     _is_in_notebook = False
     try:
         from IPython import get_ipython
-        shell = get_ipython().__class__.__name__
-        if shell == 'ZMQInteractiveShell':
+        ipython = get_ipython()
+        if ipython is not None and hasattr(ipython, "set_custom_exc"):
             _is_in_notebook = True
             return True
         else:
