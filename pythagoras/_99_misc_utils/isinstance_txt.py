@@ -1,6 +1,6 @@
 from typing import Any
 
-from pythagoras._99_misc_utils.find_in_stack import find_in_stack
+from pythagoras._99_misc_utils.find_in_stack import find_in_callstack
 
 def isinstance_txt(obj:Any, type_name:str)->bool:
     """Check if an object is an instance of a type specified by a string name.
@@ -28,7 +28,7 @@ def isinstance_txt(obj:Any, type_name:str)->bool:
         if isinstance(obj, eval(type_name)):
             return True
     except NameError:
-        candidates = find_in_stack(type_name)
+        candidates = find_in_callstack(type_name)
         assert len(candidates) == 1
         return isinstance(obj, candidates[0])
     return False
