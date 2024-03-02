@@ -1,19 +1,20 @@
 import os
 import random
-
+import sys
 
 from persidict import FileDirDict, PersiDict
 import pythagoras as pth
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
-
+from pythagoras._05_mission_control.events_and_exceptions_core import (
+    register_exception_handlers, unregister_exception_handlers, pth_excepthook)
 
 def initialize(base_dir:str
                , cloud_type:str = "local"
                , default_island_name:str = "Samos") -> None:
     """ Initialize Pythagoras.
     """
-    assert pth.is_unitialized(), "You can only initialize pythagoras once."
+    assert pth.is_fully_unitialized(), "You can only initialize pythagoras once."
 
     cloud_type = cloud_type.lower()
 
@@ -33,13 +34,21 @@ def initialize(base_dir:str
 
     value_store_dir = os.path.join(base_dir, "value_store")
     pth.value_store = dict_type(value_store_dir, digest_len=0)
+
     func_garage_dir = os.path.join(base_dir, "func_garage")
     pth.function_garage = dict_type(func_garage_dir, digest_len=0)
     pth.function_source_repository = dict_type(
-        func_garage_dir, digest_len=0, file_type="py",base_class_for_values=str)
-    # crash_history_dir = os.path.join(base_dir, "crash_history")
-    # pth.crash_history = dict_type(crash_history_dir
-    #     , digest_len=0, file_type="json")
+        func_garage_dir, digest_len=0, file_type="py"
+        , base_class_for_values=str)
+
+    crash_history_dir = os.path.join(base_dir, "crash_history")
+    pth.crash_history = dict_type(crash_history_dir
+        , digest_len=0, file_type="json")
+
+    event_log_dir = os.path.join(base_dir, "event_log")
+    pth.event_log = dict_type(event_log_dir
+        , digest_len=0, file_type="json")
+
     func_output_store_dir = os.path.join(base_dir, "func_output_store")
     pth.function_output_store = dict_type(func_output_store_dir, digest_len=0)
     swarming_requests_dir = os.path.join(base_dir, "swarming_requests")
@@ -54,19 +63,24 @@ def initialize(base_dir:str
 
     pth.initialization_parameters = parameters
 
+    register_exception_handlers()
 
-def is_unitialized():
+
+
+def is_fully_unitialized():
     """ Check if Pythagoras is uninitialized."""
     result = True
     result &= pth.value_store is None
     result &= pth.function_garage is None
     result &= pth.function_source_repository is None
     result &= pth.function_output_store is None
-    # result &= pth.crash_history is None
+    result &= pth.crash_history is None
+    result &= pth.event_log is None
     result &= pth.default_island_name is None
     result &= pth.all_autonomous_functions is None
     result &= pth.initialization_parameters is None
     result &= pth.entropy_infuser is None
+    result &= (sys.excepthook == sys.__excepthook__)
     return result
 
 def is_correctly_initialized():
@@ -79,8 +93,10 @@ def is_correctly_initialized():
         return False
     if not isinstance(pth.function_output_store, PersiDict):
         return False
-    # if not isinstance(pth.crash_history, PersiDict):
-    #     return False
+    if not isinstance(pth.crash_history, PersiDict):
+        return False
+    if not isinstance(pth.event_log, PersiDict):
+        return False
     if not isinstance(pth.default_island_name, str):
         return False
     if not isinstance(pth.all_autonomous_functions, dict):
@@ -108,11 +124,15 @@ def is_correctly_initialized():
     if not (pth.initialization_parameters["default_island_name"]
                == pth.default_island_name):
         return False
+    if sys.excepthook != pth_excepthook:
+        return False
+    if sys.excepthook == sys.__excepthook__:
+        return False
     return True
 
 def is_global_state_correct():
     """ Check if Pythagoras is in a correct state."""
-    result = is_unitialized() or is_correctly_initialized()
+    result = is_fully_unitialized() or is_correctly_initialized()
     return result
 
 def _clean_global_state():
@@ -120,12 +140,14 @@ def _clean_global_state():
     pth.function_garage = None #???
     pth.function_source_repository = None
     pth.function_output_store = None
-    # pth.crash_history = None
+    pth.crash_history = None
+    pth.event_log = None
     pth.all_autonomous_functions = None
     pth.default_island_name = None
     pth.initialization_parameters = None
     pth.entropy_infuser = None
-    assert pth.is_unitialized()
+    unregister_exception_handlers()
+    assert pth.is_fully_unitialized()
     assert pth.is_global_state_correct()
 
 

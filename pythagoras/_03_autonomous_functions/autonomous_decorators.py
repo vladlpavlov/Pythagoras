@@ -36,7 +36,7 @@ from pythagoras._03_autonomous_functions.default_island_singleton import (
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
      AutonomousFunction)
 from pythagoras._05_mission_control.global_state_management import (
-    is_unitialized)
+    is_fully_unitialized)
 
 
 class autonomous:
@@ -91,7 +91,7 @@ class autonomous:
         Currently, neither static nor dynamic checks are guaranteed to catch
         all possible violations of function autonomy requirements.
         """
-        if not self.require_pth and is_unitialized():
+        if not self.require_pth and is_fully_unitialized():
             wrapper = a_func
             logging.warning(f"Decorator @{self.__class__.__name__}()"
             + f" is used with function {a_func.__name__}"

@@ -1,7 +1,7 @@
 from copy import copy
 
 import pytest
-from pythagoras._99_misc_utils.find_in_stack import find_in_callstack
+from pythagoras._99_misc_utils.find_in_callstack import find_in_callstack
 
 class TestClass:
     def __init__(self,a):

@@ -9,7 +9,7 @@ from pythagoras._04_idempotent_functions.idempotent_func_and_address import (
     IdempotentFunction)
 
 from pythagoras._05_mission_control.global_state_management import (
-    is_unitialized)
+    is_fully_unitialized)
 
 
 
@@ -29,7 +29,7 @@ class idempotent:
 
 
     def __call__(self, a_func:Callable) -> Callable:
-        if not self.require_pth and is_unitialized():
+        if not self.require_pth and is_fully_unitialized():
             wrapper = a_func
             logging.warning(f"Decorator @{self.__class__.__name__}()"
                 + f" is used with function {a_func.__name__}"

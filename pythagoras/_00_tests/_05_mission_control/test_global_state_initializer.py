@@ -27,7 +27,7 @@ def test_corrupt_value_store(tmp_path):
     pth.value_store = None
     assert not pth.is_global_state_correct()
     assert not pth.is_correctly_initialized()
-    assert not pth.is_unitialized()
+    assert not pth.is_fully_unitialized()
 
 
 def test_corrupt_autonomous_functions(tmp_path):
@@ -39,7 +39,7 @@ def test_corrupt_autonomous_functions(tmp_path):
     pth.all_autonomous_functions = "To be, or not to be, that is the question"
     assert not pth.is_global_state_correct()
     assert not pth.is_correctly_initialized()
-    assert not pth.is_unitialized()
+    assert not pth.is_fully_unitialized()
 
 def test_corrupt_island_name(tmp_path):
     _clean_global_state()
@@ -50,4 +50,4 @@ def test_corrupt_island_name(tmp_path):
     pth.default_island_name = "new name"
     assert not pth.is_global_state_correct()
     assert not pth.is_correctly_initialized()
-    assert not pth.is_unitialized()
+    assert not pth.is_fully_unitialized()
