@@ -6,6 +6,7 @@ import traceback
 # from pythagoras._99_misc_utils.find_in_callstack import find_in_callstack
 from pythagoras._99_misc_utils.current_date_gmt_str import (
     current_date_gmt_string)
+from pythagoras._99_misc_utils.notebook_checker import is_executed_in_notebook
 from pythagoras._99_misc_utils.random_safe_str_creator import (
     get_random_safe_str)
 from pythagoras._99_misc_utils.context_builder import build_context
@@ -46,7 +47,7 @@ def log_uncaught_exception(**kwargs):
     # if len(callers) > 0:
     #     caller_name = callers[0].name + "_"
     logger = EventLogger(event_log = pth.crash_history
-        , prefix = "CRASH_"
+        , prefix = kwargs["exception"].__class__.__name__
         , save_context = True)
     logger.log_event(**kwargs)
 
@@ -76,18 +77,31 @@ def pth_excepthandler(_, exc_type, exc_value
         , exception_description=exception_description)
     traceback.print_exception(exc_type, exc_value, trace_back)
 
+
+_previous_excepthook = None
 def register_exception_handlers() -> None:
-    sys.excepthook = pth_excepthook
-    try:
-        from IPython import get_ipython
-        get_ipython().set_custom_exc((BaseException,), pth_excepthandler)
-    except:
-        pass
+    if not is_executed_in_notebook():
+        _previous_excepthook = sys.excepthook
+        sys.excepthook = pth_excepthook
+    else:
+        try:
+            from IPython import get_ipython
+            get_ipython().set_custom_exc((BaseException,), pth_excepthandler)
+        except:
+            _previous_excepthook = sys.excepthook
+            sys.excepthook = pth_excepthook
+            _previous_excepthook = None
 
 def unregister_exception_handlers() -> None:
-    sys.excepthook = sys.__excepthook__
-    try:
-        from IPython import get_ipython
-        get_ipython().set_custom_exc((BaseException,), None)
-    except:
-        pass
+
+    global _previous_excepthook
+    if _previous_excepthook is not None:
+        sys.excepthook = _previous_excepthook
+        _previous_excepthook = None
+
+    if is_executed_in_notebook():
+        try:
+            from IPython import get_ipython
+            get_ipython().set_custom_exc((BaseException,), None)
+        except:
+            pass
