@@ -1,3 +1,5 @@
+from copy import copy
+
 import pytest
 from pythagoras._99_misc_utils.find_in_stack import find_in_callstack
 
@@ -55,6 +57,36 @@ def test_detect_2_existing_variables_different_types():
     result = outer_function()
     assert len(result) == 1
 
+def test_dedup():
+    def outer_function():
+        my_var = TestClass(42)
+        def middle_function(v):
+            my_var = v
+            def inner_function():
+                return find_in_callstack('my_var', TestClass)
+
+            return inner_function()
+
+        return middle_function(my_var)
+
+    result = outer_function()
+    assert len(result) == 1
+
+def test_no_dedup():
+    def outer_function():
+        my_var = TestClass(42)
+        def middle_function(v):
+            my_var = v
+            def inner_function():
+                return find_in_callstack('my_var', TestClass)
+
+            return inner_function()
+
+        return middle_function(copy(my_var))
+
+    result = outer_function()
+    assert len(result) == 2
+
 
 def test_detect_non_existing_variable_name_nested_call():
     def outer_function():
@@ -70,7 +102,7 @@ def test_detect_non_existing_variable_name_nested_call():
     result = outer_function()
     assert len(result) == 0
 
-def test_detect_existing_variable_different_type_nested_call():
+def test_detect_existing_variable_different_types_nested_call():
     def outer_function():
         test_variable = 123  # Integer, not TestClass
 
