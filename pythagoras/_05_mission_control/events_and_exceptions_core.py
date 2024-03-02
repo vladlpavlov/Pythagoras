@@ -1,9 +1,6 @@
 import sys
 import traceback
 
-# from pythagoras._03_autonomous_functions.autonomous_funcs import AutonomousFunction
-#
-# from pythagoras._99_misc_utils.find_in_callstack import find_in_callstack
 from pythagoras._99_misc_utils.current_date_gmt_str import (
     current_date_gmt_string)
 from pythagoras._99_misc_utils.notebook_checker import is_executed_in_notebook
@@ -41,25 +38,11 @@ class EventLogger:
 
         self.event_log[name_part_1, name_part_2] = kwargs
 
-def log_uncaught_exception(**kwargs):
-    # callers = find_in_callstack("self", AutonomousFunction)
-    # caller_name = ""
-    # if len(callers) > 0:
-    #     caller_name = callers[0].name + "_"
+def log_uncaught_exception(exception: Exception, **kwargs):
     logger = EventLogger(event_log = pth.crash_history
-        , prefix = kwargs["exception"].__class__.__name__
+        , prefix = "__none__"+ exception.__class__.__name__
         , save_context = True)
-    logger.log_event(**kwargs)
-
-# def log(**kwargs):
-#     callers = find_in_callstack("self", AutonomousFunction)
-#     caller_name = ""
-#     if len(callers) > 0:
-#         caller_name = callers[0].name + "_"
-#     logger = EventLogger(event_log = pth.crash_history
-#         , prefix = caller_name + "LOG_"
-#         , save_context = False)
-#     logger.log_event(**kwargs)
+    logger.log_event(exception=exception, **kwargs)
 
 
 def pth_excepthook(exc_type, exc_value, trace_back) -> None:

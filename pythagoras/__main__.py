@@ -3,6 +3,10 @@ import pythagoras as pth
 
 _clean_global_state()
 pth.initialize("QQQQQQQQQQQQQQQQQQQQQQQQQQQQ")
-from IPython import get_ipython
-ipython = get_ipython()
-print(ipython.__class__.__name__)
+
+@pth.idempotent()
+def fff():
+    print("Hello from fff")
+    assert False
+
+fff()

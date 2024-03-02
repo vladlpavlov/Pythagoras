@@ -9,7 +9,7 @@ from pythagoras._01_foundational_objects.hash_addresses import HashAddress
 from pythagoras._01_foundational_objects.value_addresses import ValueAddress
 
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
-    AutonomousFunction, register_autonomous_function)
+    AutonomousFunction, register_autonomous_function, log_exception)
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
     OrdinaryFunction)

@@ -1,6 +1,9 @@
 from __future__ import annotations
 import builtins
+import sys
+import traceback
 from typing import Callable, Optional, Any
+from persidict import replace_unsafe_chars
 import pythagoras as pth
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
@@ -14,9 +17,12 @@ from pythagoras._03_autonomous_functions.call_graph_explorer import (
 
 from pythagoras._03_autonomous_functions.names_usage_analyzer import (
     analyze_names_in_function)
+from pythagoras._05_mission_control.events_and_exceptions_core import \
+    EventLogger
 
 from pythagoras._05_mission_control.global_state_management import (
     is_correctly_initialized)
+from pythagoras._99_misc_utils.find_in_callstack import find_in_callstack
 
 
 class AutonomousFunction(OrdinaryFunction):
@@ -134,24 +140,28 @@ class AutonomousFunction(OrdinaryFunction):
 
 
     def __call__(self, **kwargs) -> Any:
-        assert self.runtime_checks()
-        names_dict = dict()
-        island = pth.all_autonomous_functions[self.island_name]
-        names_dict["__pth_kwargs"] = kwargs
-        if self.island_name is not None:
-            for f_name in self.dependencies:
-                names_dict[f_name] = island[f_name]
-        else:
-            names_dict[self.name] = island[self.name]
+        try:
+            assert self.runtime_checks()
+            names_dict = dict()
+            island = pth.all_autonomous_functions[self.island_name]
+            names_dict["__pth_kwargs"] = kwargs
+            if self.island_name is not None:
+                for f_name in self.dependencies:
+                    names_dict[f_name] = island[f_name]
+            else:
+                names_dict[self.name] = island[self.name]
 
-        tmp_name = "__pth_tmp_" + self.name
-        source_to_exec = self.naked_source_code + "\n"
-        source_to_exec = source_to_exec.replace(
-            " "+self.name+"(", " "+tmp_name+"(",1)
-        source_to_exec += f"\n__pth_result = {tmp_name}(**__pth_kwargs)\n"
-        exec(source_to_exec, names_dict, names_dict)
-        result = names_dict["__pth_result"]
-        return result
+            tmp_name = "__pth_tmp_" + self.name
+            source_to_exec = self.naked_source_code + "\n"
+            source_to_exec = source_to_exec.replace(
+                " "+self.name+"(", " "+tmp_name+"(",1)
+            source_to_exec += f"\n__pth_result = {tmp_name}(**__pth_kwargs)\n"
+            exec(source_to_exec, names_dict, names_dict)
+            result = names_dict["__pth_result"]
+            return result
+        except Exception as e:
+            log_exception()
+            raise e
 
     def __getstate__(self):
         draft_state = dict(name = self.name
@@ -215,3 +225,64 @@ def register_autonomous_function(f: AutonomousFunction) -> None:
         assert not hasattr(f, "_static_checks_passed")
         assert not hasattr(f, "_runtime_checks_passed")
         assert not hasattr(f, "_dependencies")
+
+def log_exception():
+    callers = find_in_callstack(name_to_find="self"
+        , class_to_find=AutonomousFunction)
+    caller_name = ""
+    if len(callers) > 0:
+        caller_name = callers[0].name + "_"
+    (exc_type, exc_value, trace_back) = sys.exc_info()
+    exception_description = traceback.format_exception(
+        exc_type, exc_value, trace_back)
+    logger = EventLogger(event_log = pth.crash_history
+        , prefix = caller_name + exc_type.__name__
+        , save_context = True)
+    logger.log_event(exception=exc_value
+        , exception_description=exception_description)
+
+
+class EventPosterFactory:
+    def __init__(self, silent:bool = False):
+        assert isinstance(silent, bool)
+        self.silent = silent
+
+    def __getitem__(self, item:str)-> EventPoster:
+        assert isinstance(item, str)
+        return EventPoster(item, silent=self.silent)
+
+class EventPoster:
+    def __init__(self, label:str, silent:bool = False):
+        assert isinstance(label, str)
+        assert label == replace_unsafe_chars(label, "")
+        assert 0 < len(label) < 25
+        self.label = label
+        self.silent = silent
+
+    def __call__(self, **event_args)-> None:
+        callers = find_in_callstack(name_to_find="self"
+            , class_to_find=AutonomousFunction)
+        caller_name = ""
+        if len(callers) > 0:
+            caller_name = callers[0].name
+            caller_prefix = caller_name + "_"
+            caller_type = callers[0].__class__.__name__
+        else:
+            caller_name = "__none__"
+            caller_prefix = caller_name
+            caller_type = "AutonomousFunction"
+        prefix = caller_prefix + self.label
+        logger = EventLogger(event_log=pth.event_log
+            , prefix=prefix, save_context=False)
+        logger.log_event(**event_args)
+        if not self.silent:
+
+            print(30*"~")
+            print(f"Event '{self.label}' "
+                  + f"inside an {caller_type} '{caller_name}':")
+            for key, value in event_args.items():
+                print(f"    {key} = {value}")
+            print()
+
+post_event: EventPosterFactory = EventPosterFactory(silent=True)
+print_event: EventPosterFactory = EventPosterFactory(silent=False)
