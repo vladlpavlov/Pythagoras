@@ -274,15 +274,26 @@ class EventPoster:
         prefix = caller_prefix + self.label
         logger = EventLogger(event_log=pth.event_log
             , prefix=prefix, save_context=False)
-        logger.log_event(**event_args)
-        if not self.silent:
 
+        if not self.silent:
             print(30*"~")
             print(f"Event '{self.label}' "
                   + f"inside an {caller_type} '{caller_name}':")
             for key, value in event_args.items():
                 print(f"    {key} = {value}")
             print()
+
+        label_arg_name = "event_label"
+        while label_arg_name in event_args:
+            label_arg_name += "_"
+        event_args[label_arg_name] = self.label
+
+        caller_arg_name = "caller_name"
+        while caller_arg_name in event_args:
+            caller_arg_name += "_"
+        event_args[caller_arg_name] = caller_name
+
+        logger.log_event(**event_args)
 
 post_event: EventPosterFactory = EventPosterFactory(silent=True)
 print_event: EventPosterFactory = EventPosterFactory(silent=False)
