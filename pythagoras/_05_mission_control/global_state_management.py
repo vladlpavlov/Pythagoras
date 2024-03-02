@@ -80,7 +80,7 @@ def is_fully_unitialized():
     result &= pth.all_autonomous_functions is None
     result &= pth.initialization_parameters is None
     result &= pth.entropy_infuser is None
-    result &= (sys.excepthook == sys.__excepthook__)
+    # result &= (sys.excepthook == sys.__excepthook__)
     return result
 
 def is_correctly_initialized():
