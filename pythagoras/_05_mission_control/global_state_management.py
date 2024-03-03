@@ -53,8 +53,10 @@ def initialize(base_dir:str
 
     func_output_store_dir = os.path.join(base_dir, "func_output_store")
     pth.function_output_store = dict_type(func_output_store_dir, digest_len=0)
-    swarming_requests_dir = os.path.join(base_dir, "swarming_requests")
-    pth.swarming_requests = dict_type(swarming_requests_dir, digest_len=0)
+    execution_requests_dir = os.path.join(base_dir, "execution_requests")
+    pth.execution_requests = dict_type(execution_requests_dir, digest_len=0)
+    execution_attempts_dir = os.path.join(base_dir, "execution_attempts")
+    pth.execution_attempts = dict_type(execution_attempts_dir, digest_len=0)
     pth.default_island_name = default_island_name
     pth.all_autonomous_functions = dict()
     pth.all_autonomous_functions[default_island_name] = dict()
@@ -76,6 +78,8 @@ def is_fully_unitialized():
     result &= pth.function_garage is None
     result &= pth.function_source_repository is None
     result &= pth.function_output_store is None
+    result &= pth.execution_requests is None
+    result &= pth.execution_attempts is None
     result &= pth.crash_history is None
     result &= pth.event_log is None
     result &= pth.default_island_name is None
@@ -93,6 +97,10 @@ def is_correctly_initialized():
     if not isinstance(pth.function_source_repository, PersiDict):
         return False
     if not isinstance(pth.function_output_store, PersiDict):
+        return False
+    if not isinstance(pth.execution_requests, PersiDict):
+        return False
+    if not isinstance(pth.execution_attempts, PersiDict):
         return False
     if not isinstance(pth.crash_history, PersiDict):
         return False
@@ -140,6 +148,8 @@ def _clean_global_state():
     pth.function_garage = None #???
     pth.function_source_repository = None
     pth.function_output_store = None
+    pth.execution_requests = None
+    pth.execution_attempts = None
     pth.crash_history = None
     pth.event_log = None
     pth.all_autonomous_functions = None
