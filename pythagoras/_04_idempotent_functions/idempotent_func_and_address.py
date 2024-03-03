@@ -123,6 +123,23 @@ class IdempotentFunction(AutonomousFunction):
         pth.execution_requests.delete_if_exists(output_address)
         return result
 
+    def list_execute(self, list_of_kwargs:list[dict]) -> Any:
+        assert isinstance(list_of_kwargs, (list, tuple))
+        for kwargs in list_of_kwargs:
+            assert isinstance(kwargs, dict)
+        addrs = []
+        for kwargs in list_of_kwargs:
+            new_addr = FuncOutputAddress(self, kwargs)
+            new_addr.request_execution()
+            addrs.append(new_addr)
+        addrs_indexed = list(zip(range(len(addrs)), addrs))
+        pth.entropy_infuser.shuffle(addrs_indexed)
+        results_dict = dict()
+        for n, an_addr in addrs_indexed:
+            results_dict[n] = an_addr.function.execute(**an_addr.arguments)
+        results_list = [results_dict[n] for n in range(len(addrs))]
+        return results_list
+
 
 def register_idempotent_function(f: IdempotentFunction) -> None:
     """Register an idempotent function in the Pythagoras system."""

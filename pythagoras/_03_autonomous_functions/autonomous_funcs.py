@@ -163,7 +163,6 @@ class AutonomousFunction(OrdinaryFunction):
             log_exception()
             raise e
 
-
     def __call__(self, **kwargs) -> Any:
         return self.execute(**kwargs)
 
