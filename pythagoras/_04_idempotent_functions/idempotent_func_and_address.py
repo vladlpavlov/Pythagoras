@@ -108,6 +108,7 @@ class IdempotentFunction(AutonomousFunction):
 
         self.augmented_code_checked = True
 
+
     def execute(self, **kwargs) -> Any:
         packed_kwargs = PackedKwArgs(**kwargs)
         output_address = FuncOutputAddress(self, packed_kwargs)
@@ -139,6 +140,11 @@ class IdempotentFunction(AutonomousFunction):
             results_dict[n] = an_addr.function.execute(**an_addr.arguments)
         results_list = [results_dict[n] for n in range(len(addrs))]
         return results_list
+
+    def execution_attempts(self, **kwargs) -> list:
+        packed_kwargs = PackedKwArgs(**kwargs)
+        output_address = FuncOutputAddress(self, packed_kwargs)
+        return output_address.execution_attempts
 
 
 def register_idempotent_function(f: IdempotentFunction) -> None:
@@ -270,3 +276,14 @@ class FuncOutputAddress(HashAddress):
                 > DEFAULT_EXECUTION_TIME*(2**n_past_attempts)):
             return True
         return False
+
+    @property
+    def execution_attempts(self) -> list:
+        attempts = pth.function_execution_attempts.get_subdict(self)
+        attemps_timed = {-attempts.mtimestamp(a):attempts[a] for a in attempts}
+        times = sorted(attemps_timed)
+        result = []
+        for t in times:
+            result.append(attemps_timed[t])
+        return result
+
