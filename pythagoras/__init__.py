@@ -19,8 +19,8 @@ from pythagoras._05_mission_control import *
 
 value_store:Optional[PersiDict] = None
 function_output_store:Optional[PersiDict] = None
-execution_requests:Optional[PersiDict] = None
-execution_attempts:Optional[PersiDict] = None
+function_execution_requests:Optional[PersiDict] = None
+function_execution_attempts:Optional[PersiDict] = None
 crash_history: Optional[PersiDict] = None
 event_log: Optional[PersiDict] = None
 

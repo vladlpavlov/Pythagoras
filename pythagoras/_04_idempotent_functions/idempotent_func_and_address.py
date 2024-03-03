@@ -116,11 +116,11 @@ class IdempotentFunction(AutonomousFunction):
         output_address.request_execution()
         registration_addr = (output_address[0]
                              , output_address[1], get_random_safe_str())
-        pth.execution_attempts[registration_addr] = build_context()
+        pth.function_execution_attempts[registration_addr] = build_context()
         unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
         result = super().execute(**unpacked_kwargs)
         pth.function_output_store[output_address] = ValueAddress(result)
-        pth.execution_requests.delete_if_exists(output_address)
+        pth.function_execution_requests.delete_if_exists(output_address)
         return result
 
     def list_execute(self, list_of_kwargs:list[dict]) -> Any:
@@ -175,11 +175,11 @@ class FuncOutputAddress(HashAddress):
 
     def request_execution(self):
         if self in pth.function_output_store:
-            if self in pth.execution_requests:
-                del pth.execution_requests[self]
+            if self in pth.function_execution_requests:
+                del pth.function_execution_requests[self]
         else:
-            if self not in pth.execution_requests:
-                pth.execution_requests[self] = True
+            if self not in pth.function_execution_requests:
+                pth.function_execution_requests[self] = True
 
     def get(self, timeout: int = None):
         """Retrieve value, referenced by the address.
@@ -198,7 +198,7 @@ class FuncOutputAddress(HashAddress):
         while True:
             if self.ready:
                 result = pth.value_store[pth.function_output_store[self]]
-                pth.execution_requests.delete_if_exists(self)
+                pth.function_execution_requests.delete_if_exists(self)
                 return result
             else:
                 time.sleep(backoff_period)
@@ -256,7 +256,7 @@ class FuncOutputAddress(HashAddress):
         # TODO: these should not be constants
         if self.ready:
             return False
-        past_attempts = pth.execution_attempts.get_subdict(self)
+        past_attempts = pth.function_execution_attempts.get_subdict(self)
         n_past_attempts = len(past_attempts)
         if n_past_attempts == 0:
             return True
