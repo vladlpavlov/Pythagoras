@@ -4,6 +4,7 @@ import time
 from typing import Callable, Any
 
 import pythagoras as pth
+from pythagoras import get_random_safe_str
 
 from pythagoras._01_foundational_objects.hash_addresses import HashAddress
 from pythagoras._01_foundational_objects.value_addresses import ValueAddress
@@ -112,7 +113,10 @@ class IdempotentFunction(AutonomousFunction):
         output_address = FuncOutputAddress(self, packed_kwargs)
         if output_address.ready:
             return output_address.get()
-        pth.execution_attempts[output_address] = build_context()
+        output_address.request_execution()
+        registration_addr = (output_address[0]
+            , output_address[1], get_random_safe_str())
+        pth.execution_attempts[registration_addr] = build_context()
         unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
         result = super().__call__(**unpacked_kwargs)
         pth.function_output_store[output_address] = ValueAddress(result)
@@ -149,11 +153,15 @@ class FuncOutputAddress(HashAddress):
     @property
     def ready(self):
         result =  self in pth.function_output_store
-        if not result:
-            pth.execution_requests[self] = True
-        else:
-            pth.execution_requests.delete_if_exists(self)
         return result
+
+    def request_execution(self):
+        if self in pth.function_output_store:
+            if self in pth.execution_requests:
+                del pth.execution_requests[self]
+        else:
+            if self not in pth.execution_requests:
+                pth.execution_requests[self] = True
 
     def get(self, timeout: int = None):
         """Retrieve value, referenced by the address.
@@ -161,18 +169,17 @@ class FuncOutputAddress(HashAddress):
         If the value is not immediately available, backoff exponentially
         till timeout is exceeded. If timeout is None, keep trying forever.
         """
-        if self in pth.function_output_store:
+        if self.ready:
             return pth.value_store[pth.function_output_store[self]]
-        pth.execution_requests[self] = True
+        self.request_execution()
 
         start_time, backoff_period = time.time(), 1.0
         stop_time = (start_time + timeout) if timeout else None
         # start_time, stop_time and backoff_period are in seconds
 
         while True:
-            if self in pth.function_output_store:
-                result_address = pth.function_output_store[self]
-                result =  pth.value_store[result_address]
+            if self.ready:
+                result = pth.value_store[pth.function_output_store[self]]
                 pth.execution_requests.delete_if_exists(self)
                 return result
             else:
