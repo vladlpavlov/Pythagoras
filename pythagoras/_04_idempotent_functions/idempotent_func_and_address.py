@@ -144,7 +144,12 @@ class FuncOutputAddress(HashAddress):
         super().__init__(tmp.prefix, tmp.hash_value)
 
     def ready(self):
-        return self in pth.function_output_store
+        result =  self in pth.function_output_store
+        if not result:
+            pth.execution_requests[self] = True
+        else:
+            pth.execution_requests.delete_if_exists(self)
+        return result
 
     def get(self, timeout: int = None):
         """Retrieve value, referenced by the address.
@@ -152,14 +157,21 @@ class FuncOutputAddress(HashAddress):
         If the value is not immediately available, backoff exponentially
         till timeout is exceeded. If timeout is None, keep trying forever.
         """
+        if self in pth.function_output_store:
+            return pth.value_store[pth.function_output_store[self]]
+        pth.execution_requests[self] = True
+
         start_time, backoff_period = time.time(), 1.0
         stop_time = (start_time + timeout) if timeout else None
         # start_time, stop_time and backoff_period are in seconds
+
         while True:
-            try:
-                address = pth.function_output_store[self]
-                return pth.value_store[address]
-            except:
+            if self in pth.function_output_store:
+                result_address = pth.function_output_store[self]
+                result =  pth.value_store[result_address]
+                pth.execution_requests.delete_if_exists(self)
+                return result
+            else:
                 time.sleep(backoff_period)
                 backoff_period *= 2.0
                 backoff_period += pth.entropy_infuser.uniform(-0.5, 0.5)
@@ -191,3 +203,41 @@ class FuncOutputAddress(HashAddress):
             prefix=self.prefix, hash_value=self.hash_value)
         signature = signature_addr.get()
         return signature.args_addr.get()
+
+    @property
+    def can_be_executed(self) -> bool:
+        """Indicates if the function can be executed in the current session.
+
+        Currently, it's just a placeholder that always returns True.
+
+        The function should fe refactored once we start supporting
+        VALIDATORS, CORRECTORS and SEQUENCERS
+        """
+        return True
+
+    @property
+    def needs_execution(self) -> bool:
+        """Indicates if the function is a good candidate for execution.
+
+        Returns False if the result is already available, or if some other
+        process is currently working on it. Otherwise, returns True.
+        """
+        DEFAULT_EXECUTION_TIME = 10
+        MAX_EXECUTION_ATTEMPTS = 5
+        # TODO: these should not be constants
+        if self.ready():
+            return False
+        past_attempts = pth.execution_attempts.get_subdict(self)
+        n_past_attempts = len(past_attempts)
+        if n_past_attempts == 0:
+            return True
+        if n_past_attempts > MAX_EXECUTION_ATTEMPTS:
+            #TODO: log this event. Should we have DLQ?
+            return False
+        most_recent_timestamp = max(
+            past_attempts.mtimestamp(a) for a in past_attempts)
+        current_timestamp = time.time()
+        if (current_timestamp - most_recent_timestamp
+                > DEFAULT_EXECUTION_TIME*(2**n_past_attempts)):
+            return True
+        return False

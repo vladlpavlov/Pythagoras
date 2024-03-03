@@ -20,7 +20,7 @@ def factorial(n:int) -> int:
     else:
         return n * factorial(n=n-1)
 
-def test_idp_factorial(tmpdir):
+def test_needs_execution(tmpdir):
 
     _clean_global_state()
     initialize(base_dir=tmpdir)
@@ -28,16 +28,18 @@ def test_idp_factorial(tmpdir):
     global factorial
     factorial = idempotent()(factorial)
 
-    addr_5 = FuncOutputAddress(f=factorial, arguments=dict(n=5))
+    addr = FuncOutputAddress(f=factorial, arguments=dict(n=5))
 
-    with pytest.raises(TimeoutError):
-        addr_5.get(timeout=2)
+    assert not addr.ready()
+    assert addr.can_be_executed
+    assert addr.needs_execution
 
-    function = addr_5.function
-    arguments = addr_5.arguments
-    name = addr_5.f_name
-    assert name == "factorial"
-    assert function(**arguments) == 120
+    factorial(n=5)
+    assert addr.ready()
+    assert not addr.needs_execution
+
+
+
 
 
 
