@@ -108,18 +108,19 @@ class IdempotentFunction(AutonomousFunction):
 
         self.augmented_code_checked = True
 
-    def __call__(self, **kwargs) -> Any:
+    def execute(self, **kwargs) -> Any:
         packed_kwargs = PackedKwArgs(**kwargs)
         output_address = FuncOutputAddress(self, packed_kwargs)
         if output_address.ready:
             return output_address.get()
         output_address.request_execution()
         registration_addr = (output_address[0]
-            , output_address[1], get_random_safe_str())
+                             , output_address[1], get_random_safe_str())
         pth.execution_attempts[registration_addr] = build_context()
         unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
-        result = super().__call__(**unpacked_kwargs)
+        result = super().execute(**unpacked_kwargs)
         pth.function_output_store[output_address] = ValueAddress(result)
+        pth.execution_requests.delete_if_exists(output_address)
         return result
 
 

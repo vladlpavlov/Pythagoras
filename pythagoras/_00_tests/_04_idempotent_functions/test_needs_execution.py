@@ -34,6 +34,7 @@ def test_needs_execution(tmpdir):
     assert addr.can_be_executed
     assert addr.needs_execution
     assert len(pth.execution_attempts) == 0
+    addr.request_execution()
     assert addr in pth.execution_requests
 
     factorial(n=5)

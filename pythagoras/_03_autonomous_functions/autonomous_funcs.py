@@ -139,7 +139,7 @@ class AutonomousFunction(OrdinaryFunction):
         return True
 
 
-    def __call__(self, **kwargs) -> Any:
+    def execute(self, **kwargs) -> Any:
         try:
             assert self.runtime_checks()
             names_dict = dict()
@@ -162,6 +162,10 @@ class AutonomousFunction(OrdinaryFunction):
         except Exception as e:
             log_exception()
             raise e
+
+
+    def __call__(self, **kwargs) -> Any:
+        return self.execute(**kwargs)
 
     def __getstate__(self):
         draft_state = dict(name = self.name
