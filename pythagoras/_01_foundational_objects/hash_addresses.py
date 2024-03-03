@@ -79,10 +79,11 @@ class HashAddress(SafeStrTuple, ABC):
         address = cls.__new__(cls)
         super(cls, address).__init__(prefix, hash_value)
         if assert_readiness:
-            assert address.ready()
+            assert address.ready
         return address
 
 
+    @property
     @abstractmethod
     def ready(self) -> bool:
         """Check if address points to a value that is ready to be retrieved."""

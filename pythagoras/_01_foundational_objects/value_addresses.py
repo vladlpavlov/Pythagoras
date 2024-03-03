@@ -41,6 +41,7 @@ class ValueAddress(HashAddress):
         if push_to_cloud and not (self in pth.value_store):
             pth.value_store[self] = data
 
+    @property
     def ready(self):
         """Check if address points to a value that is ready to be retrieved."""
         return self in pth.value_store

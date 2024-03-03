@@ -108,7 +108,7 @@ class IdempotentFunction(AutonomousFunction):
     def __call__(self, **kwargs) -> Any:
         packed_kwargs = PackedKwArgs(**kwargs)
         output_address = FuncOutputAddress(self, packed_kwargs)
-        if output_address.ready():
+        if output_address.ready:
             return output_address.get()
         unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
         result = super().__call__(**unpacked_kwargs)
@@ -143,6 +143,7 @@ class FuncOutputAddress(HashAddress):
         tmp = ValueAddress(signature)
         super().__init__(tmp.prefix, tmp.hash_value)
 
+    @property
     def ready(self):
         result =  self in pth.function_output_store
         if not result:
@@ -225,7 +226,7 @@ class FuncOutputAddress(HashAddress):
         DEFAULT_EXECUTION_TIME = 10
         MAX_EXECUTION_ATTEMPTS = 5
         # TODO: these should not be constants
-        if self.ready():
+        if self.ready:
             return False
         past_attempts = pth.execution_attempts.get_subdict(self)
         n_past_attempts = len(past_attempts)

@@ -30,12 +30,12 @@ def test_needs_execution(tmpdir):
 
     addr = FuncOutputAddress(f=factorial, arguments=dict(n=5))
 
-    assert not addr.ready()
+    assert not addr.ready
     assert addr.can_be_executed
     assert addr.needs_execution
 
     factorial(n=5)
-    assert addr.ready()
+    assert addr.ready
     assert not addr.needs_execution
 
 
