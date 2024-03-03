@@ -21,6 +21,8 @@ from pythagoras._04_idempotent_functions.kw_args import (
     UnpackedKwArgs, PackedKwArgs, SortedKwArgs)
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
     process_augmented_func_src)
+from pythagoras._99_misc_utils.context_builder import build_context
+
 
 class IdempotentFunction(AutonomousFunction):
     augmented_code_checked: bool
@@ -110,6 +112,7 @@ class IdempotentFunction(AutonomousFunction):
         output_address = FuncOutputAddress(self, packed_kwargs)
         if output_address.ready:
             return output_address.get()
+        pth.execution_attempts[output_address] = build_context()
         unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
         result = super().__call__(**unpacked_kwargs)
         pth.function_output_store[output_address] = ValueAddress(result)
