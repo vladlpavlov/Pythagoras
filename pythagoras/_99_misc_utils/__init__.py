@@ -13,9 +13,6 @@ from pythagoras._99_misc_utils.package_manager import (
 from pythagoras._99_misc_utils.output_capturer import (
     OutputCapturer)
 
-from pythagoras._99_misc_utils.isinstance_txt import (
-    isinstance_txt)
-
 from pythagoras._99_misc_utils.function_name import (
     get_function_name_from_source)
 

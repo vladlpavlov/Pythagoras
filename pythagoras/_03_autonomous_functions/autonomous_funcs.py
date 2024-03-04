@@ -22,7 +22,7 @@ from pythagoras._05_events_and_exceptions.events_and_exceptions_core import \
 
 from pythagoras._06_mission_control.global_state_management import (
     is_correctly_initialized)
-from pythagoras._05_events_and_exceptions.find_in_callstack import find_in_callstack
+from pythagoras._05_events_and_exceptions.find_in_callstack import find_local_var_in_callstack
 
 
 class AutonomousFunction(OrdinaryFunction):
@@ -230,8 +230,8 @@ def register_autonomous_function(f: AutonomousFunction) -> None:
         assert not hasattr(f, "_dependencies")
 
 def log_exception():
-    callers = find_in_callstack(name_to_find="self"
-        , class_to_find=AutonomousFunction)
+    callers = find_local_var_in_callstack(name_to_find="self"
+                                          , class_to_find=AutonomousFunction)
     caller_name = ""
     if len(callers) > 0:
         caller_name = callers[0].name + "_"
@@ -263,8 +263,8 @@ class EventPoster:
         self.silent = silent
 
     def __call__(self, **event_args)-> None:
-        callers = find_in_callstack(name_to_find="self"
-            , class_to_find=AutonomousFunction)
+        callers = find_local_var_in_callstack(name_to_find="self"
+                                              , class_to_find=AutonomousFunction)
         caller_name = ""
         if len(callers) > 0:
             caller_name = callers[0].name

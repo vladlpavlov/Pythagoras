@@ -1,7 +1,7 @@
 from copy import copy
 
 import pytest
-from pythagoras._05_events_and_exceptions.find_in_callstack import find_in_callstack
+from pythagoras._05_events_and_exceptions.find_in_callstack import find_local_var_in_callstack
 
 class TestClass:
     def __init__(self,a):
@@ -14,7 +14,7 @@ def test_detect_existing_variable_name_nested_call():
 
         def middle_function():
             def inner_function():
-                return find_in_callstack('my_var', TestClass)
+                return find_local_var_in_callstack('my_var', TestClass)
 
             return inner_function()
 
@@ -30,7 +30,7 @@ def test_detect_2_existing_variable_names_nested_call():
         def middle_function():
             my_var = TestClass(24)
             def inner_function():
-                return find_in_callstack('my_var', TestClass)
+                return find_local_var_in_callstack('my_var', TestClass)
 
             return inner_function()
 
@@ -48,7 +48,7 @@ def test_detect_2_existing_variables_different_types():
         def middle_function():
             my_var = 24.0
             def inner_function():
-                return find_in_callstack('my_var', TestClass)
+                return find_local_var_in_callstack('my_var', TestClass)
 
             return inner_function()
 
@@ -63,7 +63,7 @@ def test_dedup():
         def middle_function(v):
             my_var = v
             def inner_function():
-                return find_in_callstack('my_var', TestClass)
+                return find_local_var_in_callstack('my_var', TestClass)
 
             return inner_function()
 
@@ -78,7 +78,7 @@ def test_no_dedup():
         def middle_function(v):
             my_var = v
             def inner_function():
-                return find_in_callstack('my_var', TestClass)
+                return find_local_var_in_callstack('my_var', TestClass)
 
             return inner_function()
 
@@ -94,7 +94,7 @@ def test_detect_non_existing_variable_name_nested_call():
 
         def middle_function():
             def inner_function():
-                return find_in_callstack('some_other_name', TestClass)
+                return find_local_var_in_callstack('some_other_name', TestClass)
 
             return inner_function()
 
@@ -108,7 +108,7 @@ def test_detect_existing_variable_different_types_nested_call():
 
         def middle_function():
             def inner_function():
-                return find_in_callstack('test_variable', TestClass)
+                return find_local_var_in_callstack('test_variable', TestClass)
 
             return inner_function()
 
@@ -124,9 +124,9 @@ def test_detect_invalid_input_types_nested_call():
         def middle_function():
             def inner_function():
                 with pytest.raises(AssertionError):
-                    find_in_callstack(123, TestClass)
+                    find_local_var_in_callstack(123, TestClass)
                 with pytest.raises(AssertionError):
-                    find_in_callstack('test_variable', 'TestClass')
+                    find_local_var_in_callstack('test_variable', 175)
 
             return inner_function()
 
@@ -141,7 +141,7 @@ def test_detect_empty_variable_name_nested_call():
         def middle_function():
             def inner_function():
                 with pytest.raises(AssertionError):
-                    find_in_callstack('', TestClass)
+                    find_local_var_in_callstack('', TestClass)
 
             return inner_function()
 
