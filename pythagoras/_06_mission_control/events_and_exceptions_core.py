@@ -39,7 +39,7 @@ class EventLogger:
         self.event_log[name_part_1, name_part_2] = kwargs
 
 def log_uncaught_exception(exception: Exception, **kwargs):
-    logger = EventLogger(event_log = pth.crash_history
+    logger = EventLogger(event_log = pth.global_crash_history
         , prefix = "__none__"+ exception.__class__.__name__
         , save_context = True)
     logger.log_event(exception=exception, **kwargs)

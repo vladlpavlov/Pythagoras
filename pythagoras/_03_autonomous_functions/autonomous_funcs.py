@@ -238,7 +238,7 @@ def log_exception():
     (exc_type, exc_value, trace_back) = sys.exc_info()
     exception_description = traceback.format_exception(
         exc_type, exc_value, trace_back)
-    logger = EventLogger(event_log = pth.crash_history
+    logger = EventLogger(event_log = pth.global_crash_history
         , prefix = caller_name + exc_type.__name__
         , save_context = True)
     logger.log_event(exception=exc_value
@@ -275,7 +275,7 @@ class EventPoster:
             caller_prefix = caller_name
             caller_type = "AutonomousFunction"
         prefix = caller_prefix + self.label
-        logger = EventLogger(event_log=pth.event_log
+        logger = EventLogger(event_log=pth.global_event_log
             , prefix=prefix, save_context=False)
 
         if not self.silent:

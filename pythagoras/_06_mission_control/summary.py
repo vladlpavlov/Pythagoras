@@ -12,7 +12,7 @@ def summary():
     divider = 60 * "~" + "\n"
     result = "\n\n"+divider
     result += "PERSISTENT STATE: \n"
-    result += f"{len(pth.value_store)=} \n"
+    result += f"{len(pth.global_value_store)=} \n"
     result += f"{len(pth.function_output_store)=} \n"
 
     result += divider

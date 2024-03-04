@@ -194,7 +194,7 @@ class FuncOutputAddress(HashAddress):
         till timeout is exceeded. If timeout is None, keep trying forever.
         """
         if self.ready:
-            return pth.value_store[pth.function_output_store[self]]
+            return pth.global_value_store[pth.function_output_store[self]]
         self.request_execution()
 
         start_time, backoff_period = time.time(), 1.0
@@ -203,7 +203,7 @@ class FuncOutputAddress(HashAddress):
 
         while True:
             if self.ready:
-                result = pth.value_store[pth.function_output_store[self]]
+                result = pth.global_value_store[pth.function_output_store[self]]
                 pth.function_execution_requests.delete_if_exists(self)
                 return result
             else:

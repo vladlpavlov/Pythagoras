@@ -12,27 +12,27 @@ def test_value_address_basic(tmpdir):
     initialize(tmpdir)
     counter = 0
     for v in values_to_test:
-        assert len(pth.value_store) == counter
+        assert len(pth.global_value_store) == counter
         assert ValueAddress(v).get() == v
         assert ValueAddress(v).get() == v
         counter += 1
-        assert len(pth.value_store) == counter
+        assert len(pth.global_value_store) == counter
 
     _clean_global_state()
     initialize(tmpdir)
-    assert len(pth.value_store) == counter
+    assert len(pth.global_value_store) == counter
 
 def test_nested_value_addrs(tmpdir):
     _clean_global_state()
     initialize(tmpdir)
     counter = 0
     for v in values_to_test:
-        assert len(pth.value_store) == counter
+        assert len(pth.global_value_store) == counter
         assert ValueAddress([ValueAddress(v)]).get()[0].get() == v
         assert ValueAddress([ValueAddress(v)]).get()[0].get() == v
         counter += 2
-        assert len(pth.value_store) == counter
+        assert len(pth.global_value_store) == counter
 
     _clean_global_state()
     initialize(tmpdir)
-    assert len(pth.value_store) == counter
+    assert len(pth.global_value_store) == counter

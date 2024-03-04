@@ -25,7 +25,7 @@ class SortedKwArgs(dict):
         unpacked_copy = dict()
         for k,v in self.items():
             if isinstance(v, ValueAddress):
-                unpacked_copy[k] = pth.value_store[v]
+                unpacked_copy[k] = pth.global_value_store[v]
             else:
                 unpacked_copy[k] = v
         return unpacked_copy

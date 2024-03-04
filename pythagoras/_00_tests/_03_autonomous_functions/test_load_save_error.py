@@ -11,13 +11,13 @@ import pythagoras as pth
 def test_load_save_error(tmpdir):
     _clean_global_state()
     initialize(base_dir=tmpdir, default_island_name="test", cloud_type="local")
-    assert len(pth.value_store) == 0
+    assert len(pth.global_value_store) == 0
     def f(a, b):
         return a + b
 
     f_1 = AutonomousFunction(f, island_name="test")
     f_1_address = ValueAddress(f_1)
-    assert len(pth.value_store) == 1
+    assert len(pth.global_value_store) == 1
     del pth.all_autonomous_functions["test"]
 
     def f(a, b):
@@ -25,7 +25,7 @@ def test_load_save_error(tmpdir):
 
     f_2 = AutonomousFunction(f, island_name="test")
     f_2_address = ValueAddress(f_2)
-    assert len(pth.value_store) == 2
+    assert len(pth.global_value_store) == 2
     del pth.all_autonomous_functions["test"]
 
     f_a = f_1_address.get()

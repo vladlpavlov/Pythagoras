@@ -24,7 +24,7 @@ def test_basic_save_load(tmpdir):
     assert my_function() == 2024
 
     address = None
-    # assert len(pth.value_store) == 0
+    # assert len(pth.global_value_store) == 0
     for i in range(3): address = ValueAddress(my_function)
     for i in range(3): assert address.get()() == 2024
-    # assert len(pth.value_store) == 1
+    # assert len(pth.global_value_store) == 1

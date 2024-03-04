@@ -52,7 +52,7 @@ def test_execution_attempts_weird(tmpdir):
     assert len(pth.function_execution_attempts) == 1
     assert len(FuncOutputAddress(weird_func, dict()).execution_attempts) == 1
     assert len(weird_func.execution_attempts()) == 1
-    assert len(pth.crash_history) == 1
+    assert len(pth.global_crash_history) == 1
     assert len(pth.function_execution_requests) == 1
     assert len(pth.function_output_store) == 0
 
@@ -61,7 +61,7 @@ def test_execution_attempts_weird(tmpdir):
     assert len(pth.function_execution_attempts) == 2
     assert len(FuncOutputAddress(weird_func, dict()).execution_attempts) == 2
     assert len(weird_func.execution_attempts()) == 2
-    assert len(pth.crash_history) == 2
+    assert len(pth.global_crash_history) == 2
     assert len(pth.function_execution_requests) == 1
     assert len(pth.function_output_store) == 0
 
@@ -69,7 +69,7 @@ def test_execution_attempts_weird(tmpdir):
     assert len(pth.function_execution_attempts) == 3
     assert len(FuncOutputAddress(weird_func, dict()).execution_attempts) == 3
     assert len(weird_func.execution_attempts()) == 3
-    assert len(pth.crash_history) == 2
+    assert len(pth.global_crash_history) == 2
     assert len(pth.function_execution_requests) == 0
     assert len(pth.function_output_store) == 1
 
