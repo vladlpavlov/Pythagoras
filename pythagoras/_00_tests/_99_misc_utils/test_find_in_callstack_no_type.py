@@ -1,4 +1,4 @@
-from pythagoras._99_misc_utils.find_in_callstack import find_in_callstack
+from pythagoras._05_events_and_exceptions.find_in_callstack import find_in_callstack
 
 # Test variables
 global_var = "global_value"

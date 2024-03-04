@@ -1,4 +1,4 @@
-from pythagoras._99_misc_utils.context_builder import build_context
+from pythagoras._05_events_and_exceptions.context_builder import build_context
 
 def test_build_context():
     context = build_context()

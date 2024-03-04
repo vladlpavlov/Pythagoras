@@ -1,12 +1,12 @@
 import sys
 import traceback
 
-from pythagoras._99_misc_utils.current_date_gmt_str import (
+from pythagoras._05_events_and_exceptions.current_date_gmt_str import (
     current_date_gmt_string)
-from pythagoras._99_misc_utils.notebook_checker import is_executed_in_notebook
+from pythagoras._05_events_and_exceptions.notebook_checker import is_executed_in_notebook
 from pythagoras._99_misc_utils.random_safe_str_creator import (
     get_random_safe_str)
-from pythagoras._99_misc_utils.context_builder import build_context
+from pythagoras._05_events_and_exceptions.context_builder import build_context
 
 import pythagoras as pth
 

@@ -5,7 +5,7 @@ import socket
 from typing import Dict
 from getpass import getuser
 from datetime import datetime
-from pythagoras._99_misc_utils.notebook_checker import is_executed_in_notebook
+from pythagoras._05_events_and_exceptions.notebook_checker import is_executed_in_notebook
 
 def build_context()-> Dict:
     """Capture core information about execution environment.
@@ -14,7 +14,6 @@ def build_context()-> Dict:
     to help debug (distributed) applications.
     """
     cwd = os.getcwd()
-    is_in_notebook = is_executed_in_notebook()
 
     context = dict(
         hostname = socket.gethostname()
@@ -28,10 +27,9 @@ def build_context()-> Dict:
         ,cpu_load_avg = psutil.getloadavg()
         ,disk_usage = psutil.disk_usage(cwd)
         ,virtual_memory = psutil.virtual_memory()
-        ,cwd = os.getcwd()
         ,working_directory = cwd
         ,local_timezone = datetime.now().astimezone().tzname()
-        ,is_in_notebook = is_in_notebook
+        ,is_in_notebook = is_executed_in_notebook()
         )
 
     return context

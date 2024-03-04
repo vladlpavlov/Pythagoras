@@ -10,7 +10,7 @@ from pythagoras._01_foundational_objects.hash_addresses import HashAddress
 from pythagoras._01_foundational_objects.value_addresses import ValueAddress
 
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
-    AutonomousFunction, register_autonomous_function, log_exception)
+    AutonomousFunction, register_autonomous_function)
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
     OrdinaryFunction)
@@ -22,7 +22,7 @@ from pythagoras._04_idempotent_functions.kw_args import (
     UnpackedKwArgs, PackedKwArgs, SortedKwArgs)
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
     process_augmented_func_src)
-from pythagoras._99_misc_utils.context_builder import build_context
+from pythagoras._05_events_and_exceptions.context_builder import build_context
 
 
 class IdempotentFunction(AutonomousFunction):

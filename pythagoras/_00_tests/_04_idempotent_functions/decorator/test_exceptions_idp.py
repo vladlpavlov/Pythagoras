@@ -3,7 +3,7 @@ import pytest
 from pythagoras._04_idempotent_functions import idempotent
 from pythagoras._06_mission_control.global_state_management import (
     _clean_global_state, initialize)
-from pythagoras._99_misc_utils.current_date_gmt_str import (
+from pythagoras._05_events_and_exceptions.current_date_gmt_str import (
     current_date_gmt_string)
 
 import pythagoras as pth
