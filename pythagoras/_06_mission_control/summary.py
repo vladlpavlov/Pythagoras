@@ -1,4 +1,4 @@
-from pythagoras._05_mission_control.global_state_management import is_fully_unitialized, is_correctly_initialized
+from pythagoras._06_mission_control.global_state_management import is_fully_unitialized, is_correctly_initialized
 import pythagoras as pth
 
 def summary():

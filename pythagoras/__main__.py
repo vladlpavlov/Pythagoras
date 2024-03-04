@@ -1,4 +1,4 @@
-from pythagoras._05_mission_control.global_state_management import _clean_global_state
+from pythagoras._06_mission_control.global_state_management import _clean_global_state
 import pythagoras as pth
 
 _clean_global_state()

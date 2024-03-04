@@ -1,7 +1,7 @@
 import pytest
 
 from pythagoras._03_autonomous_functions import autonomous
-from pythagoras._05_mission_control.global_state_management import (
+from pythagoras._06_mission_control.global_state_management import (
     _clean_global_state, initialize)
 from pythagoras._99_misc_utils.current_date_gmt_str import (
     current_date_gmt_string)

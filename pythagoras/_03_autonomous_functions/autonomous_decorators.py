@@ -35,7 +35,7 @@ from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
      AutonomousFunction)
-from pythagoras._05_mission_control.global_state_management import (
+from pythagoras._06_mission_control.global_state_management import (
     is_fully_unitialized)
 
 

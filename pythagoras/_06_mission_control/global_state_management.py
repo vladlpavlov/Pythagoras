@@ -6,7 +6,7 @@ from persidict import FileDirDict, PersiDict
 import pythagoras as pth
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
-from pythagoras._05_mission_control.events_and_exceptions_core import (
+from pythagoras._06_mission_control.events_and_exceptions_core import (
     register_exception_handlers, unregister_exception_handlers, pth_excepthook)
 from pythagoras._99_misc_utils.notebook_checker import is_executed_in_notebook
 

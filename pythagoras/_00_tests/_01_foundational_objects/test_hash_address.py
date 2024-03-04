@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import pandas as pd
-from pythagoras._05_mission_control.global_state_management import (
+from pythagoras._06_mission_control.global_state_management import (
     initialize, _clean_global_state)
 
 from pythagoras._01_foundational_objects import *

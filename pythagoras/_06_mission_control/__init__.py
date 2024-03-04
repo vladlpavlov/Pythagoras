@@ -1,4 +1,4 @@
-from pythagoras._05_mission_control.global_state_management import (
+from pythagoras._06_mission_control.global_state_management import (
     initialize
     , is_global_state_correct
     , is_correctly_initialized
@@ -9,4 +9,4 @@ from pythagoras._05_mission_control.global_state_management import (
     , get_autonomous_function
     )
 
-from pythagoras._05_mission_control.summary import summary
+from pythagoras._06_mission_control.summary import summary

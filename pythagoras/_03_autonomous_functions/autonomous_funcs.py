@@ -17,10 +17,10 @@ from pythagoras._03_autonomous_functions.call_graph_explorer import (
 
 from pythagoras._03_autonomous_functions.names_usage_analyzer import (
     analyze_names_in_function)
-from pythagoras._05_mission_control.events_and_exceptions_core import \
+from pythagoras._06_mission_control.events_and_exceptions_core import \
     EventLogger
 
-from pythagoras._05_mission_control.global_state_management import (
+from pythagoras._06_mission_control.global_state_management import (
     is_correctly_initialized)
 from pythagoras._99_misc_utils.find_in_callstack import find_in_callstack
 

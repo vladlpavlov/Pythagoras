@@ -1,5 +1,5 @@
 from pythagoras._01_foundational_objects.value_addresses import ValueAddress
-from pythagoras._05_mission_control.global_state_management import (
+from pythagoras._06_mission_control.global_state_management import (
     initialize, _clean_global_state)
 import pythagoras as pth
 
