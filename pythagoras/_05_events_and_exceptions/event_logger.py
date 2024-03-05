@@ -73,7 +73,7 @@ def log_two_mirrored_entries(
             , local_path, local_prefixes, event_name, event)
 
 
-def log_exception():
+def log_exception(**kwargs):
     (exc_type, exc_value, trace_back) = sys.exc_info()
     description = traceback.format_exception(
         exc_type, exc_value, trace_back)
@@ -81,6 +81,7 @@ def log_exception():
         exception_description=description
         ,exception=exc_value
         ,trace_back= trace_back)
+    event.update(kwargs)
     log_two_mirrored_entries(
         global_event_log_dict=pth.global_crash_history
         , local_event_log_dict=pth.function_crash_history
