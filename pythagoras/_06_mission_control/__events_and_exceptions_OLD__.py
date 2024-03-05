@@ -11,8 +11,8 @@ import pythagoras as pth
 
 from datetime import datetime, timezone
 
-from pythagoras._99_misc_utils.random_safe_str_creator import get_random_safe_str
-
+from pythagoras._01_foundational_objects.hash_signature import \
+    get_random_signature
 
 T = TypeVar("T")
 def detect_local_variable_in_callstack(
@@ -156,7 +156,7 @@ def get_current_date_gmt():
     return [year, month, day]
 
 def post_crash_report(exception:Any, output:str=None): #TODO: refactor
-    crash_report_name = 'crash_' + get_random_safe_str()
+    crash_report_name = 'crash_' + get_random_signature()
     event_key = get_current_date_gmt() + [crash_report_name]
     pth.global_crash_history[event_key] = ExceptionLogEntry(exception, output)
 

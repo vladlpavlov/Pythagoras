@@ -9,8 +9,7 @@ from pythagoras._05_events_and_exceptions.find_in_callstack import (
     find_local_var_in_callstack)
 from pythagoras._05_events_and_exceptions.type_retrievers import (
     retrieve_AutonomousFunction_class, retrieve_FuncOutputAddress_class)
-from pythagoras._99_misc_utils.random_safe_str_creator import (
-    get_random_safe_str)
+from pythagoras import get_random_signature
 
 from persidict import PersiDict
 import pythagoras as pth
@@ -55,7 +54,7 @@ def log_two_mirrored_entries(
             island_name = func_pointer.island_name
             function_name = func_pointer.f_name
 
-    event_name = get_random_safe_str()
+    event_name = get_random_signature()
 
     if prefix is not None:
         prefixes = [prefix]

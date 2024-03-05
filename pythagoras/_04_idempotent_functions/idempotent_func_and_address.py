@@ -4,7 +4,7 @@ import time
 from typing import Callable, Any
 
 import pythagoras as pth
-from pythagoras import get_random_safe_str
+from pythagoras import get_random_signature
 
 from pythagoras._01_foundational_objects.hash_addresses import HashAddress
 from pythagoras._01_foundational_objects.value_addresses import ValueAddress
@@ -116,8 +116,7 @@ class IdempotentFunction(AutonomousFunction):
         if output_address.ready:
             return output_address.get()
         output_address.request_execution()
-        registration_addr = (output_address[0]
-            , output_address[1], get_random_safe_str())
+        registration_addr = (output_address[1], get_random_signature())
         pth.function_execution_attempts[registration_addr] = build_context()
         unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
         result = super().execute(**unpacked_kwargs)
@@ -284,7 +283,7 @@ class FuncOutputAddress(HashAddress):
 
     @property
     def execution_attempts(self) -> list:
-        attempts = pth.function_execution_attempts.get_subdict(self)
+        attempts = pth.function_execution_attempts.get_subdict(self[1])
         attemps_timed = {-attempts.mtimestamp(a):attempts[a] for a in attempts}
         times = sorted(attemps_timed)
         result = []

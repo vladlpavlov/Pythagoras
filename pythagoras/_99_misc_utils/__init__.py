@@ -4,9 +4,6 @@ from pythagoras._99_misc_utils.base_16_32_convertors import (
 from pythagoras._99_misc_utils.long_infoname import (
     get_long_infoname)
 
-from pythagoras._99_misc_utils.random_safe_str_creator import (
-    get_random_safe_str)
-
 from pythagoras._99_misc_utils.package_manager import (
     install_package, uninstall_package)
 

@@ -1,14 +1,16 @@
 import sys
+import uuid
 from typing import Any
 
 import joblib.hashing
+
 from pythagoras._99_misc_utils.base_16_32_convertors import (
-    convert_base16_to_base32)
+    convert_int_to_base32, convert_base16_to_base32)
 
 # TODO: split into a few files, add more unit-tests
 
 hash_type: str = "sha256"
-
+max_signature_length: int = 22
 
 def get_base16_hash_signature(x:Any) -> str:
     if 'numpy' in sys.modules:
@@ -26,4 +28,10 @@ def get_base32_hash_signature(x:Any) -> str:
 
 
 def get_hash_signature(x:Any) -> str:
-    return get_base32_hash_signature(x)
+    return get_base32_hash_signature(x)[:max_signature_length]
+
+
+def get_random_signature() -> str:
+    random_int = uuid.uuid4().int + uuid.uuid1().int
+    random_str = convert_int_to_base32(random_int)
+    return random_str[:max_signature_length]
