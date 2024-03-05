@@ -34,22 +34,27 @@ def log_two_mirrored_entries(
         , local_event_log_dict:PersiDict | None
         , prefix: str | None
         , event: any):
+
     func_addrs = find_local_var_in_callstack(name_to_find="_pth_f_addr_"
             , class_to_find = retrieve_FuncOutputAddress_class())
+
+    island_name = None
+    function_name = None
+
     if len(func_addrs) > 0:
         func_pointer = func_addrs[0]
         local_path = list(func_pointer)
+        island_name = func_pointer.island_name
+        function_name = func_pointer.f_name
     else:
         funcs = find_local_var_in_callstack(name_to_find="self"
             , class_to_find=retrieve_AutonomousFunction_class())
         if len(funcs) > 0:
             func_pointer = funcs[0]
             local_path = None
-        else:
-            assert False, "No function pointer found in callstack"
+            island_name = func_pointer.island_name
+            function_name = func_pointer.f_name
 
-    island_name = func_pointer.island_name
-    function_name = func_pointer.f_name
     event_name = get_random_safe_str()
 
     if prefix is not None:
@@ -62,7 +67,8 @@ def log_two_mirrored_entries(
             global_prefixes = [island_name] + prefixes
         else:
             global_prefixes = copy(prefixes)
-        global_prefixes = [function_name] + global_prefixes
+        if function_name is not None:
+            global_prefixes = [function_name] + global_prefixes
         global_path = [current_date_gmt_string()]
         log_one_entry(global_event_log_dict
             , global_path, global_prefixes, event_name, event)

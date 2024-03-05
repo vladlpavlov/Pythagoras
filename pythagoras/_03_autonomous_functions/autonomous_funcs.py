@@ -148,20 +148,20 @@ class AutonomousFunction(OrdinaryFunction):
             assert self.runtime_checks()
             names_dict = dict()
             island = pth.all_autonomous_functions[self.island_name]
-            names_dict["__pth_kwargs"] = kwargs
+            names_dict["_pth_kwargs"] = kwargs
             if self.island_name is not None:
                 for f_name in self.dependencies:
                     names_dict[f_name] = island[f_name]
             else:
                 names_dict[self.name] = island[self.name]
 
-            tmp_name = "__pth_tmp_" + self.name
+            tmp_name = "_pth_tmp_" + self.name
             source_to_exec = self.naked_source_code + "\n"
             source_to_exec = source_to_exec.replace(
                 " "+self.name+"(", " "+tmp_name+"(",1)
-            source_to_exec += f"\n__pth_result = {tmp_name}(**__pth_kwargs)\n"
+            source_to_exec += f"\n_pth_result = {tmp_name}(**_pth_kwargs)\n"
             exec(source_to_exec, names_dict, names_dict)
-            result = names_dict["__pth_result"]
+            result = names_dict["_pth_result"]
             return result
         except Exception as e:
             log_exception()
