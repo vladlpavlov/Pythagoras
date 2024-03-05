@@ -40,6 +40,7 @@ def log_two_mirrored_entries(
 
     island_name = None
     function_name = None
+    local_path = None
 
     if len(func_addrs) > 0:
         func_pointer = func_addrs[0]
@@ -51,7 +52,6 @@ def log_two_mirrored_entries(
             , class_to_find=retrieve_AutonomousFunction_class())
         if len(funcs) > 0:
             func_pointer = funcs[0]
-            local_path = None
             island_name = func_pointer.island_name
             function_name = func_pointer.f_name
 
