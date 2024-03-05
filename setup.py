@@ -53,6 +53,8 @@ setuptools.setup(
         , 'pytest'
         , 'autopep8'
         , 'torch'
+        , 'keras'
+        , 'tensorflow'
     ]
 
 )

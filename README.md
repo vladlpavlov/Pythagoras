@@ -38,6 +38,8 @@ at the Python package index at: https://pypi.org/project/pythagoras
 * [scikit-learn](https://scikit-learn.org)
 * [autopep8](https://pypi.org/project/autopep8)
 * [pytorch](https://pytorch.org)
+* [tensorflow](https://www.tensorflow.org)
+* [keras](https://keras.io)
 
 ## Key Contacts
 
