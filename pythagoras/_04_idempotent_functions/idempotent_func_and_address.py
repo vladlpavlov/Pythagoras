@@ -22,7 +22,7 @@ from pythagoras._04_idempotent_functions.kw_args import (
     UnpackedKwArgs, PackedKwArgs, SortedKwArgs)
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
     process_augmented_func_src)
-from pythagoras._05_events_and_exceptions.context_builder import build_context
+from pythagoras._05_events_and_exceptions.context_utils import build_context
 
 
 class IdempotentFunction(AutonomousFunction):
@@ -112,11 +112,12 @@ class IdempotentFunction(AutonomousFunction):
     def execute(self, **kwargs) -> Any:
         packed_kwargs = PackedKwArgs(**kwargs)
         output_address = FuncOutputAddress(self, packed_kwargs)
+        _pth_f_addr_ = output_address
         if output_address.ready:
             return output_address.get()
         output_address.request_execution()
         registration_addr = (output_address[0]
-                             , output_address[1], get_random_safe_str())
+            , output_address[1], get_random_safe_str())
         pth.function_execution_attempts[registration_addr] = build_context()
         unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
         result = super().execute(**unpacked_kwargs)
@@ -231,6 +232,10 @@ class FuncOutputAddress(HashAddress):
             prefix=self.prefix, hash_value=self.hash_value)
         signature = signature_addr.get()
         return signature.f_name
+
+    @property
+    def island_name(self) -> str:
+        return self.function.island_name
 
     @property
     def arguments(self) -> SortedKwArgs:

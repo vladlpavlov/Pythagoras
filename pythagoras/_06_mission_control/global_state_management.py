@@ -6,7 +6,7 @@ from persidict import FileDirDict, PersiDict
 import pythagoras as pth
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
-from pythagoras._05_events_and_exceptions.events_and_exceptions_core import (
+from pythagoras._05_events_and_exceptions.uncaught_exception_handlers import (
     register_exception_handlers, unregister_exception_handlers, pth_excepthook)
 from pythagoras._05_events_and_exceptions.notebook_checker import is_executed_in_notebook
 
@@ -16,7 +16,8 @@ def initialize(base_dir:str
                , default_island_name:str = "Samos") -> None:
     """ Initialize Pythagoras.
     """
-    assert pth.is_fully_unitialized(), "You can only initialize pythagoras once."
+    assert pth.is_fully_unitialized(), (
+        "You can only initialize pythagoras once.")
 
     cloud_type = cloud_type.lower()
 
@@ -51,20 +52,27 @@ def initialize(base_dir:str
     pth.global_event_log = dict_type(event_log_dir
         , digest_len=0, file_type="json")
 
-    func_output_store_dir = os.path.join(base_dir, "func_output_store")
-    pth.function_output_store = dict_type(func_output_store_dir, digest_len=0)
-    execution_requests_dir = os.path.join(base_dir, "function_execution_requests")
-    pth.function_execution_requests = dict_type(execution_requests_dir, digest_len=0)
-    execution_attempts_dir = os.path.join(base_dir, "function_execution_attempts")
-    pth.function_execution_attempts = dict_type(execution_attempts_dir, digest_len=0)
+    func_output_store_dir = os.path.join(
+        base_dir, "func_output_store")
+    pth.function_output_store = dict_type(
+        func_output_store_dir, digest_len=0)
+    execution_requests_dir = os.path.join(
+        base_dir, "function_execution_requests")
+    pth.function_execution_requests = dict_type(
+        execution_requests_dir, digest_len=0)
+    execution_attempts_dir = os.path.join(
+        base_dir, "function_execution_attempts")
+    pth.function_execution_attempts = dict_type(
+        execution_attempts_dir, digest_len=0, file_type="json")
 
-    function_crash_history_dir = os.path.join(base_dir, "function_crash_history")
-    pth.function_crash_history = dict_type(function_crash_history_dir
-        , digest_len=0, file_type="json")
+    function_crash_history_dir = os.path.join(
+        base_dir, "function_crash_history")
+    pth.function_crash_history = dict_type(
+        function_crash_history_dir, digest_len=0, file_type="json")
 
     function_event_log_dir = os.path.join(base_dir, "function_event_log")
-    pth.function_event_log = dict_type(function_event_log_dir
-        , digest_len=0, file_type="json")
+    pth.function_event_log = dict_type(
+        function_event_log_dir, digest_len=0, file_type="json")
 
 
 
@@ -203,15 +211,3 @@ def get_autonomous_function(function_name:str
         island_name = pth.default_island_name
     return pth.all_autonomous_functions[island_name][function_name]
 
-
-# def register_idempotent_function(function:Callable):
-#     # TODO: Redfactor. Maybe use pth.IdempotentFunction
-#     assert isinstance_txt(function, "IdempotentFunction") # !!!
-#     island_name = function.island_name
-#     function_name = function.function_name
-#     if island_name not in pth.idempotent_functions:
-#         pth.idempotent_functions[island_name] = dict()
-#     ## TODO: find better way to handle this vvvvvvvvv
-#     assert function_name not in pth.idempotent_functions[island_name]
-#     ## TODO: find better way to handle this ^^^^^^^^^
-#     pth.idempotent_functions[island_name][function_name] = function

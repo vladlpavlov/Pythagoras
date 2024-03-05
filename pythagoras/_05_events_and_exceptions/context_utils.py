@@ -35,3 +35,11 @@ def build_context()-> Dict:
         )
 
     return context
+
+
+def add_context(**kwargs):
+    context_param_name = "context"
+    while context_param_name in kwargs:
+        context_param_name += "_"
+    kwargs[context_param_name] = build_context()
+    return kwargs

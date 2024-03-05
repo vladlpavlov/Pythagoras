@@ -17,12 +17,16 @@ from pythagoras._03_autonomous_functions.call_graph_explorer import (
 
 from pythagoras._03_autonomous_functions.names_usage_analyzer import (
     analyze_names_in_function)
-from pythagoras._05_events_and_exceptions.events_and_exceptions_core import \
-    EventLogger
+
+from pythagoras._05_events_and_exceptions.find_in_callstack import (
+    find_local_var_in_callstack)
+
+from pythagoras._05_events_and_exceptions.event_logger import (
+    log_exception)
 
 from pythagoras._06_mission_control.global_state_management import (
     is_correctly_initialized)
-from pythagoras._05_events_and_exceptions.find_in_callstack import find_local_var_in_callstack
+
 
 
 class AutonomousFunction(OrdinaryFunction):
@@ -228,21 +232,6 @@ def register_autonomous_function(f: AutonomousFunction) -> None:
         assert not hasattr(f, "_static_checks_passed")
         assert not hasattr(f, "_runtime_checks_passed")
         assert not hasattr(f, "_dependencies")
-
-def log_exception():
-    callers = find_local_var_in_callstack(name_to_find="self"
-                                          , class_to_find=AutonomousFunction)
-    caller_name = ""
-    if len(callers) > 0:
-        caller_name = callers[0].name + "_"
-    (exc_type, exc_value, trace_back) = sys.exc_info()
-    exception_description = traceback.format_exception(
-        exc_type, exc_value, trace_back)
-    logger = EventLogger(event_log = pth.global_crash_history
-        , prefix = caller_name + exc_type.__name__
-        , save_context = True)
-    logger.log_event(exception=exc_value
-        , exception_description=exception_description)
 
 
 class EventPosterFactory:

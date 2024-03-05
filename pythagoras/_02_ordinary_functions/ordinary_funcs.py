@@ -39,3 +39,7 @@ class OrdinaryFunction:
     @property
     def decorator(self):
         return "@pth.ordinary()"
+
+    @property
+    def f_name(self):
+        return self.name
