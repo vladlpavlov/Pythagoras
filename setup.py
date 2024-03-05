@@ -52,6 +52,7 @@ setuptools.setup(
         , 'moto'
         , 'pytest'
         , 'autopep8'
+        , 'torch'
     ]
 
 )

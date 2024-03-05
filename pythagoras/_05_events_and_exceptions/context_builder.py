@@ -5,6 +5,7 @@ import socket
 from typing import Dict
 from getpass import getuser
 from datetime import datetime
+import torch
 from pythagoras._05_events_and_exceptions.notebook_checker import is_executed_in_notebook
 
 def build_context()-> Dict:
@@ -25,6 +26,7 @@ def build_context()-> Dict:
         ,processor = platform.processor()
         ,cpu_count = psutil.cpu_count()
         ,cpu_load_avg = psutil.getloadavg()
+        ,cuda_gpu_count=torch.cuda.device_count()
         ,disk_usage = psutil.disk_usage(cwd)
         ,virtual_memory = psutil.virtual_memory()
         ,working_directory = cwd
