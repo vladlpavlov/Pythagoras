@@ -42,7 +42,6 @@ setuptools.setup(
         "persidict"
         , "lz4"
         , 'joblib'
-        , 'isort'
         , 'numpy'
         , 'scipy'
         , 'pandas'

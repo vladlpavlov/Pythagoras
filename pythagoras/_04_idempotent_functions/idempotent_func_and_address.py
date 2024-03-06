@@ -167,12 +167,18 @@ class FunctionCallSignature:
         self.args_addr = ValueAddress(arguments.pack())
 
 class FuncOutputAddress(HashAddress):
+    value_prefix: str|None = None
     def __init__(self, f: IdempotentFunction, arguments:dict[str, Any]):
         assert isinstance(f, IdempotentFunction)
         arguments = SortedKwArgs(**arguments)
         signature = FunctionCallSignature(f,arguments)
         tmp = ValueAddress(signature)
-        super().__init__(tmp.prefix, tmp.hash_value)
+        self.value_prefix = tmp.prefix
+        new_prefix = f.f_name
+        if f.island_name is not None:
+            new_prefix += "_" + f.island_name
+        new_hash_value = tmp.hash_value
+        super().__init__(new_prefix, new_hash_value)
 
     @property
     def ready(self):
@@ -221,14 +227,14 @@ class FuncOutputAddress(HashAddress):
     @property
     def function(self) -> IdempotentFunction:
         signature_addr = ValueAddress.from_strings(
-            prefix=self.prefix, hash_value=self.hash_value)
+            prefix=self.value_prefix, hash_value=self.hash_value)
         signature = signature_addr.get()
         return signature.f_addr.get()
 
     @property
     def f_name(self) -> str:
         signature_addr = ValueAddress.from_strings(
-            prefix=self.prefix, hash_value=self.hash_value)
+            prefix=self.value_prefix, hash_value=self.hash_value)
         signature = signature_addr.get()
         return signature.f_name
 
@@ -239,7 +245,7 @@ class FuncOutputAddress(HashAddress):
     @property
     def arguments(self) -> SortedKwArgs:
         signature_addr = ValueAddress.from_strings(
-            prefix=self.prefix, hash_value=self.hash_value)
+            prefix=self.value_prefix, hash_value=self.hash_value)
         signature = signature_addr.get()
         return signature.args_addr.get()
 
