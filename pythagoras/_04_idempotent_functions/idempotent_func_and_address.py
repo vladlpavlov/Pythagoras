@@ -180,6 +180,10 @@ class FuncOutputAddress(HashAddress):
         new_hash_value = tmp.hash_value
         super().__init__(new_prefix, new_hash_value)
 
+    def get_ValueAddress(self):
+        return ValueAddress.from_strings(
+            prefix=self.value_prefix, hash_value=self.hash_value)
+
     @property
     def ready(self):
         result =  self in pth.function_output_store
@@ -226,15 +230,13 @@ class FuncOutputAddress(HashAddress):
 
     @property
     def function(self) -> IdempotentFunction:
-        signature_addr = ValueAddress.from_strings(
-            prefix=self.value_prefix, hash_value=self.hash_value)
+        signature_addr = self.get_ValueAddress()
         signature = signature_addr.get()
         return signature.f_addr.get()
 
     @property
     def f_name(self) -> str:
-        signature_addr = ValueAddress.from_strings(
-            prefix=self.value_prefix, hash_value=self.hash_value)
+        signature_addr = self.get_ValueAddress()
         signature = signature_addr.get()
         return signature.f_name
 
@@ -244,8 +246,7 @@ class FuncOutputAddress(HashAddress):
 
     @property
     def arguments(self) -> SortedKwArgs:
-        signature_addr = ValueAddress.from_strings(
-            prefix=self.value_prefix, hash_value=self.hash_value)
+        signature_addr = self.get_ValueAddress()
         signature = signature_addr.get()
         return signature.args_addr.get()
 

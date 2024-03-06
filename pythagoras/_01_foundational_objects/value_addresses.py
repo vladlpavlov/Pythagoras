@@ -25,13 +25,13 @@ class ValueAddress(HashAddress):
         assert len(args) == 0
         assert len(kwargs) == 0
 
-        if isinstance(data, ValueAddress):
-            self.str_chain = deepcopy(data.str_chain)
+        if hasattr(data, "get_ValueAddress"):
+            self.str_chain = deepcopy(data.get_ValueAddress().str_chain)
             return
 
         assert not isinstance(data,HashAddress), (
-            "ValueAddress is the only HashAddress which is allowed "
-            + "to be converted to ValueAddress")
+            "get_ValueAddress is the only way to "
+            + "convert HashAddress into ValueAddress")
 
         prefix = self._build_prefix(data)
         hash_value = self._build_hash_value(data)
@@ -40,6 +40,9 @@ class ValueAddress(HashAddress):
 
         if push_to_cloud and not (self in pth.global_value_store):
             pth.global_value_store[self] = data
+
+    def get_ValueAddress(self):
+        return self
 
     @property
     def ready(self):
