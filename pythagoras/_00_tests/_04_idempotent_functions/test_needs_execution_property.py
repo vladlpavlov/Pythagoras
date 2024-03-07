@@ -24,6 +24,7 @@ def test_needs_execution(tmpdir):
 
     _clean_global_state()
     initialize(base_dir=tmpdir)
+    # initialize(base_dir="TTTTTTTTTTTTTTTTTTTTT")
 
     global factorial
     factorial = idempotent()(factorial)
@@ -33,16 +34,16 @@ def test_needs_execution(tmpdir):
     assert not addr.ready
     assert addr.can_be_executed
     assert addr.needs_execution
-    assert len(pth.function_execution_attempts) == 0
+    assert len(addr.execution_attempts) == 0
     addr.request_execution()
-    assert addr in pth.function_execution_requests
+    assert addr.is_execution_requested()
 
     factorial(n=5)
     assert addr.ready
     assert addr.can_be_executed
     assert not addr.needs_execution
-    assert len(pth.function_execution_attempts) == 5
-    assert not addr in pth.function_execution_requests
+    assert len(addr.execution_attempts) == 1
+    assert not addr.is_execution_requested()
 
 
 

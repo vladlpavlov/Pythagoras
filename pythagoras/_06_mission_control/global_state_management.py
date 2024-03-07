@@ -8,7 +8,9 @@ from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 from pythagoras._05_events_and_exceptions.uncaught_exception_handlers import (
     register_exception_handlers, unregister_exception_handlers, pth_excepthook)
-from pythagoras._05_events_and_exceptions.notebook_checker import is_executed_in_notebook
+from pythagoras._05_events_and_exceptions.notebook_checker import (
+    is_executed_in_notebook)
+from pythagoras._06_mission_control.operational_hub import OperationalHub
 
 
 def initialize(base_dir:str
@@ -35,45 +37,32 @@ def initialize(base_dir:str
         os.mkdir(base_dir)
     assert os.path.isdir(base_dir)
 
-    value_store_dir = os.path.join(base_dir, "global_value_store")
-    pth.global_value_store = dict_type(value_store_dir, digest_len=0)
+    value_store_dir = os.path.join(base_dir, "value_store")
+    pth.value_store = dict_type(
+        value_store_dir, digest_len=0, immutable_items=True)
 
-    func_garage_dir = os.path.join(base_dir, "func_garage")
-    pth.function_garage = dict_type(func_garage_dir, digest_len=0)
-    pth.function_source_repository = dict_type(
-        func_garage_dir, digest_len=0, file_type="py"
-        , base_class_for_values=str)
+    # func_garage_dir = os.path.join(base_dir, "func_garage")
+    # pth.function_garage = dict_type(func_garage_dir, digest_len=0)
+    # pth.function_source_repository = dict_type(
+    #     func_garage_dir, digest_len=0, file_type="py"
+    #     , base_class_for_values=str)
 
-    crash_history_dir = os.path.join(base_dir, "global_crash_history")
-    pth.global_crash_history = dict_type(crash_history_dir
-        , digest_len=0, file_type="json")
+    crash_history_dir = os.path.join(base_dir, "crash_history")
+    pth.crash_history = dict_type(crash_history_dir
+                                  , digest_len=0, file_type="json", immutable_items=True)
 
-    event_log_dir = os.path.join(base_dir, "global_event_log")
-    pth.global_event_log = dict_type(event_log_dir
-        , digest_len=0, file_type="json")
+    event_log_dir = os.path.join(base_dir, "event_log")
+    pth.event_log = dict_type(event_log_dir
+                              , digest_len=0, file_type="json", immutable_items=True)
 
     func_output_store_dir = os.path.join(
-        base_dir, "func_output_store")
-    pth.function_output_store = dict_type(
-        func_output_store_dir, digest_len=0)
-    execution_requests_dir = os.path.join(
-        base_dir, "function_execution_requests")
-    pth.function_execution_requests = dict_type(
-        execution_requests_dir, digest_len=0)
-    execution_attempts_dir = os.path.join(
-        base_dir, "function_execution_attempts")
-    pth.function_execution_attempts = dict_type(
-        execution_attempts_dir, digest_len=0, file_type="json")
+        base_dir, "execution_results")
+    pth.execution_results = dict_type(
+        func_output_store_dir, digest_len=0, immutable_items=True)
 
-    function_crash_history_dir = os.path.join(
-        base_dir, "function_crash_history")
-    pth.function_crash_history = dict_type(
-        function_crash_history_dir, digest_len=0, file_type="json")
-
-    function_event_log_dir = os.path.join(base_dir, "function_event_log")
-    pth.function_event_log = dict_type(
-        function_event_log_dir, digest_len=0, file_type="json")
-
+    operational_hub_dir = os.path.join(
+        base_dir, "operational_hub")
+    pth.operational_hub = OperationalHub(operational_hub_dir)
 
 
     pth.default_island_name = default_island_name
@@ -93,16 +82,11 @@ def initialize(base_dir:str
 def is_fully_unitialized():
     """ Check if Pythagoras is uninitialized."""
     result = True
-    result &= pth.global_value_store is None
-    result &= pth.function_garage is None
-    result &= pth.function_source_repository is None
-    result &= pth.function_output_store is None
-    result &= pth.function_execution_requests is None
-    result &= pth.function_execution_attempts is None
-    result &= pth.function_crash_history is None
-    result &= pth.function_event_log is None
-    result &= pth.global_crash_history is None
-    result &= pth.global_event_log is None
+    result &= pth.value_store is None
+    result &= pth.execution_results is None
+    result &= pth.operational_hub is None
+    result &= pth.crash_history is None
+    result &= pth.event_log is None
     result &= pth.default_island_name is None
     result &= pth.all_autonomous_functions is None
     result &= pth.initialization_parameters is None
@@ -111,25 +95,19 @@ def is_fully_unitialized():
 
 def is_correctly_initialized():
     """ Check if Pythagoras is correctly initialized."""
-    if not isinstance(pth.global_value_store, PersiDict):
+    if not isinstance(pth.value_store, PersiDict):
         return False
-    if not isinstance(pth.function_garage, PersiDict):
+    # if not isinstance(pth.function_garage, PersiDict):
+    #     return False
+    # if not isinstance(pth.function_source_repository, PersiDict):
+    #     return False
+    if not isinstance(pth.operational_hub, OperationalHub):
         return False
-    if not isinstance(pth.function_source_repository, PersiDict):
+    if not isinstance(pth.execution_results, PersiDict):
         return False
-    if not isinstance(pth.function_output_store, PersiDict):
+    if not isinstance(pth.crash_history, PersiDict):
         return False
-    if not isinstance(pth.function_execution_requests, PersiDict):
-        return False
-    if not isinstance(pth.function_execution_attempts, PersiDict):
-        return False
-    if not isinstance(pth.function_crash_history, PersiDict):
-        return False
-    if not isinstance(pth.function_event_log, PersiDict):
-        return False
-    if not isinstance(pth.global_crash_history, PersiDict):
-        return False
-    if not isinstance(pth.global_event_log, PersiDict):
+    if not isinstance(pth.event_log, PersiDict):
         return False
     if not isinstance(pth.default_island_name, str):
         return False
@@ -169,16 +147,13 @@ def is_global_state_correct():
     return result
 
 def _clean_global_state():
-    pth.global_value_store = None
+    pth.value_store = None
     pth.function_garage = None #???
     pth.function_source_repository = None
-    pth.function_output_store = None
-    pth.function_execution_requests = None
-    pth.function_execution_attempts = None
-    pth.function_crash_history = None
-    pth.function_event_log = None
-    pth.global_crash_history = None
-    pth.global_event_log = None
+    pth.execution_results = None
+    pth.operational_hub = None
+    pth.crash_history = None
+    pth.event_log = None
     pth.all_autonomous_functions = None
     pth.default_island_name = None
     pth.initialization_parameters = None
@@ -210,4 +185,3 @@ def get_autonomous_function(function_name:str
     if island_name is DefaultIsland:
         island_name = pth.default_island_name
     return pth.all_autonomous_functions[island_name][function_name]
-

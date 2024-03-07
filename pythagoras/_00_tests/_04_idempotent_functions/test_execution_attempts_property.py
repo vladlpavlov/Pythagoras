@@ -14,7 +14,6 @@ from pythagoras._06_mission_control.global_state_management import (
 import pythagoras as pth
 
 
-
 def test_execution_attempts_simple(tmpdir):
 
     _clean_global_state()
@@ -25,11 +24,10 @@ def test_execution_attempts_simple(tmpdir):
     def simple_func()->int:
         return 10
 
-    assert len(pth.function_execution_attempts) == 0
+    assert len(simple_func.get_address().execution_attempts) == 0
     assert simple_func() == 10
-    assert len(pth.function_execution_attempts) == 1
-    assert len(FuncOutputAddress(simple_func, dict()).execution_attempts) == 1
-    assert len(simple_func.execution_attempts()) == 1
+    assert len(simple_func.get_address().execution_attempts) == 1
+
 
 
 def test_execution_attempts_weird(tmpdir):
@@ -41,35 +39,29 @@ def test_execution_attempts_weird(tmpdir):
     @idempotent()
     def weird_func()->int:
         import pythagoras as pth
-        if len(pth.function_execution_attempts) < 3:
+        if len(pth.all_autonomous_functions[pth.default_island_name]
+               ["weird_func"].get_address().execution_attempts) < 3:
             return 10/0
         return 10
 
-    assert len(pth.function_execution_attempts) == 0
+    assert len(weird_func.get_address().execution_attempts) == 0
 
     with pytest.raises(ZeroDivisionError):
         weird_func()
-    assert len(pth.function_execution_attempts) == 1
-    assert len(FuncOutputAddress(weird_func, dict()).execution_attempts) == 1
-    assert len(weird_func.execution_attempts()) == 1
-    assert len(pth.global_crash_history) == 1
-    assert len(pth.function_execution_requests) == 1
-    assert len(pth.function_output_store) == 0
+    assert len(weird_func.get_address().execution_attempts) == 1
+    assert len(pth.crash_history) == 1
+    assert len(pth.operational_hub.binary) == 1
+    assert len(pth.execution_results) == 0
 
     with pytest.raises(ZeroDivisionError):
         weird_func()
-    assert len(pth.function_execution_attempts) == 2
-    assert len(FuncOutputAddress(weird_func, dict()).execution_attempts) == 2
-    assert len(weird_func.execution_attempts()) == 2
-    assert len(pth.global_crash_history) == 2
-    assert len(pth.function_execution_requests) == 1
-    assert len(pth.function_output_store) == 0
+    assert len(weird_func.get_address().execution_attempts) == 2
+    assert len(pth.crash_history) == 2
+    assert len(pth.operational_hub.binary) == 1
+    assert len(pth.execution_results) == 0
 
     assert weird_func() == 10
-    assert len(pth.function_execution_attempts) == 3
-    assert len(FuncOutputAddress(weird_func, dict()).execution_attempts) == 3
-    assert len(weird_func.execution_attempts()) == 3
-    assert len(pth.global_crash_history) == 2
-    assert len(pth.function_execution_requests) == 0
-    assert len(pth.function_output_store) == 1
-
+    assert len(weird_func.get_address().execution_attempts) == 3
+    assert len(pth.crash_history) == 2
+    assert len(pth.operational_hub.binary) == 0
+    assert len(pth.execution_results) == 1

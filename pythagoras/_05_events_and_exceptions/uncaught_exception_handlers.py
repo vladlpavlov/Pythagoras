@@ -1,14 +1,14 @@
 import sys, traceback
 
 from pythagoras._05_events_and_exceptions.notebook_checker import is_executed_in_notebook
-from pythagoras._05_events_and_exceptions.event_logger import log_exception
-
+from pythagoras._05_events_and_exceptions.event_logger import (
+    register_exception_globally)
 
 import pythagoras as pth
 
 
 # def log_uncaught_exception(exception: Exception, **kwargs):
-#     logger = EventLogger(event_log = pth.global_crash_history
+#     logger = EventLogger(event_log = pth.crash_history
 #         , prefix = "__none__"+ exception.__class__.__name__
 #         , save_context = True)
 #     logger.log_event(exception=exception, **kwargs)
@@ -21,7 +21,7 @@ def pth_excepthook(exc_type, exc_value, trace_back) -> None:
     #     exc_type, exc_value, trace_back)
     # log_uncaught_exception(exception = exc_value
     #     , exception_description = exception_description)
-    log_exception()
+    register_exception_globally()
     sys.__excepthook__(exc_type, exc_value, trace_back)
 
 def pth_excepthandler(_, exc_type, exc_value
@@ -30,7 +30,7 @@ def pth_excepthandler(_, exc_type, exc_value
     #     exc_type, exc_value, trace_back)
     # log_uncaught_exception(exception=exc_value
     #     , exception_description=exception_description)
-    log_exception()
+    register_exception_globally()
     traceback.print_exception(exc_type, exc_value, trace_back)
 
 

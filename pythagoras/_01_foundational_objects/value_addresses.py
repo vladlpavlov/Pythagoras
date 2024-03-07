@@ -38,8 +38,8 @@ class ValueAddress(HashAddress):
 
         super().__init__(prefix, hash_value)
 
-        if push_to_cloud and not (self in pth.global_value_store):
-            pth.global_value_store[self] = data
+        if push_to_cloud and not (self in pth.value_store):
+            pth.value_store[self] = data
 
     def get_ValueAddress(self):
         return self
@@ -47,12 +47,12 @@ class ValueAddress(HashAddress):
     @property
     def ready(self):
         """Check if address points to a value that is ready to be retrieved."""
-        return self in pth.global_value_store
+        return self in pth.value_store
 
 
     def get(self, timeout:Optional[int] = None) -> Any:
         """Retrieve value, referenced by the address"""
-        return pth.global_value_store[self]
+        return pth.value_store[self]
 
     def get_typed(self
             ,expected_type:Type[T]

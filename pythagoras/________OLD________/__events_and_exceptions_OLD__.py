@@ -158,7 +158,7 @@ def get_current_date_gmt():
 def post_crash_report(exception:Any, output:str=None): #TODO: refactor
     crash_report_name = 'crash_' + get_random_signature()
     event_key = get_current_date_gmt() + [crash_report_name]
-    pth.global_crash_history[event_key] = ExceptionLogEntry(exception, output)
+    pth.crash_history[event_key] = ExceptionLogEntry(exception, output)
 
 
 

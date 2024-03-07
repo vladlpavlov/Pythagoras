@@ -10,3 +10,6 @@ from pythagoras._06_mission_control.global_state_management import (
     )
 
 from pythagoras._06_mission_control.summary import summary
+
+from pythagoras._06_mission_control.operational_hub import (
+    OperationalHub)

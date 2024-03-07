@@ -28,7 +28,7 @@ class idempotent:
         self.require_pth = require_pth
 
 
-    def __call__(self, a_func:Callable) -> Callable:
+    def __call__(self, a_func:Callable) -> IdempotentFunction:
         if not self.require_pth and is_fully_unitialized():
             wrapper = a_func
             logging.warning(f"Decorator @{self.__class__.__name__}()"

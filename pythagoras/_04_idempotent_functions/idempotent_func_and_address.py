@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import time
+import traceback
 from typing import Callable, Any
 
+from persidict import PersiDict
+
 import pythagoras as pth
-from pythagoras import get_random_signature
+from pythagoras import get_random_signature, OutputCapturer
 
 from pythagoras._01_foundational_objects.hash_addresses import HashAddress
 from pythagoras._01_foundational_objects.value_addresses import ValueAddress
@@ -22,7 +25,9 @@ from pythagoras._04_idempotent_functions.kw_args import (
     UnpackedKwArgs, PackedKwArgs, SortedKwArgs)
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
     process_augmented_func_src)
-from pythagoras._05_events_and_exceptions.context_utils import build_context
+from pythagoras._05_events_and_exceptions.context_utils import build_context, add_context
+from pythagoras._05_events_and_exceptions.event_logger import register_exception_globally, \
+    register_event_globally
 
 
 class IdempotentFunction(AutonomousFunction):
@@ -108,6 +113,11 @@ class IdempotentFunction(AutonomousFunction):
 
         self.augmented_code_checked = True
 
+    def get_address(self, **kwargs) -> FuncOutputAddress:
+        packed_kwargs = PackedKwArgs(**kwargs)
+        output_address = FuncOutputAddress(self, packed_kwargs)
+        return output_address
+
 
     def execute(self, **kwargs) -> Any:
         packed_kwargs = PackedKwArgs(**kwargs)
@@ -115,14 +125,14 @@ class IdempotentFunction(AutonomousFunction):
         _pth_f_addr_ = output_address
         if output_address.ready:
             return output_address.get()
-        output_address.request_execution()
-        registration_addr = (output_address[1], get_random_signature())
-        pth.function_execution_attempts[registration_addr] = build_context()
-        unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
-        result = super().execute(**unpacked_kwargs)
-        pth.function_output_store[output_address] = ValueAddress(result)
-        pth.function_execution_requests.delete_if_exists(output_address)
-        return result
+        with FuncExecutionContext(output_address) as ec:
+            output_address.request_execution()
+            ec.register_execution_attempt()
+            unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
+            result = super().execute(**unpacked_kwargs)
+            pth.execution_results[output_address] = ValueAddress(result)
+            output_address.drop_execution_request()
+            return result
 
     def list_execute(self, list_of_kwargs:list[dict]) -> Any:
         assert isinstance(list_of_kwargs, (list, tuple))
@@ -140,11 +150,6 @@ class IdempotentFunction(AutonomousFunction):
             results_dict[n] = an_addr.function.execute(**an_addr.arguments)
         results_list = [results_dict[n] for n in range(len(addrs))]
         return results_list
-
-    def execution_attempts(self, **kwargs) -> list:
-        packed_kwargs = PackedKwArgs(**kwargs)
-        output_address = FuncOutputAddress(self, packed_kwargs)
-        return output_address.execution_attempts
 
 
 def register_idempotent_function(f: IdempotentFunction) -> None:
@@ -186,16 +191,25 @@ class FuncOutputAddress(HashAddress):
 
     @property
     def ready(self):
-        result =  self in pth.function_output_store
+        result =  self in pth.execution_results
         return result
 
     def request_execution(self):
-        if self in pth.function_output_store:
-            if self in pth.function_execution_requests:
-                del pth.function_execution_requests[self]
+        request_address = self + ["execution_requested"]
+        if self in pth.execution_results:
+            if request_address in pth.operational_hub.binary:
+                del pth.operational_hub.binary[request_address]
         else:
-            if self not in pth.function_execution_requests:
-                pth.function_execution_requests[self] = True
+            if request_address not in pth.operational_hub.binary:
+                pth.operational_hub.binary[request_address] = True
+
+    def drop_execution_request(self):
+        request_address = self + ["execution_requested"]
+        pth.operational_hub.binary.delete_if_exists(request_address)
+
+    def is_execution_requested(self):
+        request_address = self + ["execution_requested"]
+        return request_address in pth.operational_hub.binary
 
     def get(self, timeout: int = None):
         """Retrieve value, referenced by the address.
@@ -204,7 +218,7 @@ class FuncOutputAddress(HashAddress):
         till timeout is exceeded. If timeout is None, keep trying forever.
         """
         if self.ready:
-            return pth.global_value_store[pth.function_output_store[self]]
+            return pth.value_store[pth.execution_results[self]]
         self.request_execution()
 
         start_time, backoff_period = time.time(), 1.0
@@ -213,8 +227,8 @@ class FuncOutputAddress(HashAddress):
 
         while True:
             if self.ready:
-                result = pth.global_value_store[pth.function_output_store[self]]
-                pth.function_execution_requests.delete_if_exists(self)
+                result = pth.value_store[pth.execution_results[self]]
+                self.drop_execution_request()
                 return result
             else:
                 time.sleep(backoff_period)
@@ -273,7 +287,7 @@ class FuncOutputAddress(HashAddress):
         # TODO: these should not be constants
         if self.ready:
             return False
-        past_attempts = pth.function_execution_attempts.get_subdict(self)
+        past_attempts = self.execution_attempts
         n_past_attempts = len(past_attempts)
         if n_past_attempts == 0:
             return True
@@ -289,12 +303,89 @@ class FuncOutputAddress(HashAddress):
         return False
 
     @property
-    def execution_attempts(self) -> list:
-        attempts = pth.function_execution_attempts.get_subdict(self[1])
-        attemps_timed = {-attempts.mtimestamp(a):attempts[a] for a in attempts}
-        times = sorted(attemps_timed)
-        result = []
-        for t in times:
-            result.append(attemps_timed[t])
-        return result
+    def execution_attempts(self) -> PersiDict:
+        attempts_path = self + ["attempts"]
+        attempts = pth.operational_hub.jason.get_subdict(attempts_path)
+        return attempts
 
+    @property
+    def execution_outputs(self) -> PersiDict:
+        outputs_path = self + ["outputs"]
+        outputs = pth.operational_hub.text.get_subdict(outputs_path)
+        return outputs
+
+    @property
+    def crashes(self) -> PersiDict:
+        crashes_path = self + ["crashes"]
+        crashes = pth.operational_hub.jason.get_subdict(crashes_path)
+        return crashes
+
+    @property
+    def events(self) -> PersiDict:
+        events_path = self + ["events"]
+        events = pth.operational_hub.jason.get_subdict(events_path)
+        return events
+
+class FuncExecutionContext:
+    session_id: str
+    f_address: FuncOutputAddress
+    output_capturer = OutputCapturer
+    exception_counter: int
+    event_counter: int
+
+    def __init__(self, f_address: FuncOutputAddress):
+        self.session_id = get_random_signature()
+        self.f_address = f_address
+        self.output_capturer = OutputCapturer()
+        self.exception_counter = 0
+        self.event_counter = 0
+
+    def __enter__(self):
+        self.output_capturer.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, trace_back):
+        self.output_capturer.__exit__(exc_type, exc_value, traceback)
+
+        output_id = self.session_id+"_o"
+        execution_outputs = self.f_address.execution_outputs
+        execution_outputs[output_id] = self.output_capturer.get_output()
+
+        self.register_exception(
+            exc_type=exc_type, exc_value=exc_value, trace_back=trace_back)
+
+
+    def register_execution_attempt(self):
+        execution_attempts = self.f_address.execution_attempts
+        attempt_id = self.session_id+"_a"
+        execution_attempts[attempt_id] = build_context()
+
+
+    def register_exception(self,exc_type, exc_value, trace_back, **kwargs):
+        if exc_value is None:
+            return
+        exception_id = self.session_id + f"_c_{self.exception_counter}"
+        self.f_address.crashes[exception_id] = add_context(
+            **kwargs, exc_value=exc_value)
+        self.exception_counter += 1
+        exception_id = exc_type.__name__ + "_"+ exception_id
+        exception_id = self.f_address.island_name + "_" + exception_id
+        exception_id = self.f_address.f_name + "_" + exception_id
+        register_exception_globally(**kwargs, exception_id=exception_id)
+
+    def register_event(self, event_type:str|None=None, **kwargs):
+        event_id = self.session_id + f"_e_{self.event_counter}"
+        if event_type is not None:
+            event_id += "_"+ event_type
+        events = self.f_address.events
+        events[event_id] = add_context(**kwargs, event_type=event_type)
+
+        event_id = self.session_id + f"_e_{self.event_counter}"
+        if event_type is not None:
+            kwargs["event_type"] = event_type
+            event_id = event_type + "_"+ event_id
+        event_id = self.f_address.island_name + "_" + event_id
+        event_id = self.f_address.f_name + "_" + event_id
+        register_event_globally(**kwargs, event_id=event_id)
+
+        self.event_counter += 1

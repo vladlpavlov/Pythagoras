@@ -12,7 +12,7 @@ from pythagoras.python_utils import get_long_infoname
 
 T = TypeVar("T")
 
-# global_value_store:Optional[PersiDict] = None
+# value_store:Optional[PersiDict] = None
 
 def set_value_store(store:PersiDict) -> None:
     """Set a global value store."""

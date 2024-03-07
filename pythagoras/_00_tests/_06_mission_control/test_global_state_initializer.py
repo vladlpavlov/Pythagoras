@@ -14,8 +14,8 @@ def test_local_initialization(tmp_path):
     assert pth.is_correctly_initialized()
 
     assert pth.initialization_parameters == init_params
-    assert len(pth.global_value_store) == 0
-    # assert len(pth.global_crash_history) == 0
+    assert len(pth.value_store) == 0
+    # assert len(pth.crash_history) == 0
     assert pth.default_island_name == "kuku"
 
 def test_corrupt_value_store(tmp_path):
@@ -24,7 +24,7 @@ def test_corrupt_value_store(tmp_path):
         cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
 
     pth.initialize(**init_params)
-    pth.global_value_store = None
+    pth.value_store = None
     assert not pth.is_global_state_correct()
     assert not pth.is_correctly_initialized()
     assert not pth.is_fully_unitialized()

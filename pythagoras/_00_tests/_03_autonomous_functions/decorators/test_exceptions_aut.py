@@ -24,8 +24,8 @@ def test_zero_div(tmpdir):
 
     date_str_2 = current_date_gmt_string()
 
-    assert len(pth.global_crash_history) == 1
-    for event_id  in list(pth.global_crash_history):
+    assert len(pth.crash_history) == 1
+    for event_id  in list(pth.crash_history):
         assert "ZeroDivisionError" in event_id[1]
         assert "zero_div" in event_id[1]
         assert event_id[0] in [date_str_1, date_str_2]
@@ -51,8 +51,8 @@ def test_sqrt(tmpdir):
 
     date_str_2 = current_date_gmt_string()
 
-    assert len(pth.global_crash_history) == n - 1
-    for event_id in list(pth.global_crash_history):
+    assert len(pth.crash_history) == n - 1
+    for event_id in list(pth.crash_history):
         assert "ValueError" in event_id[1]
         assert "my_sqrt" in event_id[1]
         assert event_id[0] in [date_str_1, date_str_2]

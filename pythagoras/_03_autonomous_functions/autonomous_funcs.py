@@ -22,7 +22,7 @@ from pythagoras._05_events_and_exceptions.find_in_callstack import (
     find_local_var_in_callstack)
 
 from pythagoras._05_events_and_exceptions.event_logger import (
-    log_exception)
+    register_exception_globally)
 
 from pythagoras._06_mission_control.global_state_management import (
     is_correctly_initialized)
@@ -164,7 +164,11 @@ class AutonomousFunction(OrdinaryFunction):
             result = names_dict["_pth_result"]
             return result
         except Exception as e:
-            log_exception()
+            if self.__class__ == AutonomousFunction:
+                exception_id = f"{self.name}_{self.island_name}"
+                exception_id += f"_{e.__class__.__name__}"
+                exception_id += f"_{pth.get_random_signature()}"
+                register_exception_globally(exception_id=exception_id)
             raise e
 
     def __call__(self, **kwargs) -> Any:
@@ -264,7 +268,7 @@ class EventPoster:
             caller_prefix = caller_name
             caller_type = "AutonomousFunction"
         prefix = caller_prefix + self.label
-        logger = EventLogger(event_log=pth.global_event_log
+        logger = EventLogger(event_log=pth.event_log
             , prefix=prefix, save_context=False)
 
         if not self.silent:
