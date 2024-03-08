@@ -1,7 +1,7 @@
 import sys, traceback
 
 from pythagoras._05_events_and_exceptions.notebook_checker import is_executed_in_notebook
-from pythagoras._05_events_and_exceptions.event_logger import (
+from pythagoras._05_events_and_exceptions.global_event_loggers import (
     register_exception_globally)
 
 import pythagoras as pth

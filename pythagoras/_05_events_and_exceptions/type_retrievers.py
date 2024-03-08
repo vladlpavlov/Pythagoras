@@ -27,4 +27,13 @@ def retrieve_FunctionExecutionResultAddress_class() -> type:
     return sys.modules['pythagoras'].FunctionExecutionResultAddress
 
 
+def retrieve_FunctionExecutionContext_class() -> type:
+    """Return the FunctionExecutionContext class.
+
+    This is for-internal-use-only function, created to
+    avoid circular import dependencies.
+    """
+    return sys.modules['pythagoras'].FunctionExecutionContext
+
+
 

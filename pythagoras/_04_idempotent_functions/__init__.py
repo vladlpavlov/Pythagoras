@@ -2,7 +2,9 @@ from pythagoras._04_idempotent_functions.kw_args import (
     SortedKwArgs, PackedKwArgs, UnpackedKwArgs)
 
 from pythagoras._04_idempotent_functions.idempotent_func_and_address import (
-    IdempotentFunction, FunctionExecutionResultAddress)
+    IdempotentFunction
+    , FunctionExecutionResultAddress
+    , FunctionExecutionContext)
 
 from pythagoras._04_idempotent_functions.idempotent_decorator import (
     idempotent)

@@ -8,6 +8,7 @@ from pythagoras import get_random_signature
 import pythagoras as pth
 
 
+
 def register_exception_globally(exception_id = None, **kwargs):
     path = current_date_gmt_string()
     exc_type, exc_value, trace_back = sys.exc_info()

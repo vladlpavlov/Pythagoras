@@ -4,7 +4,7 @@ import sys
 import traceback
 from typing import Callable, Optional, Any
 from persidict import replace_unsafe_chars
-import pythagoras as pth
+
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
     OrdinaryFunction)
@@ -18,15 +18,16 @@ from pythagoras._03_autonomous_functions.call_graph_explorer import (
 from pythagoras._03_autonomous_functions.names_usage_analyzer import (
     analyze_names_in_function)
 
-from pythagoras._05_events_and_exceptions.find_in_callstack import (
-    find_local_var_in_callstack)
+from pythagoras._03_autonomous_functions.pth_available_names_retriever import (
+    retrieve_objs_available_inside_autonomous_functions)
 
-from pythagoras._05_events_and_exceptions.event_logger import (
+from pythagoras._05_events_and_exceptions.global_event_loggers import (
     register_exception_globally)
 
 from pythagoras._06_mission_control.global_state_management import (
     is_correctly_initialized)
 
+import pythagoras as pth
 
 
 class AutonomousFunction(OrdinaryFunction):
@@ -123,6 +124,8 @@ class AutonomousFunction(OrdinaryFunction):
         import_required -= set(pth.primary_decorators)
         builtin_names = set(dir(builtins))
         import_required -= builtin_names
+        pth_names = set(retrieve_objs_available_inside_autonomous_functions())
+        import_required -= pth_names
         import_required -= {name}
         if self.island_name is not None:
             island = pth.all_autonomous_functions[self.island_name]
@@ -146,7 +149,7 @@ class AutonomousFunction(OrdinaryFunction):
     def execute(self, **kwargs) -> Any:
         try:
             assert self.runtime_checks()
-            names_dict = dict()
+            names_dict = retrieve_objs_available_inside_autonomous_functions()
             island = pth.all_autonomous_functions[self.island_name]
             names_dict["_pth_kwargs"] = kwargs
             if self.island_name is not None:
@@ -154,6 +157,7 @@ class AutonomousFunction(OrdinaryFunction):
                     names_dict[f_name] = island[f_name]
             else:
                 names_dict[self.name] = island[self.name]
+
 
             tmp_name = "_pth_tmp_" + self.name
             source_to_exec = self.naked_source_code + "\n"
@@ -236,60 +240,3 @@ def register_autonomous_function(f: AutonomousFunction) -> None:
         assert not hasattr(f, "_static_checks_passed")
         assert not hasattr(f, "_runtime_checks_passed")
         assert not hasattr(f, "_dependencies")
-
-
-class EventPosterFactory:
-    def __init__(self, silent:bool = False):
-        assert isinstance(silent, bool)
-        self.silent = silent
-
-    def __getitem__(self, item:str)-> EventPoster:
-        assert isinstance(item, str)
-        return EventPoster(item, silent=self.silent)
-
-class EventPoster:
-    def __init__(self, label:str, silent:bool = False):
-        assert isinstance(label, str)
-        assert label == replace_unsafe_chars(label, "")
-        assert 0 < len(label) < 25
-        self.label = label
-        self.silent = silent
-
-    def __call__(self, **event_args)-> None:
-        callers = find_local_var_in_callstack(name_to_find="self"
-                                              , class_to_find=AutonomousFunction)
-        caller_name = ""
-        if len(callers) > 0:
-            caller_name = callers[0].name
-            caller_prefix = caller_name + "_"
-            caller_type = callers[0].__class__.__name__
-        else:
-            caller_name = "__none__"
-            caller_prefix = caller_name
-            caller_type = "AutonomousFunction"
-        prefix = caller_prefix + self.label
-        logger = EventLogger(event_log=pth.event_log
-            , prefix=prefix, save_context=False)
-
-        if not self.silent:
-            print(30*"~")
-            print(f"Event '{self.label}' "
-                  + f"inside an {caller_type} '{caller_name}':")
-            for key, value in event_args.items():
-                print(f"    {key} = {value}")
-            print()
-
-        label_arg_name = "event_label"
-        while label_arg_name in event_args:
-            label_arg_name += "_"
-        event_args[label_arg_name] = self.label
-
-        caller_arg_name = "caller_name"
-        while caller_arg_name in event_args:
-            caller_arg_name += "_"
-        event_args[caller_arg_name] = caller_name
-
-        logger.log_event(**event_args)
-
-post_event: EventPosterFactory = EventPosterFactory(silent=True)
-print_event: EventPosterFactory = EventPosterFactory(silent=False)

@@ -26,8 +26,8 @@ from pythagoras._04_idempotent_functions.kw_args import (
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
     process_augmented_func_src)
 from pythagoras._05_events_and_exceptions.context_utils import build_context, add_context
-from pythagoras._05_events_and_exceptions.event_logger import register_exception_globally, \
-    register_event_globally
+from pythagoras._05_events_and_exceptions.global_event_loggers import (
+    register_exception_globally, register_event_globally)
 
 
 class IdempotentFunction(AutonomousFunction):
@@ -125,9 +125,9 @@ class IdempotentFunction(AutonomousFunction):
         _pth_f_addr_ = output_address
         if output_address.ready:
             return output_address.get()
-        with FunctionExecutionContext(output_address) as ec:
+        with FunctionExecutionContext(output_address) as _pth_ec:
             output_address.request_execution()
-            ec.register_execution_attempt()
+            _pth_ec.register_execution_attempt()
             unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
             result = super().execute(**unpacked_kwargs)
             pth.execution_results[output_address] = ValueAddress(result)
