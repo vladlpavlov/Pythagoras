@@ -5,7 +5,7 @@ import logging
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 
-from pythagoras._04_idempotent_functions.idempotent_func_and_address import (
+from pythagoras._04_idempotent_functions.idempotent_func_address_context import (
     IdempotentFunction)
 
 from pythagoras._06_mission_control.global_state_management import (

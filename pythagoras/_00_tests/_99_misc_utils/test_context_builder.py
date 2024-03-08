@@ -1,7 +1,8 @@
-from pythagoras._05_events_and_exceptions.context_utils import build_context
+from pythagoras._05_events_and_exceptions.execution_environment_summary import (
+    build_execution_environment_summary)
 
 def test_build_context():
-    context = build_context()
+    context = build_execution_environment_summary()
     assert isinstance(context, dict)
     assert "hostname" in context
     assert "user" in context

@@ -1,6 +1,7 @@
 import sys
 
-from pythagoras._05_events_and_exceptions.context_utils import add_context
+from pythagoras._05_events_and_exceptions.execution_environment_summary import (
+    add_execution_environment_summary)
 from pythagoras._05_events_and_exceptions.current_date_gmt_str import (
     current_date_gmt_string)
 from pythagoras import get_random_signature
@@ -15,7 +16,7 @@ def register_exception_globally(exception_id = None, **kwargs):
     if exception_id is None:
         exception_id = exc_type.__name__ + "_" + get_random_signature()
     full_path = [path, exception_id]
-    pth.crash_history[full_path] = add_context(
+    pth.crash_history[full_path] = add_execution_environment_summary(
         exc_value=exc_value, **kwargs)
 
 
@@ -24,4 +25,4 @@ def register_event_globally(event_id = None, **kwargs):
     if event_id is None:
         event_id = get_random_signature()
     full_path = [path, event_id]
-    pth.event_log[full_path] = add_context(**kwargs)
+    pth.event_log[full_path] = add_execution_environment_summary(**kwargs)

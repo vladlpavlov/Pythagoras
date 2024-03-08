@@ -1,4 +1,4 @@
-from pythagoras._04_idempotent_functions.idempotent_func_and_address import (
+from pythagoras._04_idempotent_functions.idempotent_func_address_context import (
     IdempotentFunction)
 
 

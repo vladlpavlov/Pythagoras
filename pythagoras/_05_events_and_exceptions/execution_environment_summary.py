@@ -8,7 +8,7 @@ from datetime import datetime
 import torch
 from pythagoras._05_events_and_exceptions.notebook_checker import is_executed_in_notebook
 
-def build_context()-> Dict:
+def build_execution_environment_summary()-> Dict:
     """Capture core information about execution environment.
 
     The function is intended to be used to log environment information
@@ -16,7 +16,7 @@ def build_context()-> Dict:
     """
     cwd = os.getcwd()
 
-    context = dict(
+    execution_environment_summary = dict(
         hostname = socket.gethostname()
         ,user = getuser()
         ,pid = os.getpid()
@@ -34,12 +34,12 @@ def build_context()-> Dict:
         ,is_in_notebook = is_executed_in_notebook()
         )
 
-    return context
+    return execution_environment_summary
 
 
-def add_context(**kwargs):
-    context_param_name = "context"
+def add_execution_environment_summary(**kwargs):
+    context_param_name = "execution_environment_summary"
     while context_param_name in kwargs:
         context_param_name += "_"
-    kwargs[context_param_name] = build_context()
+    kwargs[context_param_name] = build_execution_environment_summary()
     return kwargs

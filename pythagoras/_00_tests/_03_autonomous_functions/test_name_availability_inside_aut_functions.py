@@ -2,7 +2,7 @@ import pytest
 import pythagoras as pth
 
 from pythagoras._06_mission_control.global_state_management import (
-    _clean_global_state, initialize)
+    _clean_global_state)
 
 def test_name_availability(tmpdir):
     _clean_global_state()

@@ -25,7 +25,8 @@ from pythagoras._04_idempotent_functions.kw_args import (
     UnpackedKwArgs, PackedKwArgs, SortedKwArgs)
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
     process_augmented_func_src)
-from pythagoras._05_events_and_exceptions.context_utils import build_context, add_context
+from pythagoras._05_events_and_exceptions.execution_environment_summary import (
+    build_execution_environment_summary, add_execution_environment_summary)
 from pythagoras._05_events_and_exceptions.global_event_loggers import (
     register_exception_globally, register_event_globally)
 
@@ -358,14 +359,14 @@ class FunctionExecutionContext:
     def register_execution_attempt(self):
         execution_attempts = self.f_address.execution_attempts
         attempt_id = self.session_id+"_a"
-        execution_attempts[attempt_id] = build_context()
+        execution_attempts[attempt_id] = build_execution_environment_summary()
 
 
     def register_exception(self,exc_type, exc_value, trace_back, **kwargs):
         if exc_value is None:
             return
         exception_id = self.session_id + f"_c_{self.exception_counter}"
-        self.f_address.crashes[exception_id] = add_context(
+        self.f_address.crashes[exception_id] = add_execution_environment_summary(
             **kwargs, exc_value=exc_value)
         self.exception_counter += 1
         exception_id = exc_type.__name__ + "_"+ exception_id
@@ -378,7 +379,7 @@ class FunctionExecutionContext:
         if event_type is not None:
             event_id += "_"+ event_type
         events = self.f_address.events
-        events[event_id] = add_context(**kwargs, event_type=event_type)
+        events[event_id] = add_execution_environment_summary(**kwargs, event_type=event_type)
 
         event_id = self.session_id + f"_e_{self.event_counter}"
         if event_type is not None:
