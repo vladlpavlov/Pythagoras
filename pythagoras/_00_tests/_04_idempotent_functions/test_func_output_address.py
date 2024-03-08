@@ -7,7 +7,7 @@ from pythagoras._03_autonomous_functions.autonomous_decorators import autonomous
 from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
 from pythagoras._04_idempotent_functions.idempotency_checks import is_idempotent
 from pythagoras._04_idempotent_functions.idempotent_func_and_address import (
-    FuncOutputAddress)
+    FunctionExecutionResultAddress)
 from pythagoras._06_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
@@ -28,7 +28,7 @@ def test_idp_factorial(tmpdir):
     global factorial
     factorial = idempotent()(factorial)
 
-    addr_5 = FuncOutputAddress(f=factorial, arguments=dict(n=5))
+    addr_5 = FunctionExecutionResultAddress(f=factorial, arguments=dict(n=5))
 
     with pytest.raises(TimeoutError):
         addr_5.get(timeout=2)

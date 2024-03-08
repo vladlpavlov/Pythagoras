@@ -113,19 +113,19 @@ class IdempotentFunction(AutonomousFunction):
 
         self.augmented_code_checked = True
 
-    def get_address(self, **kwargs) -> FuncOutputAddress:
+    def get_address(self, **kwargs) -> FunctionExecutionResultAddress:
         packed_kwargs = PackedKwArgs(**kwargs)
-        output_address = FuncOutputAddress(self, packed_kwargs)
+        output_address = FunctionExecutionResultAddress(self, packed_kwargs)
         return output_address
 
 
     def execute(self, **kwargs) -> Any:
         packed_kwargs = PackedKwArgs(**kwargs)
-        output_address = FuncOutputAddress(self, packed_kwargs)
+        output_address = FunctionExecutionResultAddress(self, packed_kwargs)
         _pth_f_addr_ = output_address
         if output_address.ready:
             return output_address.get()
-        with FuncExecutionContext(output_address) as ec:
+        with FunctionExecutionContext(output_address) as ec:
             output_address.request_execution()
             ec.register_execution_attempt()
             unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
@@ -140,7 +140,7 @@ class IdempotentFunction(AutonomousFunction):
             assert isinstance(kwargs, dict)
         addrs = []
         for kwargs in list_of_kwargs:
-            new_addr = FuncOutputAddress(self, kwargs)
+            new_addr = FunctionExecutionResultAddress(self, kwargs)
             new_addr.request_execution()
             addrs.append(new_addr)
         addrs_indexed = list(zip(range(len(addrs)), addrs))
@@ -171,7 +171,7 @@ class FunctionCallSignature:
         self.f_addr = ValueAddress(f)
         self.args_addr = ValueAddress(arguments.pack())
 
-class FuncOutputAddress(HashAddress):
+class FunctionExecutionResultAddress(HashAddress):
     value_prefix: str|None = None
     def __init__(self, f: IdempotentFunction, arguments:dict[str, Any]):
         assert isinstance(f, IdempotentFunction)
@@ -326,14 +326,14 @@ class FuncOutputAddress(HashAddress):
         events = pth.operational_hub.jason.get_subdict(events_path)
         return events
 
-class FuncExecutionContext:
+class FunctionExecutionContext:
     session_id: str
-    f_address: FuncOutputAddress
+    f_address: FunctionExecutionResultAddress
     output_capturer = OutputCapturer
     exception_counter: int
     event_counter: int
 
-    def __init__(self, f_address: FuncOutputAddress):
+    def __init__(self, f_address: FunctionExecutionResultAddress):
         self.session_id = get_random_signature()
         self.f_address = f_address
         self.output_capturer = OutputCapturer()

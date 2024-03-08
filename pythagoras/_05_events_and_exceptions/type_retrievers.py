@@ -18,13 +18,13 @@ def retrieve_AutonomousFunction_class() -> type:
     return sys.modules['pythagoras'].AutonomousFunction
 
 
-def retrieve_FuncOutputAddress_class() -> type:
-    """Return the FuncOutputAddress class.
+def retrieve_FunctionExecutionResultAddress_class() -> type:
+    """Return the FunctionExecutionResultAddress class.
 
     This is for-internal-use-only function, created to
     avoid circular import dependencies.
     """
-    return sys.modules['pythagoras'].FuncOutputAddress
+    return sys.modules['pythagoras'].FunctionExecutionResultAddress
 
 
 
