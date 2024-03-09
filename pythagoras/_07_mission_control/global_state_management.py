@@ -6,6 +6,8 @@ from persidict import FileDirDict, PersiDict
 import pythagoras as pth
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
+from pythagoras._05_events_and_exceptions.execution_environment_summary import \
+    build_execution_environment_summary
 from pythagoras._05_events_and_exceptions.uncaught_exception_handlers import (
     register_exception_handlers, unregister_exception_handlers, pth_excepthook)
 from pythagoras._05_events_and_exceptions.notebook_checker import (
@@ -16,7 +18,8 @@ from pythagoras._07_mission_control.operational_hub import OperationalHub
 def initialize(base_dir:str
                , n_background_workers:int
                , cloud_type:str = "local"
-               , default_island_name:str = "Samos") -> None:
+               , default_island_name:str = "Samos"
+               , runtime_id: str|None = None):
     """ Initialize Pythagoras.
     """
     assert pth.is_fully_unitialized(), (
@@ -46,13 +49,31 @@ def initialize(base_dir:str
     pth.value_store = dict_type(
         value_store_dir, digest_len=0, immutable_items=True)
 
+    execution_nodes_dir = os.path.join(base_dir, "execution_nodes")
+    pth.execution_nodes = dict_type(
+        execution_nodes_dir, digest_len=0
+        , immutable_items=False
+        , file_type="pkl")
+
+    if runtime_id is None:
+        node_id = pth.get_node_signature()
+        runtime_id = pth.get_random_signature()
+        pth.runtime_id = runtime_id
+        pth.execution_nodes[node_id,"runtime_id"]= runtime_id
+        summary = build_execution_environment_summary()
+        pth.execution_nodes[node_id, "execution_environment"] = summary
+    else:
+        pth.runtime_id = runtime_id
+
     crash_history_dir = os.path.join(base_dir, "crash_history")
-    pth.crash_history = dict_type(crash_history_dir
-                                  , digest_len=0, file_type="json", immutable_items=True)
+    pth.crash_history = dict_type(
+        crash_history_dir, digest_len=0
+        , file_type="json", immutable_items=True)
 
     event_log_dir = os.path.join(base_dir, "event_log")
-    pth.event_log = dict_type(event_log_dir
-                              , digest_len=0, file_type="json", immutable_items=True)
+    pth.event_log = dict_type(
+        event_log_dir, digest_len=0
+        , file_type="json", immutable_items=True)
 
     func_output_store_dir = os.path.join(
         base_dir, "execution_results")
@@ -72,7 +93,8 @@ def initialize(base_dir:str
     parameters = dict(base_dir=base_dir
         ,cloud_type=cloud_type
         ,n_background_workers=n_background_workers
-        ,default_island_name=default_island_name)
+        ,default_island_name=default_island_name
+        , runtime_id=pth.runtime_id)
 
     pth.initialization_parameters = parameters
 
@@ -81,6 +103,7 @@ def initialize(base_dir:str
     for n in range(n_background_workers):
         pth.launch_background_worker()
 
+    return PythagorasContext()
 
 
 def is_fully_unitialized():
@@ -96,16 +119,14 @@ def is_fully_unitialized():
     result &= pth.initialization_parameters is None
     result &= pth.entropy_infuser is None
     result &= pth.n_background_workers is None
+    result &= pth.runtime_id is None
+    result &= pth.execution_nodes is None
     return result
 
 def is_correctly_initialized():
     """ Check if Pythagoras is correctly initialized."""
     if not isinstance(pth.value_store, PersiDict):
         return False
-    # if not isinstance(pth.function_garage, PersiDict):
-    #     return False
-    # if not isinstance(pth.function_source_repository, PersiDict):
-    #     return False
     if not isinstance(pth.operational_hub, OperationalHub):
         return False
     if not isinstance(pth.execution_results, PersiDict):
@@ -114,6 +135,8 @@ def is_correctly_initialized():
         return False
     if not isinstance(pth.event_log, PersiDict):
         return False
+    if not isinstance(pth.execution_nodes, PersiDict):
+        return False
     if not isinstance(pth.default_island_name, str):
         return False
     if not isinstance(pth.all_autonomous_functions, dict):
@@ -121,6 +144,8 @@ def is_correctly_initialized():
     if not isinstance(pth.entropy_infuser, random.Random):
         return False
     if not isinstance(pth.n_background_workers, int):
+        return False
+    if not isinstance(pth.runtime_id, str):
         return False
     if len(pth.all_autonomous_functions) > 0: # TODO: rework later
         for island_name in pth.all_autonomous_functions:
@@ -154,6 +179,9 @@ def is_global_state_correct():
     return result
 
 def _clean_global_state():
+    if isinstance(pth.execution_nodes, PersiDict):
+        node_id = pth.get_node_signature()
+        del pth.execution_nodes[node_id,"runtime_id"]
     pth.value_store = None
     pth.function_garage = None #???
     pth.function_source_repository = None
@@ -161,14 +189,24 @@ def _clean_global_state():
     pth.operational_hub = None
     pth.crash_history = None
     pth.event_log = None
+    pth.execution_nodes = None
     pth.all_autonomous_functions = None
     pth.default_island_name = None
     pth.initialization_parameters = None
     pth.entropy_infuser = None
     pth.n_background_workers = None
+    pth.runtime_id = None
     unregister_exception_handlers()
     assert pth.is_fully_unitialized()
     assert pth.is_global_state_correct()
+
+class PythagorasContext:
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        _clean_global_state()
 
 
 def get_all_island_names() -> set[str]:

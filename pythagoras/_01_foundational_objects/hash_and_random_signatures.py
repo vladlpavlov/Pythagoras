@@ -1,5 +1,4 @@
-import sys
-import uuid
+import platform, getpass, sys, uuid
 from typing import Any
 
 import joblib.hashing
@@ -29,6 +28,19 @@ def get_base32_hash_signature(x:Any) -> str:
 
 def get_hash_signature(x:Any) -> str:
     return get_base32_hash_signature(x)[:max_signature_length]
+
+
+def get_node_signature() -> str:
+    mac = uuid.getnode()
+    system = platform.system()
+    release = platform.release()
+    version = platform.version()
+    machine = platform.machine()
+    processor = platform.processor()
+    user = getpass.getuser()
+    id_string = f"{mac}{system}{release}{version}"
+    id_string += f"{machine}{processor}{user}"
+    return get_hash_signature(id_string)
 
 
 def get_random_signature() -> str:

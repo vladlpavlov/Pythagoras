@@ -26,7 +26,9 @@ crash_history: Optional[PersiDict] = None
 event_log: Optional[PersiDict] = None
 
 operational_hub:Optional[OperationalHub] = None
+execution_nodes:Optional[PersiDict] = None
 
+runtime_id: Optional[str] = None
 all_autonomous_functions:Optional[Dict[str|None,Dict[str,AutonomousFunction]]] = None
 default_island_name: Optional[str] = None
 entropy_infuser: Optional[Random] = None

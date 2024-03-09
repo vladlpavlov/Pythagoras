@@ -8,6 +8,17 @@ import pythagoras as pth
 
 ctx = None
 
+def parent_runtime_is_live():
+    node_id = pth.get_node_signature()
+    try:
+        if pth.runtime_id == pth.execution_nodes[node_id,"runtime_id"]:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
 def process_random_execution_request(pth_init_params:dict):
     pth_init_params["n_background_workers"] = 0
     pth.initialize(**pth_init_params)
@@ -18,6 +29,8 @@ def process_random_execution_request(pth_init_params:dict):
         while len(candidate_addresses) == 0:
             random_delay = pth.entropy_infuser.uniform(0.5, 1.5)
             sleep(random_delay)
+            if not parent_runtime_is_live():
+                return
             for seq in pth.operational_hub.binary:
                 new_addresses = pth.FunctionExecutionResultAddress.from_strings(
                     prefix=seq[0], hash_value=seq[1], assert_readiness=False)
@@ -47,6 +60,8 @@ def background_worker(pth_init_params:dict):
         while True:
             random_delay = pth.entropy_infuser.uniform(0.1, 0.5)
             sleep(random_delay)
+            if not parent_runtime_is_live():
+                return
             p = ctx.Process(
                 target=process_random_execution_request
                 , kwargs=subpr_kwargs)
@@ -60,6 +75,7 @@ def launch_background_worker(pth_init_params:dict | None = None):
         pth_init_params = deepcopy(pth.initialization_parameters)
 
     pth_init_params["n_background_workers"] = 0
+    pth_init_params["runtime_id"] = pth.runtime_id
 
     global ctx
     if ctx is None:
