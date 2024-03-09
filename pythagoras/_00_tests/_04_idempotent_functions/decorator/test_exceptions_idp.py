@@ -1,7 +1,7 @@
 import pytest
 
 from pythagoras._04_idempotent_functions import idempotent
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 from pythagoras._05_events_and_exceptions.current_date_gmt_str import (
     current_date_gmt_string)
@@ -11,7 +11,7 @@ import pythagoras as pth
 
 def test_zero_div(tmpdir):
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(tmpdir, n_background_workers=0)
     # initialize(base_dir="EEEEEEEEEEEEEEEEEEEE")
 
     date_str_1 = current_date_gmt_string()
@@ -36,7 +36,7 @@ def test_zero_div(tmpdir):
 
 def test_sqrt(tmpdir):
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     date_str_1 = current_date_gmt_string()
 

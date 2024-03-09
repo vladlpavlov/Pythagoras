@@ -19,7 +19,8 @@ setuptools.setup(
         , "pythagoras._03_autonomous_functions"
         , "pythagoras._04_idempotent_functions"
         , "pythagoras._05_events_and_exceptions"
-        , "pythagoras._06_mission_control"
+        , "pythagoras._06_swarming"
+        , "pythagoras._07_mission_control"
         , "pythagoras._99_misc_utils"
         ]
     ,classifiers=[

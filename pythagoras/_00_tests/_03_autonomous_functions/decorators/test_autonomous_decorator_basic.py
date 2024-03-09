@@ -1,12 +1,12 @@
 
 from pythagoras._03_autonomous_functions import *
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
 def test_strictly_autonomous(tmpdir):
 
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     def f(a: int):
         b = 24
@@ -27,7 +27,7 @@ def h(a:int):
 
 def test_not_autonomous(tmpdir):
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
     assert not is_autonomous(h)
     assert not is_loosely_autonomous(h)
     assert not is_strictly_autonomous(h)
@@ -37,7 +37,7 @@ def test_not_autonomous(tmpdir):
 
 def test_autonomous(tmpdir):
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     @autonomous(island_name="DEMO")
     def zyx(a: int):
@@ -58,7 +58,7 @@ def f_2():
 
 def test_default_island_chained(tmpdir):
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     global f_1, f_2
     f_1 = autonomous(island_name=DefaultIsland)(f_1)
@@ -78,7 +78,7 @@ def g_1():
 
 def test_chained_reversed_order(tmpdir):
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     global g_1, g_2
 

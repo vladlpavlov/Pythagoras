@@ -4,7 +4,7 @@ from pythagoras._01_foundational_objects.value_addresses import ValueAddress
 
 from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
 from pythagoras._04_idempotent_functions.idempotency_checks import is_idempotent
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
 import pythagoras as pth
@@ -24,7 +24,7 @@ def f4():
 
 def test_conflicted_chained_save_load(tmpdir):
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     global f1, f2, f3, f4
 
@@ -43,7 +43,7 @@ def test_conflicted_chained_save_load(tmpdir):
     assert address_4.get()() == 0
 
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(tmpdir, n_background_workers=0)
     del f1, f2, f3, f4
 
     @idempotent()

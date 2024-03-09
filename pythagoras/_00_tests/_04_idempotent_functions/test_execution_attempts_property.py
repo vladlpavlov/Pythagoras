@@ -1,7 +1,7 @@
 import pytest
 
 from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
 import pythagoras as pth
@@ -10,7 +10,7 @@ import pythagoras as pth
 def test_execution_attempts_simple(tmpdir):
 
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
 
     @idempotent()
@@ -26,7 +26,7 @@ def test_execution_attempts_simple(tmpdir):
 def test_execution_attempts_weird(tmpdir):
 
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
 
     @idempotent()

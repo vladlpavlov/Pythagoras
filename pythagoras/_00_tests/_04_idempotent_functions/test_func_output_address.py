@@ -3,7 +3,7 @@ import pytest
 from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
 from pythagoras._04_idempotent_functions.idempotent_func_address_context import (
     FunctionExecutionResultAddress)
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
 import pythagoras as pth
@@ -18,7 +18,7 @@ def factorial(n:int) -> int:
 def test_idp_factorial(tmpdir):
 
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(base_dir=tmpdir,n_background_workers=0)
 
     global factorial
     factorial = idempotent()(factorial)

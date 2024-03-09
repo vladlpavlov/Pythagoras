@@ -1,11 +1,11 @@
 from pythagoras._03_autonomous_functions import autonomous
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
 
 def test_nested_from_import(tmpdir):
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(base_dir=tmpdir, n_background_workers=0)
 
     @autonomous()
     def f(x:float)->float:
@@ -17,7 +17,7 @@ def test_nested_from_import(tmpdir):
 
 def test_nested_import_as(tmpdir):
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(base_dir=tmpdir,n_background_workers=0)
 
     @autonomous()
     def f(x:float)->float:
@@ -28,7 +28,7 @@ def test_nested_import_as(tmpdir):
 
 def test_nested_from_import_as(tmpdir):
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(base_dir=tmpdir,n_background_workers=0)
 
     @autonomous()
     def f(x:float)->float:

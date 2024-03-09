@@ -1,5 +1,5 @@
 from pythagoras._03_autonomous_functions import *
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
 import pytest
@@ -31,7 +31,7 @@ def f_6():
 
 def test_two_chains_with_errors(tmpdir):
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
     global f_1, f_2, f_3, f_4, f_5, f_6
 
     f_1 = autonomous(island_name="Moon")(f_1)

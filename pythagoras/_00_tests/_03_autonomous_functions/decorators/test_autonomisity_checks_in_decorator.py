@@ -4,14 +4,14 @@ from pythagoras._03_autonomous_functions import *
 
 import sys
 
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
 def test_globals(tmpdir):
     """Test autonomous function wrapper with global objects."""
 
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     @autonomous()
     def good_global_f():
@@ -44,7 +44,7 @@ def test_locals_2(tmpdir):
 
 
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     import random
 
@@ -69,7 +69,7 @@ def test_locals_2(tmpdir):
 def test_non_classic_callables(tmpdir):
 
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     with pytest.raises(Exception):
         autonomous()(lambda x: x**2)
@@ -100,7 +100,7 @@ def test_non_classic_callables(tmpdir):
 def test_yield(tmpdir):
 
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     with pytest.raises(Exception):
         @autonomous()
@@ -110,7 +110,7 @@ def test_yield(tmpdir):
 def test_nested_yield(tmpdir):
 
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     @autonomous()
     def f_y():

@@ -1,7 +1,7 @@
 import pytest
 
 import pythagoras as pth
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state)
 
 def test_init_checks(tmpdir):
@@ -18,7 +18,7 @@ def test_init_checks(tmpdir):
     pth.autonomous(require_pth=False)(f_2)
 
     _clean_global_state()
-    pth.initialize(base_dir=tmpdir)
+    pth.initialize(base_dir=tmpdir, n_background_workers=0)
 
     pth.autonomous()(f_1)
     pth.autonomous()(f_2)

@@ -1,6 +1,6 @@
 from pythagoras._03_autonomous_functions import *
 import pytest
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 import pythagoras as pth
 
@@ -8,7 +8,7 @@ import pythagoras as pth
 
 def test_2_didderent_functions_same_name(tmpdir):
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
     def f():
         return 1
     f_1 = autonomous(island_name="Moon")(f)
@@ -28,7 +28,7 @@ def test_2_didderent_functions_same_name(tmpdir):
 
 def test_2_similar_functions_same_name(tmpdir):
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
     def f():
         return 100
     f_1 = autonomous(island_name="Moon")(f)

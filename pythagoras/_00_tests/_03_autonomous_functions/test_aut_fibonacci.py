@@ -1,12 +1,9 @@
 import pytest
 
-from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
-from pythagoras._04_idempotent_functions.idempotency_checks import is_idempotent
-from pythagoras._03_autonomous_functions.autonomous_decorators import autonomous
-from pythagoras._06_mission_control.global_state_management import (
-    _clean_global_state, initialize)
 
-import pythagoras as pth
+from pythagoras._03_autonomous_functions.autonomous_decorators import autonomous
+from pythagoras._07_mission_control.global_state_management import (
+    _clean_global_state, initialize)
 
 
 def fibonacci(n: int) -> int:
@@ -17,7 +14,7 @@ def fibonacci(n: int) -> int:
 
 def test_aut_fibonacci(tmpdir):
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(base_dir=tmpdir,n_background_workers=0)
 
     global fibonacci
     fibonacci = autonomous()(fibonacci)

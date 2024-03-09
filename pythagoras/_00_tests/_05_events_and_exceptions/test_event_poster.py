@@ -2,15 +2,15 @@ import pytest
 
 import pythagoras as pth
 
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state)
-from pythagoras._05_events_and_exceptions.event_poster import (
+from pythagoras._05_events_and_exceptions.event_posters import (
     post_event)
 
 
 def test_outside_a_function(tmpdir):
     _clean_global_state()
-    pth.initialize(tmpdir)
+    pth.initialize(tmpdir, n_background_workers=0)
     pth.post_event()
     assert len(pth.event_log) == 1
     pth.post_event(msg = "one more")
@@ -18,7 +18,7 @@ def test_outside_a_function(tmpdir):
 
 def test_labeled_outside_a_function(tmpdir):
     _clean_global_state()
-    pth.initialize(tmpdir)
+    pth.initialize(tmpdir, n_background_workers=0)
     for i in range(3):
         post_event["QWERTYTREWQ"]()
     assert len(pth.event_log) == 3
@@ -34,7 +34,7 @@ def test_no_initialization():
 
 def test_inside_an_idempotent_function(tmpdir):
     _clean_global_state()
-    pth.initialize(tmpdir)
+    pth.initialize(tmpdir, n_background_workers=0)
     @pth.idempotent()
     def some_function():
         post_event(m="test_event")

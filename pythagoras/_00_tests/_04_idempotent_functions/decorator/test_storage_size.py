@@ -2,7 +2,7 @@ import pytest
 
 from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
 from pythagoras._04_idempotent_functions.idempotency_checks import is_idempotent
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
 import pythagoras as pth
@@ -12,7 +12,7 @@ import pythagoras as pth
 def test_no_args(tmpdir):
 
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     assert len(pth.value_store) == 0
     @idempotent()
@@ -26,7 +26,7 @@ def test_no_args(tmpdir):
 def test_two_args(tmpdir):
 
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     assert len(pth.value_store) == 0
 

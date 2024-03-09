@@ -116,8 +116,13 @@ class IdempotentFunction(AutonomousFunction):
 
     def get_address(self, **kwargs) -> FunctionExecutionResultAddress:
         packed_kwargs = PackedKwArgs(**kwargs)
-        output_address = FunctionExecutionResultAddress(self, packed_kwargs)
-        return output_address
+        result_address = FunctionExecutionResultAddress(self, packed_kwargs)
+        return result_address
+
+    def swarm(self, **kwargs) -> FunctionExecutionResultAddress:
+        result_address = self.get_address(**kwargs)
+        result_address.request_execution()
+        return result_address
 
 
     def execute(self, **kwargs) -> Any:
@@ -173,13 +178,11 @@ class FunctionCallSignature:
         self.args_addr = ValueAddress(arguments.pack())
 
 class FunctionExecutionResultAddress(HashAddress):
-    value_prefix: str|None = None
     def __init__(self, f: IdempotentFunction, arguments:dict[str, Any]):
         assert isinstance(f, IdempotentFunction)
         arguments = SortedKwArgs(**arguments)
         signature = FunctionCallSignature(f,arguments)
         tmp = ValueAddress(signature)
-        self.value_prefix = tmp.prefix
         new_prefix = f.f_name
         if f.island_name is not None:
             new_prefix += "_" + f.island_name
@@ -187,12 +190,18 @@ class FunctionExecutionResultAddress(HashAddress):
         super().__init__(new_prefix, new_hash_value)
 
     def get_ValueAddress(self):
-        return ValueAddress.from_strings(
-            prefix=self.value_prefix, hash_value=self.hash_value)
+        return ValueAddress.from_strings(  # TODO: refactor this
+            prefix="functioncallsignature", hash_value=self.hash_value)
 
     @property
     def ready(self):
         result =  self in pth.execution_results
+        return result
+
+    def execute(self):
+        function = self.function
+        arguments = self.arguments
+        result = function.execute(**arguments)
         return result
 
     def request_execution(self):

@@ -1,7 +1,7 @@
 import sys
 
-from pythagoras.OLD_p_cloud import SharedStorage_P2P_Cloud, PFuncOutputAddress, PValueAddress, PFunctionCallSignature, \
-    KwArgsDict, post_log_entry
+from pythagoras.________OLD________.OLD_p_cloud import SharedStorage_P2P_Cloud, PFuncOutputAddress, \
+    post_log_entry
 
 if sys.argv[1] == SharedStorage_P2P_Cloud.__name__:
     assert len(sys.argv) == 6

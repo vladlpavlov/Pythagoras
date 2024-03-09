@@ -1,13 +1,13 @@
 from pythagoras import ValueAddress
 from pythagoras._04_idempotent_functions.kw_args import PackedKwArgs
-from pythagoras._06_mission_control.global_state_management import _clean_global_state, \
+from pythagoras._07_mission_control.global_state_management import _clean_global_state, \
     initialize
 
 
 def test_packed_kwargs(tmpdir):
     """Test PackedKwArgs constructor and basic functions."""
     _clean_global_state()
-    initialize(base_dir=tmpdir, default_island_name="test", cloud_type="local")
+    initialize(base_dir=tmpdir, n_background_workers=0)
 
     sampe_dict = { "e": 0, "c":1, "b":2, "a":3}
     assert list(sampe_dict.keys()) != sorted(sampe_dict.keys())

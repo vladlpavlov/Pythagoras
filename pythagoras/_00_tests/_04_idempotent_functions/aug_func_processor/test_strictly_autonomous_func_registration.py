@@ -1,5 +1,5 @@
 import pytest
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
     process_augmented_func_src)
@@ -17,7 +17,7 @@ def f_1_2():
 
 def test_strictly_autonomous_func_registration(tmpdir):
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     assert len(pth.all_autonomous_functions) == 2
     assert len(pth.all_autonomous_functions[None]) == 0

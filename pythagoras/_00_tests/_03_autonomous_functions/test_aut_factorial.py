@@ -1,15 +1,7 @@
-import pytest
 
-from persidict import FileDirDict
-
-from pythagoras._02_ordinary_functions.ordinary_decorator import ordinary
 from pythagoras._03_autonomous_functions.autonomous_decorators import autonomous
-from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
-from pythagoras._04_idempotent_functions.idempotency_checks import is_idempotent
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
-
-import pythagoras as pth
 
 
 def factorial(n:int) -> int:
@@ -21,7 +13,7 @@ def factorial(n:int) -> int:
 def test_aut_factorial(tmpdir):
 
     _clean_global_state()
-    initialize(base_dir=tmpdir)
+    initialize(base_dir=tmpdir,n_background_workers=0)
 
     global factorial
     factorial = autonomous()(factorial)

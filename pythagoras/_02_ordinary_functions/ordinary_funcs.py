@@ -25,7 +25,10 @@ class OrdinaryFunction:
             self.name = get_function_name_from_source(self.naked_source_code)
 
 
-    def __call__(self, **kwargs):
+    def __call__(self,*args, **kwargs):
+        assert len(args) == 0, (f"Function {self.name} can't"
+            + " be called with positional arguments,"
+            + " only keyword arguments are allowed.")
         names_dict = dict(globals())
         names_dict.update(locals())
         names_dict["__pth_kwargs"] = kwargs

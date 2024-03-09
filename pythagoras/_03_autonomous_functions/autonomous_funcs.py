@@ -24,7 +24,7 @@ from pythagoras._03_autonomous_functions.pth_available_names_retriever import (
 from pythagoras._05_events_and_exceptions.global_event_loggers import (
     register_exception_globally)
 
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     is_correctly_initialized)
 
 import pythagoras as pth
@@ -175,7 +175,10 @@ class AutonomousFunction(OrdinaryFunction):
                 register_exception_globally(exception_id=exception_id)
             raise e
 
-    def __call__(self, **kwargs) -> Any:
+    def __call__(self,* args, **kwargs) -> Any:
+        assert len(args) == 0, (f"Function {self.name} can't"
+            + " be called with positional arguments,"
+            + " only keyword arguments are allowed.")
         return self.execute(**kwargs)
 
     def __getstate__(self):

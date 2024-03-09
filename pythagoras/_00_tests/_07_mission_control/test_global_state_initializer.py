@@ -1,12 +1,15 @@
 import pythagoras as pth
-from pythagoras._06_mission_control.global_state_management import _clean_global_state
+from pythagoras._07_mission_control.global_state_management import _clean_global_state
 
 
 def test_local_initialization(tmp_path):
     _clean_global_state()
 
     init_params = dict(
-        cloud_type="local",base_dir=tmp_path, default_island_name="kuku")
+        cloud_type="local"
+        ,base_dir=tmp_path
+        , default_island_name="kuku"
+        ,n_background_workers=0)
 
     pth.initialize(**init_params)
 
@@ -15,13 +18,15 @@ def test_local_initialization(tmp_path):
 
     assert pth.initialization_parameters == init_params
     assert len(pth.value_store) == 0
-    # assert len(pth.crash_history) == 0
     assert pth.default_island_name == "kuku"
 
 def test_corrupt_value_store(tmp_path):
     _clean_global_state()
     init_params = dict(
-        cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
+        cloud_type="local"
+        , base_dir=tmp_path
+        , default_island_name="kuku"
+        ,n_background_workers=0)
 
     pth.initialize(**init_params)
     pth.value_store = None
@@ -33,7 +38,10 @@ def test_corrupt_value_store(tmp_path):
 def test_corrupt_autonomous_functions(tmp_path):
     _clean_global_state()
     init_params = dict(
-        cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
+        cloud_type="local"
+        , base_dir=tmp_path
+        , default_island_name="kuku"
+        ,n_background_workers=0)
 
     pth.initialize(**init_params)
     pth.all_autonomous_functions = "To be, or not to be, that is the question"
@@ -44,7 +52,10 @@ def test_corrupt_autonomous_functions(tmp_path):
 def test_corrupt_island_name(tmp_path):
     _clean_global_state()
     init_params = dict(
-        cloud_type="local", base_dir=tmp_path, default_island_name="kuku")
+        cloud_type="local"
+        , base_dir=tmp_path
+        , default_island_name="kuku"
+        , n_background_workers=0)
 
     pth.initialize(**init_params)
     pth.default_island_name = "new name"

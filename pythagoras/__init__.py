@@ -15,7 +15,8 @@ from pythagoras._02_ordinary_functions import *
 from pythagoras._03_autonomous_functions import *
 from pythagoras._04_idempotent_functions import *
 from pythagoras._05_events_and_exceptions import *
-from pythagoras._06_mission_control import *
+from pythagoras._06_swarming import *
+from pythagoras._07_mission_control import *
 
 
 value_store:Optional[PersiDict] = None
@@ -29,6 +30,7 @@ operational_hub:Optional[OperationalHub] = None
 all_autonomous_functions:Optional[Dict[str|None,Dict[str,AutonomousFunction]]] = None
 default_island_name: Optional[str] = None
 entropy_infuser: Optional[Random] = None
+n_background_workers: Optional[int] = None
 initialization_parameters: Optional[dict] = None
 
 primary_decorators = {d.__name__:d for d in [

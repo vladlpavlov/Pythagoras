@@ -1,5 +1,5 @@
 import pytest
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
     process_augmented_func_src)
@@ -50,7 +50,7 @@ def f_5_3():
 
 def test_basic_input_validation(tmpdir):
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
     process_augmented_func_src(src_1_good)
 
     with pytest.raises(Exception):

@@ -1,6 +1,6 @@
 from pythagoras import autonomous
 
-from pythagoras._06_mission_control.global_state_management import (
+from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, initialize)
 
 
@@ -70,7 +70,7 @@ def total():
 
 def test_tree(tmpdir):
     _clean_global_state()
-    initialize(tmpdir)
+    initialize(tmpdir, n_background_workers=0)
 
     global f_1, f_2, f_3, f_4, f_5, f_6, f_1_2, f_2_3
     global f_3_4, f_4_5, f_5_6, f_1_2_3, f_2_3_4, f_3_4_5

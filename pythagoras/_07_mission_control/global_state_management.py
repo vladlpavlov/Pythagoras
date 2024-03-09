@@ -10,10 +10,11 @@ from pythagoras._05_events_and_exceptions.uncaught_exception_handlers import (
     register_exception_handlers, unregister_exception_handlers, pth_excepthook)
 from pythagoras._05_events_and_exceptions.notebook_checker import (
     is_executed_in_notebook)
-from pythagoras._06_mission_control.operational_hub import OperationalHub
+from pythagoras._07_mission_control.operational_hub import OperationalHub
 
 
 def initialize(base_dir:str
+               , n_background_workers:int
                , cloud_type:str = "local"
                , default_island_name:str = "Samos") -> None:
     """ Initialize Pythagoras.
@@ -30,6 +31,10 @@ def initialize(base_dir:str
     else:
         assert False, "AWS support not yet implemented"
 
+    n_background_workers = int(n_background_workers)
+    assert n_background_workers >= 0
+    pth.n_background_workers = n_background_workers
+
     pth.entropy_infuser = random.Random()
 
     assert not os.path.isfile(base_dir)
@@ -40,12 +45,6 @@ def initialize(base_dir:str
     value_store_dir = os.path.join(base_dir, "value_store")
     pth.value_store = dict_type(
         value_store_dir, digest_len=0, immutable_items=True)
-
-    # func_garage_dir = os.path.join(base_dir, "func_garage")
-    # pth.function_garage = dict_type(func_garage_dir, digest_len=0)
-    # pth.function_source_repository = dict_type(
-    #     func_garage_dir, digest_len=0, file_type="py"
-    #     , base_class_for_values=str)
 
     crash_history_dir = os.path.join(base_dir, "crash_history")
     pth.crash_history = dict_type(crash_history_dir
@@ -70,12 +69,17 @@ def initialize(base_dir:str
     pth.all_autonomous_functions[default_island_name] = dict()
     pth.all_autonomous_functions[None] = dict()
 
-    parameters = dict(cloud_type=cloud_type
-        , base_dir=base_dir, default_island_name=default_island_name)
+    parameters = dict(base_dir=base_dir
+        ,cloud_type=cloud_type
+        ,n_background_workers=n_background_workers
+        ,default_island_name=default_island_name)
 
     pth.initialization_parameters = parameters
 
     register_exception_handlers()
+
+    for n in range(n_background_workers):
+        pth.launch_background_worker()
 
 
 
@@ -91,6 +95,7 @@ def is_fully_unitialized():
     result &= pth.all_autonomous_functions is None
     result &= pth.initialization_parameters is None
     result &= pth.entropy_infuser is None
+    result &= pth.n_background_workers is None
     return result
 
 def is_correctly_initialized():
@@ -114,6 +119,8 @@ def is_correctly_initialized():
     if not isinstance(pth.all_autonomous_functions, dict):
         return False
     if not isinstance(pth.entropy_infuser, random.Random):
+        return False
+    if not isinstance(pth.n_background_workers, int):
         return False
     if len(pth.all_autonomous_functions) > 0: # TODO: rework later
         for island_name in pth.all_autonomous_functions:
@@ -158,6 +165,7 @@ def _clean_global_state():
     pth.default_island_name = None
     pth.initialization_parameters = None
     pth.entropy_infuser = None
+    pth.n_background_workers = None
     unregister_exception_handlers()
     assert pth.is_fully_unitialized()
     assert pth.is_global_state_correct()
