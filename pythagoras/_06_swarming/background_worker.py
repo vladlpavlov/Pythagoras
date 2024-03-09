@@ -1,11 +1,12 @@
 from time import sleep
 from copy import deepcopy
 import os, sys
-from multiprocessing import Process
+from multiprocessing import get_context, Process
 
 from pythagoras._99_misc_utils.output_suppressor import OutputSuppressor
 import pythagoras as pth
 
+ctx = None
 
 def process_random_execution_request(pth_init_params:dict):
     pth_init_params["n_background_workers"] = 0
@@ -38,11 +39,15 @@ def background_worker(pth_init_params:dict):
     pth.initialize(**pth_init_params)
     subpr_kwargs = dict(pth_init_params=pth_init_params)
 
+    global ctx
+    if ctx is None:
+        ctx = get_context("spawn")
+
     with OutputSuppressor():
         while True:
             random_delay = pth.entropy_infuser.uniform(0.1, 0.5)
             sleep(random_delay)
-            p = Process(
+            p = ctx.Process(
                 target=process_random_execution_request
                 , kwargs=subpr_kwargs)
             p.start()
@@ -56,8 +61,12 @@ def launch_background_worker(pth_init_params:dict | None = None):
 
     pth_init_params["n_background_workers"] = 0
 
+    global ctx
+    if ctx is None:
+        ctx = get_context("spawn")
+
     subpr_kwargs = dict(
         pth_init_params = pth_init_params)
-    p = Process(target=background_worker, kwargs=subpr_kwargs)
+    p = ctx.Process(target=background_worker, kwargs=subpr_kwargs)
     p.start()
     return p
