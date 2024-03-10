@@ -18,7 +18,7 @@ def summary(include_current_session:bool = True, print_result:bool = False):
     result += f"{len(pth.crash_history)=} \n"
     result += f"{len(pth.event_log)=} \n"
     result += f"{len(pth.execution_requests)=} \n"
-    result += f"{len(pth.compute_nodes)=} \n"
+    result += f"{len(pth.compute_nodes.subdicts())=} \n"
 
 
     if include_current_session:
