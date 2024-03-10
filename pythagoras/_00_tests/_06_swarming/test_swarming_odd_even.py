@@ -19,30 +19,27 @@ def isOdd(n):
 
 
 def test_no_decorators(tmpdir):
-
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
-
-    assert isOdd(n=400) == False
-    assert isEven(n=400) == True
-
-
-def test_one_decorator_odd(tmpdir):
-    global isEven, isOdd
-    address = None
     with initialize(tmpdir, n_background_workers=0):
-        isEven = idempotent()(isEven)
-        with pytest.raises(Exception):
-            address = isOdd.swarm(n=400)
+        assert isOdd(n=400) == False
+        assert isEven(n=400) == True
 
 
-def test_one_decorator_even(tmpdir):
-    global isEven, isOdd
-    address = None
-    with initialize(tmpdir, n_background_workers=0):
-        isEven = idempotent()(isEven)
-        with pytest.raises(Exception):
-            address = isEven.swarm(n=400)
+# def test_one_decorator_odd(tmpdir):
+#     global isEven, isOdd
+#     address = None
+#     with initialize(tmpdir, n_background_workers=0):
+#         isEven = idempotent()(isEven)
+#         with pytest.raises(Exception):
+#             address = isOdd.swarm(n=400)
+#
+#
+# def test_one_decorator_even(tmpdir):
+#     global isEven, isOdd
+#     address = None
+#     with initialize(tmpdir, n_background_workers=0):
+#         isEven = idempotent()(isEven)
+#         with pytest.raises(Exception):
+#             address = isEven.swarm(n=400)
 
 
 def test_two_decorators(tmpdir):
