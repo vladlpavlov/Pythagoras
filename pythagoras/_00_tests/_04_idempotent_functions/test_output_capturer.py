@@ -1,5 +1,5 @@
 import sys, logging
-from pythagoras._99_misc_utils.output_capturer import OutputCapturer
+from pythagoras._04_idempotent_functions.output_capturer import OutputCapturer
 
 def test_capture_stdout():
     with OutputCapturer() as capturer:

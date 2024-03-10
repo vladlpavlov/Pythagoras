@@ -7,7 +7,7 @@ from typing import Callable, Any
 from persidict import PersiDict
 
 import pythagoras as pth
-from pythagoras import get_random_signature, OutputCapturer
+from pythagoras import get_random_signature
 
 from pythagoras._01_foundational_objects.hash_addresses import HashAddress
 from pythagoras._01_foundational_objects.value_addresses import ValueAddress
@@ -25,6 +25,7 @@ from pythagoras._04_idempotent_functions.kw_args import (
     UnpackedKwArgs, PackedKwArgs, SortedKwArgs)
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
     process_augmented_func_src)
+from pythagoras._04_idempotent_functions.output_capturer import OutputCapturer
 from pythagoras._05_events_and_exceptions.execution_environment_summary import (
     build_execution_environment_summary, add_execution_environment_summary)
 from pythagoras._05_events_and_exceptions.global_event_loggers import (

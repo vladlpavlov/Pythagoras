@@ -1,9 +1,8 @@
 from time import sleep
 from copy import deepcopy
-import os, sys
-from multiprocessing import get_context, Process
+from multiprocessing import get_context
 
-from pythagoras._99_misc_utils.output_suppressor import OutputSuppressor
+from pythagoras._06_swarming.output_suppressor import OutputSuppressor
 import pythagoras as pth
 
 

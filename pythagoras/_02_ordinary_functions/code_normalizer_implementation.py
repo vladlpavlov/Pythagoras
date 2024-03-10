@@ -16,10 +16,10 @@ parsing and formatting. Internal utilities from `pythagoras` are also utilized.
 from __future__ import annotations
 import ast
 import inspect
-from typing import Callable, Union
+from typing import Callable
 import autopep8
 
-from pythagoras._99_misc_utils.function_name import get_function_name_from_source
+from pythagoras._02_ordinary_functions.function_name import get_function_name_from_source
 from pythagoras._99_misc_utils.long_infoname import get_long_infoname
 from pythagoras._02_ordinary_functions.assert_ordinarity import assert_ordinarity
 import pythagoras as pth

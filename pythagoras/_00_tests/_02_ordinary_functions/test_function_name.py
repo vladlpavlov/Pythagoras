@@ -1,4 +1,5 @@
-from pythagoras import get_function_name_from_source
+from pythagoras._02_ordinary_functions.function_name import (
+    get_function_name_from_source)
 
 from inspect import getsource
 

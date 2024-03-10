@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Callable
 
 
-from pythagoras._99_misc_utils.function_name import (
+from pythagoras._02_ordinary_functions.function_name import (
     get_function_name_from_source)
 from pythagoras._02_ordinary_functions.code_normalizer_implementation import (
     __get_normalized_function_source__)
