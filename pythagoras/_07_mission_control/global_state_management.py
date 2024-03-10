@@ -64,7 +64,7 @@ def initialize(base_dir:str
     pth.compute_nodes = dict_type(
         compute_nodes_dir, digest_len=0
         , immutable_items=False
-        , file_type="pkl")
+        , file_type="json")
 
     if runtime_id is None:
         node_id = get_node_signature()
