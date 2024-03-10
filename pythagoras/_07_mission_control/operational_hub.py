@@ -1,6 +1,6 @@
 from persidict import PersiDict,FileDirDict
 
-class OperationalHub:
+class RunHistory:
     jason: PersiDict
     python: PersiDict
     text: PersiDict

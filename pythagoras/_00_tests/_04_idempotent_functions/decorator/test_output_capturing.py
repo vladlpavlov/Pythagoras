@@ -16,4 +16,4 @@ def test_print(tmpdir):
     for i in range(1,4):
         f(n=i)
         f(n=i)
-        assert (len(pth.operational_hub.text) == i)
+        assert (len(pth.run_history.text) == i)

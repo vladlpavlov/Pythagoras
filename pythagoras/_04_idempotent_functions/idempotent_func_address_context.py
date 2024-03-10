@@ -208,19 +208,19 @@ class FunctionExecutionResultAddress(HashAddress):
     def request_execution(self):
         request_address = self + ["execution_requested"]
         if self in pth.execution_results:
-            if request_address in pth.operational_hub.binary:
-                del pth.operational_hub.binary[request_address]
+            if request_address in pth.run_history.binary:
+                del pth.run_history.binary[request_address]
         else:
-            if request_address not in pth.operational_hub.binary:
-                pth.operational_hub.binary[request_address] = True
+            if request_address not in pth.run_history.binary:
+                pth.run_history.binary[request_address] = True
 
     def drop_execution_request(self):
         request_address = self + ["execution_requested"]
-        pth.operational_hub.binary.delete_if_exists(request_address)
+        pth.run_history.binary.delete_if_exists(request_address)
 
     def is_execution_requested(self):
         request_address = self + ["execution_requested"]
-        return request_address in pth.operational_hub.binary
+        return request_address in pth.run_history.binary
 
     def get(self, timeout: int = None):
         """Retrieve value, referenced by the address.
@@ -316,25 +316,25 @@ class FunctionExecutionResultAddress(HashAddress):
     @property
     def execution_attempts(self) -> PersiDict:
         attempts_path = self + ["attempts"]
-        attempts = pth.operational_hub.jason.get_subdict(attempts_path)
+        attempts = pth.run_history.jason.get_subdict(attempts_path)
         return attempts
 
     @property
     def execution_outputs(self) -> PersiDict:
         outputs_path = self + ["outputs"]
-        outputs = pth.operational_hub.text.get_subdict(outputs_path)
+        outputs = pth.run_history.text.get_subdict(outputs_path)
         return outputs
 
     @property
     def crashes(self) -> PersiDict:
         crashes_path = self + ["crashes"]
-        crashes = pth.operational_hub.jason.get_subdict(crashes_path)
+        crashes = pth.run_history.jason.get_subdict(crashes_path)
         return crashes
 
     @property
     def events(self) -> PersiDict:
         events_path = self + ["events"]
-        events = pth.operational_hub.jason.get_subdict(events_path)
+        events = pth.run_history.jason.get_subdict(events_path)
         return events
 
 class FunctionExecutionContext:

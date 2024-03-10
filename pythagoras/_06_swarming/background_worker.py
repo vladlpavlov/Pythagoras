@@ -10,7 +10,7 @@ import pythagoras as pth
 def parent_runtime_is_live():
     node_id = pth.get_node_signature()
     try:
-        if pth.runtime_id == pth.execution_nodes[node_id,"runtime_id"]:
+        if pth.runtime_id == pth.compute_nodes[node_id, "runtime_id"]:
             return True
         else:
             return False
@@ -30,7 +30,7 @@ def process_random_execution_request(pth_init_params:dict):
             sleep(random_delay)
             if not parent_runtime_is_live():
                 return
-            for seq in pth.operational_hub.binary:
+            for seq in pth.run_history.binary:
                 new_addresses = pth.FunctionExecutionResultAddress.from_strings(
                     prefix=seq[0], hash_value=seq[1], assert_readiness=False)
                 if not new_addresses.needs_execution:

@@ -12,4 +12,4 @@ from pythagoras._07_mission_control.global_state_management import (
 from pythagoras._07_mission_control.summary import summary
 
 from pythagoras._07_mission_control.operational_hub import (
-    OperationalHub)
+    RunHistory)

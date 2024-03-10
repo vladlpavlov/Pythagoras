@@ -12,7 +12,7 @@ from pythagoras._05_events_and_exceptions.uncaught_exception_handlers import (
     register_exception_handlers, unregister_exception_handlers, pth_excepthook)
 from pythagoras._05_events_and_exceptions.notebook_checker import (
     is_executed_in_notebook)
-from pythagoras._07_mission_control.operational_hub import OperationalHub
+from pythagoras._07_mission_control.operational_hub import RunHistory
 
 
 def initialize(base_dir:str
@@ -49,9 +49,9 @@ def initialize(base_dir:str
     pth.value_store = dict_type(
         value_store_dir, digest_len=0, immutable_items=True)
 
-    execution_nodes_dir = os.path.join(base_dir, "execution_nodes")
-    pth.execution_nodes = dict_type(
-        execution_nodes_dir, digest_len=0
+    compute_nodes_dir = os.path.join(base_dir, "compute_nodes")
+    pth.compute_nodes = dict_type(
+        compute_nodes_dir, digest_len=0
         , immutable_items=False
         , file_type="pkl")
 
@@ -59,9 +59,9 @@ def initialize(base_dir:str
         node_id = pth.get_node_signature()
         runtime_id = pth.get_random_signature()
         pth.runtime_id = runtime_id
-        pth.execution_nodes[node_id,"runtime_id"]= runtime_id
+        pth.compute_nodes[node_id, "runtime_id"]= runtime_id
         summary = build_execution_environment_summary()
-        pth.execution_nodes[node_id, "execution_environment"] = summary
+        pth.compute_nodes[node_id, "execution_environment"] = summary
     else:
         pth.runtime_id = runtime_id
 
@@ -80,9 +80,9 @@ def initialize(base_dir:str
     pth.execution_results = dict_type(
         func_output_store_dir, digest_len=0, immutable_items=True)
 
-    operational_hub_dir = os.path.join(
-        base_dir, "operational_hub")
-    pth.operational_hub = OperationalHub(operational_hub_dir)
+    run_history_dir = os.path.join(
+        base_dir, "run_history")
+    pth.run_history = RunHistory(run_history_dir)
 
 
     pth.default_island_name = default_island_name
@@ -111,7 +111,7 @@ def is_fully_unitialized():
     result = True
     result &= pth.value_store is None
     result &= pth.execution_results is None
-    result &= pth.operational_hub is None
+    result &= pth.run_history is None
     result &= pth.crash_history is None
     result &= pth.event_log is None
     result &= pth.default_island_name is None
@@ -120,14 +120,14 @@ def is_fully_unitialized():
     result &= pth.entropy_infuser is None
     result &= pth.n_background_workers is None
     result &= pth.runtime_id is None
-    result &= pth.execution_nodes is None
+    result &= pth.compute_nodes is None
     return result
 
 def is_correctly_initialized():
     """ Check if Pythagoras is correctly initialized."""
     if not isinstance(pth.value_store, PersiDict):
         return False
-    if not isinstance(pth.operational_hub, OperationalHub):
+    if not isinstance(pth.run_history, RunHistory):
         return False
     if not isinstance(pth.execution_results, PersiDict):
         return False
@@ -135,7 +135,7 @@ def is_correctly_initialized():
         return False
     if not isinstance(pth.event_log, PersiDict):
         return False
-    if not isinstance(pth.execution_nodes, PersiDict):
+    if not isinstance(pth.compute_nodes, PersiDict):
         return False
     if not isinstance(pth.default_island_name, str):
         return False
@@ -179,17 +179,17 @@ def is_global_state_correct():
     return result
 
 def _clean_global_state():
-    if isinstance(pth.execution_nodes, PersiDict):
+    if isinstance(pth.compute_nodes, PersiDict):
         node_id = pth.get_node_signature()
-        del pth.execution_nodes[node_id,"runtime_id"]
+        del pth.compute_nodes[node_id, "runtime_id"]
     pth.value_store = None
     pth.function_garage = None #???
     pth.function_source_repository = None
     pth.execution_results = None
-    pth.operational_hub = None
+    pth.run_history = None
     pth.crash_history = None
     pth.event_log = None
-    pth.execution_nodes = None
+    pth.compute_nodes = None
     pth.all_autonomous_functions = None
     pth.default_island_name = None
     pth.initialization_parameters = None
