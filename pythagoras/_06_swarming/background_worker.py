@@ -6,7 +6,7 @@ from multiprocessing import get_context, Process
 from pythagoras._99_misc_utils.output_suppressor import OutputSuppressor
 import pythagoras as pth
 
-ctx = None
+
 
 def parent_runtime_is_live():
     node_id = pth.get_node_signature()
@@ -52,9 +52,7 @@ def background_worker(pth_init_params:dict):
     pth.initialize(**pth_init_params)
     subpr_kwargs = dict(pth_init_params=pth_init_params)
 
-    global ctx
-    if ctx is None:
-        ctx = get_context("spawn")
+    ctx = get_context("spawn")
 
     with OutputSuppressor():
         while True:
@@ -77,9 +75,7 @@ def launch_background_worker(pth_init_params:dict | None = None):
     pth_init_params["n_background_workers"] = 0
     pth_init_params["runtime_id"] = pth.runtime_id
 
-    global ctx
-    if ctx is None:
-        ctx = get_context("spawn")
+    ctx = get_context("spawn")
 
     subpr_kwargs = dict(
         pth_init_params = pth_init_params)
