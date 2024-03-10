@@ -12,18 +12,18 @@ from pythagoras._07_mission_control.global_state_management import (
 import pythagoras as pth
 
 
-def factorial(n:int) -> int:
+def factorial(n: int) -> int:
     if n in [0, 1]:
         return 1
     else:
-        return n * factorial(n=n-1)
+        return n * factorial(n=n - 1)
+
+def get_factorial_address(n:int, dir):
+    with initialize(dir, n_background_workers=0):
+        new_factorial = idempotent()(factorial)
+        return new_factorial.swarm(n=n)
 
 def test_swarming_factorial(tmpdir):
-    address = None
-    with initialize(tmpdir, n_background_workers=0):
-        global factorial
-        factorial = idempotent()(factorial)
-        address = factorial.swarm(n=5)
-
-    with initialize(tmpdir, n_background_workers=5):
+    address = get_factorial_address(n=5, dir=tmpdir)
+    with initialize(tmpdir, n_background_workers=2):
         assert address.get() == 120
