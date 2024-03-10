@@ -54,6 +54,8 @@ def initialize(base_dir:str
         os.mkdir(base_dir)
     assert os.path.isdir(base_dir)
 
+    pth.base_dir = os.path.abspath(base_dir)
+
     value_store_dir = os.path.join(base_dir, "value_store")
     pth.value_store = dict_type(
         value_store_dir, digest_len=0, immutable_items=True)

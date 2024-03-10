@@ -19,6 +19,8 @@ from pythagoras._06_swarming import *
 from pythagoras._07_mission_control import *
 
 
+base_dir:Optional[str] = None
+
 value_store:Optional[PersiDict] = None
 execution_results:Optional[PersiDict] = None
 execution_requests:Optional[PersiDict] = None

@@ -12,11 +12,13 @@ def summary(include_current_session:bool = True, print_result:bool = False):
 
     result = "\n"
     result += 20*"~" + " PERSISTENT STATE: " + 20*"~" + "\n"
+    result += f"{pth.base_dir=} \n"
     result += f"{len(pth.value_store)=} \n"
     result += f"{len(pth.execution_results)=} \n"
     result += f"{len(pth.crash_history)=} \n"
     result += f"{len(pth.event_log)=} \n"
     result += f"{len(pth.execution_requests)=} \n"
+    result += f"{len(pth.compute_nodes)=} \n"
 
 
     if include_current_session:
