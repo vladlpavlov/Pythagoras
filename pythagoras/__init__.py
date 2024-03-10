@@ -21,6 +21,7 @@ from pythagoras._07_mission_control import *
 
 value_store:Optional[PersiDict] = None
 execution_results:Optional[PersiDict] = None
+execution_requests:Optional[PersiDict] = None
 
 crash_history: Optional[PersiDict] = None
 event_log: Optional[PersiDict] = None

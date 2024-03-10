@@ -12,7 +12,7 @@ from pythagoras._05_events_and_exceptions.uncaught_exception_handlers import (
     register_exception_handlers, unregister_exception_handlers, pth_excepthook)
 from pythagoras._05_events_and_exceptions.notebook_checker import (
     is_executed_in_notebook)
-from pythagoras._07_mission_control.operational_hub import RunHistory
+from pythagoras._07_mission_control.run_history import RunHistory
 
 
 def initialize(base_dir:str
@@ -78,12 +78,18 @@ def initialize(base_dir:str
     func_output_store_dir = os.path.join(
         base_dir, "execution_results")
     pth.execution_results = dict_type(
-        func_output_store_dir, digest_len=0, immutable_items=True)
+        func_output_store_dir, digest_len=0
+        , immutable_items=True)
 
     run_history_dir = os.path.join(
         base_dir, "run_history")
     pth.run_history = RunHistory(run_history_dir)
 
+    execution_requests_dir = os.path.join(
+        base_dir, "execution_requests")
+    pth.execution_requests = dict_type(
+        execution_requests_dir, digest_len=0
+        , immutable_items=False)
 
     pth.default_island_name = default_island_name
     pth.all_autonomous_functions = dict()
@@ -111,6 +117,7 @@ def is_fully_unitialized():
     result = True
     result &= pth.value_store is None
     result &= pth.execution_results is None
+    result &= pth.execution_requests is None
     result &= pth.run_history is None
     result &= pth.crash_history is None
     result &= pth.event_log is None
@@ -130,6 +137,8 @@ def is_correctly_initialized():
     if not isinstance(pth.run_history, RunHistory):
         return False
     if not isinstance(pth.execution_results, PersiDict):
+        return False
+    if not isinstance(pth.execution_requests, PersiDict):
         return False
     if not isinstance(pth.crash_history, PersiDict):
         return False
@@ -183,9 +192,8 @@ def _clean_global_state():
         node_id = pth.get_node_signature()
         del pth.compute_nodes[node_id, "runtime_id"]
     pth.value_store = None
-    pth.function_garage = None #???
-    pth.function_source_repository = None
     pth.execution_results = None
+    pth.execution_requests = None
     pth.run_history = None
     pth.crash_history = None
     pth.event_log = None

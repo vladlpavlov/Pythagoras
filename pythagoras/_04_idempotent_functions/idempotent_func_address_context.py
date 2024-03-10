@@ -206,21 +206,17 @@ class FunctionExecutionResultAddress(HashAddress):
         return result
 
     def request_execution(self):
-        request_address = self + ["execution_requested"]
         if self in pth.execution_results:
-            if request_address in pth.run_history.binary:
-                del pth.run_history.binary[request_address]
+            pth.execution_requests.delete_if_exists(self)
         else:
-            if request_address not in pth.run_history.binary:
-                pth.run_history.binary[request_address] = True
+            if self not in pth.execution_requests:
+                pth.execution_requests[self] = True
 
     def drop_execution_request(self):
-        request_address = self + ["execution_requested"]
-        pth.run_history.binary.delete_if_exists(request_address)
+        pth.execution_requests.delete_if_exists(self)
 
     def is_execution_requested(self):
-        request_address = self + ["execution_requested"]
-        return request_address in pth.run_history.binary
+        return self in pth.execution_requests
 
     def get(self, timeout: int = None):
         """Retrieve value, referenced by the address.

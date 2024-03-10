@@ -30,9 +30,9 @@ def process_random_execution_request(pth_init_params:dict):
             sleep(random_delay)
             if not parent_runtime_is_live():
                 return
-            for seq in pth.run_history.binary:
+            for addr in pth.execution_requests:
                 new_addresses = pth.FunctionExecutionResultAddress.from_strings(
-                    prefix=seq[0], hash_value=seq[1], assert_readiness=False)
+                    prefix=addr[0], hash_value=addr[1], assert_readiness=False)
                 if not new_addresses.needs_execution:
                     continue
                 if not new_addresses.can_be_executed:
