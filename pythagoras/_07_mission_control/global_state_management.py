@@ -3,7 +3,9 @@ import random
 import sys
 
 from persidict import FileDirDict, PersiDict
-import pythagoras as pth
+
+from pythagoras._01_foundational_objects.hash_and_random_signatures import (
+    get_node_signature, get_random_signature)
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 from pythagoras._05_events_and_exceptions.execution_environment_summary import \
@@ -13,7 +15,14 @@ from pythagoras._05_events_and_exceptions.uncaught_exception_handlers import (
 from pythagoras._05_events_and_exceptions.notebook_checker import (
     is_executed_in_notebook)
 from pythagoras._07_mission_control.run_history import RunHistory
+from pythagoras._07_mission_control.summary import summary
 
+import pythagoras as pth
+
+
+def _force_initialize(*args, **kwargs):
+    _clean_global_state()
+    return initialize(*args, **kwargs)
 
 def initialize(base_dir:str
                , n_background_workers:int
@@ -56,8 +65,8 @@ def initialize(base_dir:str
         , file_type="pkl")
 
     if runtime_id is None:
-        node_id = pth.get_node_signature()
-        runtime_id = pth.get_random_signature()
+        node_id = get_node_signature()
+        runtime_id = get_random_signature()
         pth.runtime_id = runtime_id
         pth.compute_nodes[node_id, "runtime_id"]= runtime_id
         summary = build_execution_environment_summary()
@@ -189,7 +198,7 @@ def is_global_state_correct():
 
 def _clean_global_state():
     if isinstance(pth.compute_nodes, PersiDict):
-        node_id = pth.get_node_signature()
+        node_id = get_node_signature()
         del pth.compute_nodes[node_id, "runtime_id"]
     pth.value_store = None
     pth.execution_results = None
@@ -215,6 +224,12 @@ class PythagorasContext:
 
     def __exit__(self, exc_type, exc_value, traceback):
         _clean_global_state()
+
+    def __str__(self):
+        return summary(include_current_session=False)
+
+    def __repr__(self):
+        return summary(include_current_session=False)
 
 
 def get_all_island_names() -> set[str]:

@@ -1,6 +1,6 @@
 from pythagoras._03_autonomous_functions import *
 from pythagoras._07_mission_control.global_state_management import (
-    _clean_global_state, initialize)
+    _clean_global_state, initialize, _force_initialize)
 
 
 def f_2():
@@ -28,21 +28,20 @@ def f_4():
 
 
 def test_two_chains_no_errors(tmpdir):
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
+    with _force_initialize(tmpdir, n_background_workers=0):
 
-    global f_1, f_2, f_3, f_4, f_5, f_6
+        global f_1, f_2, f_3, f_4, f_5, f_6
 
-    f_2 = autonomous(island_name="Moon")(f_2)
-    f_3 = autonomous(island_name="Moon")(f_3)
-    f_1 = autonomous(island_name="Moon")(f_1)
-    f_5 = autonomous(island_name="Sun")(f_5)
-    f_6 = autonomous(island_name="Sun")(f_6)
-    f_4 = autonomous(island_name="Sun")(f_4)
+        f_2 = autonomous(island_name="Moon")(f_2)
+        f_3 = autonomous(island_name="Moon")(f_3)
+        f_1 = autonomous(island_name="Moon")(f_1)
+        f_5 = autonomous(island_name="Sun")(f_5)
+        f_6 = autonomous(island_name="Sun")(f_6)
+        f_4 = autonomous(island_name="Sun")(f_4)
 
-    assert f_1() == 0
-    assert f_2() == 0
-    assert f_3() == 0
-    assert f_4() == 10
-    assert f_5() == 100
-    assert f_6() == 1000
+        assert f_1() == 0
+        assert f_2() == 0
+        assert f_3() == 0
+        assert f_4() == 10
+        assert f_5() == 100
+        assert f_6() == 1000

@@ -69,29 +69,28 @@ def total():
 
 
 def test_tree(tmpdir):
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
+    with initialize(tmpdir, n_background_workers=0):
 
-    global f_1, f_2, f_3, f_4, f_5, f_6, f_1_2, f_2_3
-    global f_3_4, f_4_5, f_5_6, f_1_2_3, f_2_3_4, f_3_4_5
-    global f_4_5_6, total
+        global f_1, f_2, f_3, f_4, f_5, f_6, f_1_2, f_2_3
+        global f_3_4, f_4_5, f_5_6, f_1_2_3, f_2_3_4, f_3_4_5
+        global f_4_5_6, total
 
-    f_1 = autonomous("kuku")(f_1)
-    f_2 = autonomous("kuku")(f_2)
-    f_3 = autonomous("kuku")(f_3)
-    f_4 = autonomous("kuku")(f_4)
-    f_5 = autonomous("kuku")(f_5)
-    f_6 = autonomous("kuku")(f_6)
-    f_1_2 = autonomous("kuku")(f_1_2)
-    f_2_3 = autonomous("kuku")(f_2_3)
-    f_3_4 = autonomous("kuku")(f_3_4)
-    f_4_5 = autonomous("kuku")(f_4_5)
-    f_5_6 = autonomous("kuku")(f_5_6)
-    f_1_2_3 = autonomous("kuku")(f_1_2_3)
-    f_2_3_4 = autonomous("kuku")(f_2_3_4)
-    f_3_4_5 = autonomous("kuku")(f_3_4_5)
-    f_4_5_6 = autonomous("kuku")(f_4_5_6)
-    total = autonomous("kuku")(total)
+        f_1 = autonomous("kuku")(f_1)
+        f_2 = autonomous("kuku")(f_2)
+        f_3 = autonomous("kuku")(f_3)
+        f_4 = autonomous("kuku")(f_4)
+        f_5 = autonomous("kuku")(f_5)
+        f_6 = autonomous("kuku")(f_6)
+        f_1_2 = autonomous("kuku")(f_1_2)
+        f_2_3 = autonomous("kuku")(f_2_3)
+        f_3_4 = autonomous("kuku")(f_3_4)
+        f_4_5 = autonomous("kuku")(f_4_5)
+        f_5_6 = autonomous("kuku")(f_5_6)
+        f_1_2_3 = autonomous("kuku")(f_1_2_3)
+        f_2_3_4 = autonomous("kuku")(f_2_3_4)
+        f_3_4_5 = autonomous("kuku")(f_3_4_5)
+        f_4_5_6 = autonomous("kuku")(f_4_5_6)
+        total = autonomous("kuku")(total)
 
-    assert total() == 0
+        assert total() == 0
 

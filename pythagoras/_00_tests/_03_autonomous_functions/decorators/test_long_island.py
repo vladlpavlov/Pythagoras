@@ -31,22 +31,21 @@ def f_6():
 
 
 def test_chained(tmpdir):
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
-    global f_1, f_2, f_3, f_4_as_str, f_5, f_6
+    with initialize(tmpdir, n_background_workers=0):
+        global f_1, f_2, f_3, f_4_as_str, f_5, f_6
 
-    f_1 = autonomous(island_name="Moon")(f_1)
-    f_2 = autonomous(island_name="Moon")(f_2)
-    f_3 = autonomous(island_name="Moon")(f_3)
-    f_4 = autonomous(island_name="Moon")(f_4_as_str)
-    f_5 = autonomous(island_name="Moon")(f_5)
-    f_6 = autonomous(island_name="Moon")(f_6)
+        f_1 = autonomous(island_name="Moon")(f_1)
+        f_2 = autonomous(island_name="Moon")(f_2)
+        f_3 = autonomous(island_name="Moon")(f_3)
+        f_4 = autonomous(island_name="Moon")(f_4_as_str)
+        f_5 = autonomous(island_name="Moon")(f_5)
+        f_6 = autonomous(island_name="Moon")(f_6)
 
-    assert f_1() == 0
-    assert f_2() == 0
-    assert f_3() == 0
-    assert f_4() == 0
-    assert f_5() == 0
-    assert f_6() == 0
+        assert f_1() == 0
+        assert f_2() == 0
+        assert f_3() == 0
+        assert f_4() == 0
+        assert f_5() == 0
+        assert f_6() == 0
 
 

@@ -4,7 +4,8 @@ from pythagoras._05_events_and_exceptions.execution_environment_summary import (
     add_execution_environment_summary)
 from pythagoras._05_events_and_exceptions.current_date_gmt_str import (
     current_date_gmt_string)
-from pythagoras import get_random_signature
+from pythagoras._01_foundational_objects.hash_and_random_signatures import (
+    get_random_signature)
 
 import pythagoras as pth
 

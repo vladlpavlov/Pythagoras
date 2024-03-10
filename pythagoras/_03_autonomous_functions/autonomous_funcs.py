@@ -1,10 +1,10 @@
 from __future__ import annotations
 import builtins
-import sys
-import traceback
 from typing import Callable, Optional, Any
-from persidict import replace_unsafe_chars
 
+
+from pythagoras._01_foundational_objects.hash_and_random_signatures import (
+    get_random_signature)
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
     OrdinaryFunction)
@@ -171,7 +171,7 @@ class AutonomousFunction(OrdinaryFunction):
             if self.__class__ == AutonomousFunction:
                 exception_id = f"{self.name}_{self.island_name}"
                 exception_id += f"_{e.__class__.__name__}"
-                exception_id += f"_{pth.get_random_signature()}"
+                exception_id += f"_{get_random_signature()}"
                 register_exception_globally(exception_id=exception_id)
             raise e
 

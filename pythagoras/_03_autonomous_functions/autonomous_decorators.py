@@ -66,7 +66,7 @@ class autonomous:
         self.island_name = island_name
         self.require_pth = require_pth
 
-    def __call__(self, a_func: Callable) -> AutonomousFunction:
+    def __call__(self, a_func: Callable|str) -> AutonomousFunction:
         """Decorator for autonomous functions.
 
         It does both static and dynamic checks for autonomous functions.

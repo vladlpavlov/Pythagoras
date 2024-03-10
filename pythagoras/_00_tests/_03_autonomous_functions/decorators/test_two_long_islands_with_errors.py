@@ -1,6 +1,6 @@
 from pythagoras._03_autonomous_functions import *
 from pythagoras._07_mission_control.global_state_management import (
-    _clean_global_state, initialize)
+    _clean_global_state, initialize, _force_initialize)
 
 import pytest
 
@@ -30,24 +30,23 @@ def f_6():
 
 
 def test_two_chains_with_errors(tmpdir):
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
-    global f_1, f_2, f_3, f_4, f_5, f_6
+    with _force_initialize(tmpdir, n_background_workers=0):
+        global f_1, f_2, f_3, f_4, f_5, f_6
 
-    f_1 = autonomous(island_name="Moon")(f_1)
-    f_2 = autonomous(island_name="Moon")(f_2)
-    f_3 = autonomous(island_name="Moon")(f_3)
-    f_4 = autonomous(island_name="Sun")(f_4)
-    f_5 = autonomous(island_name="Sun")(f_5)
-    f_6 = autonomous(island_name="Sun")(f_6)
+        f_1 = autonomous(island_name="Moon")(f_1)
+        f_2 = autonomous(island_name="Moon")(f_2)
+        f_3 = autonomous(island_name="Moon")(f_3)
+        f_4 = autonomous(island_name="Sun")(f_4)
+        f_5 = autonomous(island_name="Sun")(f_5)
+        f_6 = autonomous(island_name="Sun")(f_6)
 
 
-    assert f_1() == 0
-    assert f_2() == 0
-    assert f_3() == 0
-    with pytest.raises(Exception):
-        assert f_4() == 0
-    with pytest.raises(Exception):
-        assert f_5() == 0
-    with pytest.raises(Exception):
-        assert f_6() == 0
+        assert f_1() == 0
+        assert f_2() == 0
+        assert f_3() == 0
+        with pytest.raises(Exception):
+            assert f_4() == 0
+        with pytest.raises(Exception):
+            assert f_5() == 0
+        with pytest.raises(Exception):
+            assert f_6() == 0

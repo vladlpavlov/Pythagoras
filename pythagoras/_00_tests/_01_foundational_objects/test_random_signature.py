@@ -1,6 +1,7 @@
 from persidict import replace_unsafe_chars
 
-from pythagoras import get_random_signature
+from pythagoras._01_foundational_objects.hash_and_random_signatures import (
+    get_random_signature)
 
 def test_random_id():
     all_random_ids = set()

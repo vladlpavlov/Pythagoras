@@ -4,36 +4,33 @@ from pythagoras._07_mission_control.global_state_management import (
 
 
 def test_nested_from_import(tmpdir):
-    _clean_global_state()
-    initialize(base_dir=tmpdir, n_background_workers=0)
+    with initialize(base_dir=tmpdir, n_background_workers=0):
 
-    @autonomous()
-    def f(x:float)->float:
-        from math import sqrt
-        return sqrt(x)
+        @autonomous()
+        def f(x:float)->float:
+            from math import sqrt
+            return sqrt(x)
 
-    assert f(x=4) == 2
+        assert f(x=4) == 2
 
 
 def test_nested_import_as(tmpdir):
-    _clean_global_state()
-    initialize(base_dir=tmpdir,n_background_workers=0)
+    with initialize(base_dir=tmpdir,n_background_workers=0):
 
-    @autonomous()
-    def f(x:float)->float:
-        import math as mm
-        return mm.sin(x)
+        @autonomous()
+        def f(x:float)->float:
+            import math as mm
+            return mm.sin(x)
 
-    assert f(x=0) == 0
+        assert f(x=0) == 0
 
 def test_nested_from_import_as(tmpdir):
-    _clean_global_state()
-    initialize(base_dir=tmpdir,n_background_workers=0)
+    with initialize(base_dir=tmpdir,n_background_workers=0):
 
-    @autonomous()
-    def f(x:float)->float:
-        from math import log as l
-        return l(x)
+        @autonomous()
+        def f(x:float)->float:
+            from math import log as l
+            return l(x)
 
-    assert f(x=1) == 0
+        assert f(x=1) == 0
 

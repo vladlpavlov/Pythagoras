@@ -2,13 +2,16 @@ from time import sleep
 from copy import deepcopy
 from multiprocessing import get_context
 
+from pythagoras._01_foundational_objects.hash_and_random_signatures import (
+    get_node_signature)
+
 from pythagoras._06_swarming.output_suppressor import OutputSuppressor
 import pythagoras as pth
 
 
 
 def parent_runtime_is_live():
-    node_id = pth.get_node_signature()
+    node_id = get_node_signature()
     try:
         if pth.runtime_id == pth.compute_nodes[node_id, "runtime_id"]:
             return True

@@ -1,7 +1,7 @@
 
 from pythagoras._03_autonomous_functions.autonomous_decorators import autonomous
 from pythagoras._07_mission_control.global_state_management import (
-    _clean_global_state, initialize)
+    _clean_global_state, initialize, _force_initialize)
 
 
 def factorial(n:int) -> int:
@@ -11,11 +11,7 @@ def factorial(n:int) -> int:
         return n * factorial(n=n-1)
 
 def test_aut_factorial(tmpdir):
-
-    _clean_global_state()
-    initialize(base_dir=tmpdir,n_background_workers=0)
-
-    global factorial
-    factorial = autonomous()(factorial)
-
-    assert factorial(n=5) == 120
+    with _force_initialize(base_dir=tmpdir,n_background_workers=0):
+        global factorial
+        factorial = autonomous()(factorial)
+        assert factorial(n=5) == 120

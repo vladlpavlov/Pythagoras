@@ -7,7 +7,8 @@ from typing import Callable, Any
 from persidict import PersiDict
 
 import pythagoras as pth
-from pythagoras import get_random_signature
+from pythagoras._01_foundational_objects.hash_and_random_signatures import (
+    get_random_signature)
 
 from pythagoras._01_foundational_objects.hash_addresses import HashAddress
 from pythagoras._01_foundational_objects.value_addresses import ValueAddress

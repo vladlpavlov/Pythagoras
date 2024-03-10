@@ -19,43 +19,31 @@ def isOdd(n):
 
 
 def test_no_decorators(tmpdir):
-
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
-
-    assert isOdd(n=4) == False
-    assert isEven(n=4) == True
-
-
-def test_one_decorator_odd(tmpdir):
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
-
-    global isEven,  isOdd
-    isEven = idempotent()(isEven)
-
-    with pytest.raises(Exception):
+    with initialize(tmpdir, n_background_workers=0):
         assert isOdd(n=4) == False
-
-
-def test_one_decorator_even(tmpdir):
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
-
-    global isEven,  isOdd
-    isEven = idempotent()(isEven)
-
-    with pytest.raises(Exception):
         assert isEven(n=4) == True
 
 
+def test_one_decorator_odd(tmpdir):
+    with initialize(tmpdir, n_background_workers=0):
+        global isEven,  isOdd
+        isEven = idempotent()(isEven)
+        with pytest.raises(Exception):
+            assert isOdd(n=4) == False
+
+
+def test_one_decorator_even(tmpdir):
+    with initialize(tmpdir, n_background_workers=0):
+        global isEven,  isOdd
+        isEven = idempotent()(isEven)
+        with pytest.raises(Exception):
+            assert isEven(n=4) == True
+
+
 def test_two_decorators(tmpdir):
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
-
-    global isEven, isOdd
-    isEven = idempotent()(isEven)
-    isOdd = idempotent()(isOdd)
-
-    assert isOdd(n=4) == False
-    assert isEven(n=4) == True
+    with initialize(tmpdir, n_background_workers=0):
+        global isEven, isOdd
+        isEven = idempotent()(isEven)
+        isOdd = idempotent()(isOdd)
+        assert isOdd(n=4) == False
+        assert isEven(n=4) == True
