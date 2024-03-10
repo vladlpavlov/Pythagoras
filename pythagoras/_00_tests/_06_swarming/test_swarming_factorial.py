@@ -21,9 +21,11 @@ def factorial(n: int) -> int:
 def get_factorial_address(n:int, dir):
     with initialize(dir, n_background_workers=0):
         new_factorial = idempotent()(factorial)
+        print(f"{pth.runtime_id=}")
         return new_factorial.swarm(n=n)
 
 def test_swarming_factorial(tmpdir):
     address = get_factorial_address(n=5, dir=tmpdir)
     with initialize(tmpdir, n_background_workers=2):
+        print(f"{pth.runtime_id=}")
         assert address.get() == 120

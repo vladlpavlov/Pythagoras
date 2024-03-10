@@ -13,7 +13,7 @@ import pythagoras as pth
 def parent_runtime_is_live():
     node_id = get_node_signature()
     try:
-        if pth.runtime_id == pth.compute_nodes[node_id, "runtime_id"]:
+        if pth.runtime_id == pth.compute_nodes.pkl[node_id, "runtime_id"]:
             return True
         else:
             return False

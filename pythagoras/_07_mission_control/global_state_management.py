@@ -6,6 +6,7 @@ from persidict import FileDirDict, PersiDict
 
 from pythagoras._01_foundational_objects.hash_and_random_signatures import (
     get_node_signature, get_random_signature)
+from pythagoras._01_foundational_objects.multipersidict import MultiPersiDict
 from pythagoras._03_autonomous_functions.default_island_singleton import (
     DefaultIslandType, DefaultIsland)
 from pythagoras._05_events_and_exceptions.execution_environment_summary import \
@@ -61,18 +62,20 @@ def initialize(base_dir:str
         value_store_dir, digest_len=0, immutable_items=True)
 
     compute_nodes_dir = os.path.join(base_dir, "compute_nodes")
-    pth.compute_nodes = dict_type(
-        compute_nodes_dir, digest_len=0
-        , immutable_items=False
-        , file_type="json")
+    pth.compute_nodes = MultiPersiDict(
+        dict_type = dict_type
+        , dir_name = compute_nodes_dir
+        , pkl = dict(digest_len=0, immutable_items=False)
+        , json = dict(digest_len=0, immutable_items=False)
+        )
 
     if runtime_id is None:
         node_id = get_node_signature()
         runtime_id = get_random_signature()
         pth.runtime_id = runtime_id
-        pth.compute_nodes[node_id, "runtime_id"]= runtime_id
+        pth.compute_nodes.pkl[node_id, "runtime_id"]= runtime_id
         summary = build_execution_environment_summary()
-        pth.compute_nodes[node_id, "execution_environment"] = summary
+        pth.compute_nodes.json[node_id, "execution_environment"] = summary
     else:
         pth.runtime_id = runtime_id
 
@@ -155,7 +158,7 @@ def is_correctly_initialized():
         return False
     if not isinstance(pth.event_log, PersiDict):
         return False
-    if not isinstance(pth.compute_nodes, PersiDict):
+    if not isinstance(pth.compute_nodes, MultiPersiDict):
         return False
     if not isinstance(pth.default_island_name, str):
         return False
@@ -199,9 +202,9 @@ def is_global_state_correct():
     return result
 
 def _clean_global_state():
-    if isinstance(pth.compute_nodes, PersiDict):
+    if isinstance(pth.compute_nodes, MultiPersiDict):
         node_id = get_node_signature()
-        del pth.compute_nodes[node_id, "runtime_id"]
+        del pth.compute_nodes.pkl[node_id, "runtime_id"]
     pth.value_store = None
     pth.execution_results = None
     pth.execution_requests = None

@@ -7,6 +7,8 @@ import pythagoras as pth
 
 def test_random_request_execution(tmpdir):
 
+
+
     with pth.initialize(tmpdir, n_background_workers=0):
 
         @pth.idempotent()
