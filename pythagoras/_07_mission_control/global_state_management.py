@@ -15,7 +15,6 @@ from pythagoras._05_events_and_exceptions.uncaught_exception_handlers import (
     register_exception_handlers, unregister_exception_handlers, pth_excepthook)
 from pythagoras._05_events_and_exceptions.notebook_checker import (
     is_executed_in_notebook)
-from pythagoras._07_mission_control.run_history import RunHistory
 from pythagoras._07_mission_control.summary import summary
 
 import pythagoras as pth
@@ -97,7 +96,19 @@ def initialize(base_dir:str
 
     run_history_dir = os.path.join(
         base_dir, "run_history")
-    pth.run_history = RunHistory(run_history_dir)
+    # pth.run_history = RunHistory(run_history_dir)
+    pth.run_history = MultiPersiDict(
+        dict_type = dict_type
+        , dir_name = run_history_dir
+        , json = dict(digest_len=0, immutable_items=True)
+        , py = dict(
+            base_class_for_values=str
+            , digest_len=0
+            , immutable_items=True)
+        , txt = dict(
+            base_class_for_values=str
+            , digest_len=0
+            , immutable_items=True))
 
     execution_requests_dir = os.path.join(
         base_dir, "execution_requests")
@@ -148,7 +159,7 @@ def is_correctly_initialized():
     """ Check if Pythagoras is correctly initialized."""
     if not isinstance(pth.value_store, PersiDict):
         return False
-    if not isinstance(pth.run_history, RunHistory):
+    if not isinstance(pth.run_history, MultiPersiDict):
         return False
     if not isinstance(pth.execution_results, PersiDict):
         return False

@@ -313,25 +313,25 @@ class FunctionExecutionResultAddress(HashAddress):
     @property
     def execution_attempts(self) -> PersiDict:
         attempts_path = self + ["attempts"]
-        attempts = pth.run_history.jason.get_subdict(attempts_path)
+        attempts = pth.run_history.json.get_subdict(attempts_path)
         return attempts
 
     @property
     def execution_outputs(self) -> PersiDict:
         outputs_path = self + ["outputs"]
-        outputs = pth.run_history.text.get_subdict(outputs_path)
+        outputs = pth.run_history.txt.get_subdict(outputs_path)
         return outputs
 
     @property
     def crashes(self) -> PersiDict:
         crashes_path = self + ["crashes"]
-        crashes = pth.run_history.jason.get_subdict(crashes_path)
+        crashes = pth.run_history.json.get_subdict(crashes_path)
         return crashes
 
     @property
     def events(self) -> PersiDict:
         events_path = self + ["events"]
-        events = pth.run_history.jason.get_subdict(events_path)
+        events = pth.run_history.json.get_subdict(events_path)
         return events
 
 class FunctionExecutionContext:

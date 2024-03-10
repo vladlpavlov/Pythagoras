@@ -28,7 +28,7 @@ execution_requests:Optional[PersiDict] = None
 crash_history: Optional[PersiDict] = None
 event_log: Optional[PersiDict] = None
 
-run_history:Optional[RunHistory] = None
+run_history:Optional[MultiPersiDict] = None
 compute_nodes:Optional[MultiPersiDict] = None
 
 runtime_id: Optional[str] = None
