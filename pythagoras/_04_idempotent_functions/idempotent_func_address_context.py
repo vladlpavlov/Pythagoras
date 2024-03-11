@@ -136,6 +136,11 @@ class IdempotentFunction(AutonomousFunction):
         with FunctionExecutionContext(output_address) as _pth_ec:
             output_address.request_execution()
             _pth_ec.register_execution_attempt()
+            pth.run_history.py[output_address + ["source"]] = (
+                self.naked_source_code)
+            pth.run_history.py[
+                output_address + ["augmented_source"]] = (
+                self.augmented_source_code)
             unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
             result = super().execute(**unpacked_kwargs)
             pth.execution_results[output_address] = ValueAddress(result)
