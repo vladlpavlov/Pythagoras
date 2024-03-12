@@ -41,7 +41,7 @@ def test_one_decorator_even(tmpdir):
 
 
 def test_two_decorators(tmpdir):
-    tmpdir = "YIYIYIYIYIYIYIYIYIYIYIYIYIYIYIY"
+    # tmpdir = "YIYIYIYIYIYIYIYIYIYIYIYIYIYIYIY"
     with _force_initialize(tmpdir, n_background_workers=0):
         global isEven, isOdd
         isEven = idempotent()(isEven)

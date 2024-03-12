@@ -1,6 +1,4 @@
-import os
-import random
-import sys
+import os, random, sys, atexit
 
 from persidict import FileDirDict, PersiDict
 
@@ -73,6 +71,7 @@ def initialize(base_dir:str
         runtime_id = get_random_signature()
         pth.runtime_id = runtime_id
         pth.compute_nodes.pkl[node_id, "runtime_id"]= runtime_id
+        atexit.register(clean_runtime_id)
         summary = build_execution_environment_summary()
         pth.compute_nodes.json[node_id, "execution_environment"] = summary
     else:
@@ -104,7 +103,7 @@ def initialize(base_dir:str
         , py = dict(
             base_class_for_values=str
             , digest_len=0
-            , immutable_items=True)
+            , immutable_items=False)
         , txt = dict(
             base_class_for_values=str
             , digest_len=0
@@ -212,10 +211,17 @@ def is_global_state_correct():
     result = is_fully_unitialized() or is_correctly_initialized()
     return result
 
-def _clean_global_state():
-    if isinstance(pth.compute_nodes, MultiPersiDict):
+def clean_runtime_id():
+    """ Clean runtime id."""
+    try:
         node_id = get_node_signature()
-        del pth.compute_nodes.pkl[node_id, "runtime_id"]
+        address = [node_id, "runtime_id"]
+        pth.compute_nodes.pkl.delete_if_exists(address)
+    except:
+        pass
+
+def _clean_global_state():
+    clean_runtime_id()
     pth.value_store = None
     pth.execution_results = None
     pth.execution_requests = None
