@@ -86,6 +86,7 @@ class IdempotentFunction(AutonomousFunction):
             , naked_source_code=self.naked_source_code
             , island_name=self.island_name
             , augmented_source_code=self.augmented_source_code
+            , strictly_autonomous=self.strictly_autonomous
             , class_name=self.__class__.__name__)
         state = dict()
         for key in sorted(draft_state):
@@ -93,11 +94,12 @@ class IdempotentFunction(AutonomousFunction):
         return state
 
     def __setstate__(self, state):
-        assert len(state) == 5
+        assert len(state) == 6
         assert state["class_name"] == IdempotentFunction.__name__
         self.name = state["name"]
         self.naked_source_code = state["naked_source_code"]
         self.island_name = state["island_name"]
+        self.strictly_autonomous = state["strictly_autonomous"]
         self.augmented_code_checked = False
         register_idempotent_function(self)
 

@@ -30,11 +30,13 @@ import pythagoras as pth
 class AutonomousFunction(OrdinaryFunction):
     # naked_source_code: str
     # name: str
-    island_name:Optional[str]
+    island_name:str
+    strictly_autonomous:bool
 
 
     def __init__(self, a_func: Callable | str | OrdinaryFunction
-                 , island_name:str | None = None):
+                 , island_name:str | None = None
+                 ,strictly_autonomous:bool = False):
 
         super().__init__(a_func)
 
@@ -48,6 +50,8 @@ class AutonomousFunction(OrdinaryFunction):
 
         self.island_name = island_name
 
+        self.strictly_autonomous = bool(strictly_autonomous)
+
         if self.__class__.__name__ == AutonomousFunction.__name__:
             register_autonomous_function(self)
 
@@ -55,14 +59,14 @@ class AutonomousFunction(OrdinaryFunction):
 
     @property
     def decorator(self) -> str:
-        decorator_str = f"@pth.autonomous(island_name={self.island_name})"
+        decorator_str =""
+        if self.strictly_autonomous:
+            decorator_str = (f"@pth.strictly_autonomous"
+                             +f"(island_name={self.island_name})")
+        else:
+            decorator_str = (f"@pth.autonomous"
+                             +f"(island_name={self.island_name})")
         return decorator_str
-        # decorator_str =""
-        # if self.island_name is None:
-        #     decorator_str = "@pth.strictly_autonomous()"
-        # else:
-        #     decorator_str = f"@pth.autonomous(island_name={self.island_name})"
-        # return decorator_str
 
     @property
     def dependencies(self) -> list[str]:
@@ -120,7 +124,7 @@ class AutonomousFunction(OrdinaryFunction):
         pth_names = set(retrieve_objs_available_inside_autonomous_functions())
         import_required -= pth_names
         import_required -= {name}
-        if self.island_name is not None:
+        if not self.strictly_autonomous:
             island = pth.all_autonomous_functions[self.island_name]
             import_required -= set(island)
 
@@ -178,6 +182,7 @@ class AutonomousFunction(OrdinaryFunction):
         draft_state = dict(name = self.name
             , naked_source_code = self.naked_source_code
             , island_name = self.island_name
+            , strictly_autonomous = self.strictly_autonomous
             , class_name = self.__class__.__name__)
         state = dict()
         for key in sorted(draft_state):
@@ -185,11 +190,12 @@ class AutonomousFunction(OrdinaryFunction):
         return state
 
     def __setstate__(self, state):
-        assert len(state) == 4
+        assert len(state) == 5
         assert state["class_name"] == AutonomousFunction.__name__
         self.name = state["name"]
         self.naked_source_code = state["naked_source_code"]
         self.island_name = state["island_name"]
+        self.strictly_autonomous = state["strictly_autonomous"]
         register_autonomous_function(self)
 
 
@@ -219,7 +225,7 @@ def register_autonomous_function(f: AutonomousFunction) -> None:
         assert type(f) == type(island[f.name])
 
     assert f.static_checks()
-    if f.island_name is None: ## ?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!
+    if f.strictly_autonomous:
         assert f.runtime_checks()
 
     assert f.island_name in pth.all_autonomous_functions

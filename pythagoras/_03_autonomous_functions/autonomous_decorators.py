@@ -51,9 +51,11 @@ class autonomous:
 
     island_name: str | None
 
-    def __init__(self, island_name: str | None = None):
+    def __init__(self, island_name: str | None = None
+                 , strictly_autonomous: bool = False):
         assert isinstance(island_name, str) or island_name is None
         self.island_name = island_name
+        self.strictly_autonomous = strictly_autonomous
 
     def __call__(self, a_func: Callable|str) -> AutonomousFunction:
         """Decorator for autonomous functions.
@@ -81,7 +83,9 @@ class autonomous:
         all possible violations of function autonomy requirements.
         """
 
-        wrapper = AutonomousFunction(a_func, self.island_name)
+        wrapper = AutonomousFunction(
+            a_func, island_name=self.island_name
+            , strictly_autonomous=self.strictly_autonomous)
         return wrapper
 
 class strictly_autonomous(autonomous):
@@ -105,5 +109,5 @@ class strictly_autonomous(autonomous):
     Currently, neither static nor dynamic checks are guaranteed to catch
     all possible violations of strict function autonomicity requirements.
     """
-    def __init__(self, require_pth: bool = True):
-        super().__init__(island_name=None)
+    def __init__(self, island_name: str | None = None):
+        super().__init__(island_name=island_name, strictly_autonomous=True)
