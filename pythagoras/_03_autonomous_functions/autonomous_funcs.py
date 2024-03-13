@@ -9,9 +9,6 @@ from pythagoras._01_foundational_objects.hash_and_random_signatures import (
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
     OrdinaryFunction)
 
-from pythagoras._03_autonomous_functions.default_island_singleton import (
-    DefaultIslandType, DefaultIsland)
-
 from pythagoras._03_autonomous_functions.call_graph_explorer import (
     explore_call_graph_deep)
 
@@ -37,23 +34,17 @@ class AutonomousFunction(OrdinaryFunction):
 
 
     def __init__(self, a_func: Callable | str | OrdinaryFunction
-                 , island_name:str | None | DefaultIslandType = DefaultIsland):
-
-        assert is_correctly_initialized(), (
-            "You should initialize Pythagoras by calling"
-            + " pth.initialize() before using any of its features.")
+                 , island_name:str | None = None):
 
         super().__init__(a_func)
 
-        if island_name is DefaultIsland:
+        if island_name is None:
             island_name = pth.default_island_name
+        assert isinstance(island_name, str)
+        # TODO: Add checks for island_name (should be a safe str)
 
         if isinstance(a_func, AutonomousFunction):
             assert island_name == a_func.island_name
-
-        if island_name is not None:
-            assert isinstance(island_name, str)
-            # TODO: Add checks for island_name (should be a safe str)
 
         self.island_name = island_name
 
@@ -64,12 +55,14 @@ class AutonomousFunction(OrdinaryFunction):
 
     @property
     def decorator(self) -> str:
-        decorator_str =""
-        if self.island_name is None:
-            decorator_str = "@pth.strictly_autonomous()"
-        else:
-            decorator_str = f"@pth.autonomous(island_name={self.island_name})"
+        decorator_str = f"@pth.autonomous(island_name={self.island_name})"
         return decorator_str
+        # decorator_str =""
+        # if self.island_name is None:
+        #     decorator_str = "@pth.strictly_autonomous()"
+        # else:
+        #     decorator_str = f"@pth.autonomous(island_name={self.island_name})"
+        # return decorator_str
 
     @property
     def dependencies(self) -> list[str]:
@@ -226,7 +219,7 @@ def register_autonomous_function(f: AutonomousFunction) -> None:
         assert type(f) == type(island[f.name])
 
     assert f.static_checks()
-    if f.island_name is None:
+    if f.island_name is None: ## ?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!
         assert f.runtime_checks()
 
     assert f.island_name in pth.all_autonomous_functions

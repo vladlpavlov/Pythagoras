@@ -19,9 +19,6 @@ from pythagoras._03_autonomous_functions.autonomous_funcs import (
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
     OrdinaryFunction)
 
-from pythagoras._03_autonomous_functions.default_island_singleton import (
-    DefaultIslandType, DefaultIsland)
-
 from pythagoras._04_idempotent_functions.kw_args import (
     UnpackedKwArgs, PackedKwArgs, SortedKwArgs)
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
@@ -36,7 +33,7 @@ from pythagoras._05_events_and_exceptions.global_event_loggers import (
 class IdempotentFunction(AutonomousFunction):
     augmented_code_checked: bool
     def __init__(self, a_func: Callable | str | OrdinaryFunction
-            , island_name:str | None | DefaultIslandType = DefaultIsland):
+            , island_name:str | None = None):
         super().__init__(a_func, island_name)
         self.augmented_code_checked = False
         register_idempotent_function(self)

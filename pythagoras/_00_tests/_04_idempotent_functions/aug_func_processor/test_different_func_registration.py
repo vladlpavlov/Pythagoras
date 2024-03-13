@@ -23,13 +23,11 @@ def test_basic_func_registration(tmpdir):
     _clean_global_state()
     initialize(tmpdir, n_background_workers=0)
 
-    assert len(pth.all_autonomous_functions) == 2
-    assert len(pth.all_autonomous_functions[None]) == 0
+    assert len(pth.all_autonomous_functions) == 1
 
 
     process_augmented_func_src(src_1_good)
-    assert len(pth.all_autonomous_functions) == 2
-    assert len(pth.all_autonomous_functions[None]) == 0
+    assert len(pth.all_autonomous_functions) == 1
     assert len(pth.all_autonomous_functions[pth.default_island_name]) == 1
 
     with pytest.raises(Exception):

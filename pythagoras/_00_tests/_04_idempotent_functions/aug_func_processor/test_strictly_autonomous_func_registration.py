@@ -15,15 +15,15 @@ def f_1_2():
     pass
 """
 
-def test_strictly_autonomous_func_registration(tmpdir):
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
-
-    assert len(pth.all_autonomous_functions) == 2
-    assert len(pth.all_autonomous_functions[None]) == 0
-
-    for _ in range(5):
-        process_augmented_func_src(src_1_good)
-        assert len(pth.all_autonomous_functions) == 2
-        assert len(pth.all_autonomous_functions[None]) == 2
-        assert len(pth.all_autonomous_functions[pth.default_island_name]) == 0
+# def test_strictly_autonomous_func_registration(tmpdir):
+#     _clean_global_state()
+#     initialize(tmpdir, n_background_workers=0)
+#
+#     assert len(pth.all_autonomous_functions) == 2
+#     assert len(pth.all_autonomous_functions[None]) == 0
+#
+#     for _ in range(5):
+#         process_augmented_func_src(src_1_good)
+#         assert len(pth.all_autonomous_functions) == 2
+#         assert len(pth.all_autonomous_functions[None]) == 2
+#         assert len(pth.all_autonomous_functions[pth.default_island_name]) == 0

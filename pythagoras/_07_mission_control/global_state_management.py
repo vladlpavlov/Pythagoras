@@ -5,10 +5,8 @@ from persidict import FileDirDict, PersiDict
 from pythagoras._01_foundational_objects.hash_and_random_signatures import (
     get_node_signature, get_random_signature)
 from pythagoras._01_foundational_objects.multipersidict import MultiPersiDict
-from pythagoras._03_autonomous_functions.default_island_singleton import (
-    DefaultIslandType, DefaultIsland)
-from pythagoras._05_events_and_exceptions.execution_environment_summary import \
-    build_execution_environment_summary
+from pythagoras._05_events_and_exceptions.execution_environment_summary import (
+    build_execution_environment_summary)
 from pythagoras._05_events_and_exceptions.uncaught_exception_handlers import (
     register_exception_handlers, unregister_exception_handlers, pth_excepthook)
 from pythagoras._05_events_and_exceptions.notebook_checker import (
@@ -95,7 +93,6 @@ def initialize(base_dir:str
 
     run_history_dir = os.path.join(
         base_dir, "run_history")
-    # pth.run_history = RunHistory(run_history_dir)
     pth.run_history = MultiPersiDict(
         dict_type = dict_type
         , dir_name = run_history_dir
@@ -118,7 +115,6 @@ def initialize(base_dir:str
     pth.default_island_name = default_island_name
     pth.all_autonomous_functions = dict()
     pth.all_autonomous_functions[default_island_name] = dict()
-    pth.all_autonomous_functions[None] = dict()
 
     parameters = dict(base_dir=base_dir
         ,cloud_type=cloud_type
@@ -182,7 +178,7 @@ def is_correctly_initialized():
         return False
     if len(pth.all_autonomous_functions) > 0: # TODO: rework later
         for island_name in pth.all_autonomous_functions:
-            if not isinstance(island_name, (str, type(None))):
+            if not isinstance(island_name, str):
                 return False
             if not isinstance(pth.all_autonomous_functions[island_name], dict):
                 return False
@@ -259,20 +255,20 @@ def get_all_island_names() -> set[str]:
     return set(pth.all_autonomous_functions.keys())
 
 def get_all_autonomous_function_names(
-        island_name:str | None | DefaultIslandType = DefaultIsland):
+        island_name:str | None = None):
     """ Get all autonomous functions."""
-    if island_name is DefaultIsland:
+    if island_name is None:
         island_name = pth.default_island_name
     return list(pth.all_autonomous_functions[island_name].keys())
 
-def get_island(island_name:str | None | DefaultIslandType = DefaultIsland):
-    if island_name is DefaultIsland:
+def get_island(island_name:str | None = None):
+    if island_name is None:
         island_name = pth.default_island_name
     return pth.all_autonomous_functions[island_name]
 
 def get_autonomous_function(function_name:str
-    , island_name:str | None | DefaultIslandType = DefaultIsland):
+    , island_name:str | None = None):
     """ Get cloudized function."""
-    if island_name is DefaultIsland:
+    if island_name is None:
         island_name = pth.default_island_name
     return pth.all_autonomous_functions[island_name][function_name]
