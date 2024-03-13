@@ -1,4 +1,4 @@
-from pythagoras._06_swarming.background_worker import launch_background_worker
+from pythagoras._06_swarming.background_workers import launch_background_worker
 import pythagoras as pth
 
 def test_launch_background_worker(tmpdir):

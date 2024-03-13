@@ -1,5 +1,5 @@
 from copy import deepcopy
-from pythagoras._06_swarming.background_worker import (
+from pythagoras._06_swarming.background_workers import (
     process_random_execution_request)
 from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state)
