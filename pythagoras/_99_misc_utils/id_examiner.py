@@ -9,4 +9,4 @@ def is_reserved_identifier(id: str) -> bool:
     :return: True if the id is reserved, False otherwise.
     """
 
-    return id.startswith("__pth_")
+    return id.startswith("_pth_")
