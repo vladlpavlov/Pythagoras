@@ -1,6 +1,6 @@
 from __future__ import annotations
 import builtins
-from typing import Callable, Optional, Any
+from typing import Callable, Any
 
 
 from pythagoras._01_foundational_objects.hash_and_random_signatures import (
@@ -20,9 +20,6 @@ from pythagoras._03_autonomous_functions.pth_available_names_retriever import (
 
 from pythagoras._05_events_and_exceptions.global_event_loggers import (
     register_exception_globally)
-
-from pythagoras._07_mission_control.global_state_management import (
-    is_correctly_initialized)
 
 import pythagoras as pth
 
@@ -62,10 +59,10 @@ class AutonomousFunction(OrdinaryFunction):
         decorator_str =""
         if self.strictly_autonomous:
             decorator_str = (f"@pth.strictly_autonomous"
-                             +f"(island_name={self.island_name})")
+                             +f"(island_name='{self.island_name}')")
         else:
             decorator_str = (f"@pth.autonomous"
-                             +f"(island_name={self.island_name})")
+                             +f"(island_name='{self.island_name}')")
         return decorator_str
 
     @property

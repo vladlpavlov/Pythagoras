@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import time
 import traceback
-from typing import Callable, Any
+from copy import deepcopy
+from typing import Callable, Any, List, TypeAlias
 
 from persidict import PersiDict
 
@@ -29,19 +30,88 @@ from pythagoras._05_events_and_exceptions.execution_environment_summary import (
 from pythagoras._05_events_and_exceptions.global_event_loggers import (
     register_exception_globally, register_event_globally)
 
+supporting_funcs:TypeAlias = (None | str | AutonomousFunction
+                              | List[str] | List[AutonomousFunction])
 
 class IdempotentFunction(AutonomousFunction):
     augmented_code_checked: bool
+    validators: supporting_funcs
+    correctors: supporting_funcs
     def __init__(self, a_func: Callable | str | OrdinaryFunction
-            , island_name:str | None = None):
+            , island_name:str | None = None
+            , validators: supporting_funcs = None
+            , correctors: supporting_funcs = None):
         super().__init__(a_func, island_name)
+        if validators is None:
+            assert correctors is None
+        self.validators = self.process_supporting_functions_arg(validators)
+        self.correctors = self.process_supporting_functions_arg(correctors)
         self.augmented_code_checked = False
         register_idempotent_function(self)
+
+
+    def process_supporting_functions_arg(self
+            , supporting_funcs: supporting_funcs = None):
+        result = None
+        if supporting_funcs is None:
+            return result
+        if isinstance(supporting_funcs, (AutonomousFunction,str)):
+            result = [supporting_funcs]
+        else:
+            result = supporting_funcs
+        assert isinstance(result, list)
+        for f in result:
+            if isinstance(f, AutonomousFunction):
+                assert f.strictly_autonomous
+                assert f.island_name == self.island_name
+            else:
+                assert isinstance(f, str)
+                assert f in pth.all_autonomous_functions[self.island_name]
+        result = [(f if isinstance(f,str) else f.name) for f in result]
+        result = sorted(result)
+        return result
+
+
+    def validate_environment(self):
+        if self.validators is not None:
+            island = pth.all_autonomous_functions[self.island_name]
+            for f in self.validators:
+                island[f].execute()
+
+    def correct_environment(self):
+        if self.correctors is not None:
+            island = pth.all_autonomous_functions[self.island_name]
+            for f in self.correctors:
+                island[f].execute()
+
+
+    @property
+    def can_be_executed(self) -> bool:
+        try:
+            self.validate_environment()
+            return True
+        except:
+            pass
+
+        try:
+            self.correct_environment()
+            self.validate_environment()
+            return True
+        except:
+            pass
+
+        return False
 
     @property
     def decorator(self) -> str:
         decorator_str = "@pth.idempotent("
-        decorator_str += f"island_name='{self.island_name}'"
+        decorator_str += f"\n\tisland_name='{self.island_name}'"
+        if self.validators is not None:
+            validators_str = f"\n\t, validators={self.validators}"
+            decorator_str += validators_str
+        if self.correctors is not None:
+            correctors_str = f"\n\t, correctors={self.correctors}"
+            decorator_str += correctors_str
         decorator_str += ")"
         return decorator_str
 
@@ -52,7 +122,15 @@ class IdempotentFunction(AutonomousFunction):
 
         if not self.augmented_code_checked:
             augmented_code = ""
-            for f_name in self.dependencies:
+
+            full_dependencies = []
+            if self.validators is not None:
+                full_dependencies += self.validators
+            if self.correctors is not None:
+                full_dependencies += self.correctors
+            full_dependencies += self.dependencies
+
+            for f_name in full_dependencies:
                 f = island[f_name]
                 augmented_code += f.decorator + "\n"
                 augmented_code += f.naked_source_code + "\n"
@@ -87,6 +165,8 @@ class IdempotentFunction(AutonomousFunction):
             , island_name=self.island_name
             , augmented_source_code=self.augmented_source_code
             , strictly_autonomous=self.strictly_autonomous
+            , validators=self.validators
+            , correctors=self.correctors
             , class_name=self.__class__.__name__)
         state = dict()
         for key in sorted(draft_state):
@@ -94,12 +174,14 @@ class IdempotentFunction(AutonomousFunction):
         return state
 
     def __setstate__(self, state):
-        assert len(state) == 6
+        assert len(state) == 8
         assert state["class_name"] == IdempotentFunction.__name__
         self.name = state["name"]
         self.naked_source_code = state["naked_source_code"]
         self.island_name = state["island_name"]
         self.strictly_autonomous = state["strictly_autonomous"]
+        self.validators = state["validators"]
+        self.correctors = state["correctors"]
         self.augmented_code_checked = False
         register_idempotent_function(self)
 
@@ -115,10 +197,12 @@ class IdempotentFunction(AutonomousFunction):
 
         self.augmented_code_checked = True
 
+
     def get_address(self, **kwargs) -> FunctionExecutionResultAddress:
         packed_kwargs = PackedKwArgs(**kwargs)
         result_address = FunctionExecutionResultAddress(self, packed_kwargs)
         return result_address
+
 
     def swarm(self, **kwargs) -> FunctionExecutionResultAddress:
         result_address = self.get_address(**kwargs)
@@ -140,6 +224,7 @@ class IdempotentFunction(AutonomousFunction):
             pth.run_history.py[
                 output_address + ["augmented_source"]] = (
                 self.augmented_source_code)
+            assert output_address.can_be_executed
             unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
             result = super().execute(**unpacked_kwargs)
             pth.execution_results[output_address] = ValueAddress(result)
@@ -278,14 +363,12 @@ class FunctionExecutionResultAddress(HashAddress):
 
     @property
     def can_be_executed(self) -> bool:
-        """Indicates if the function can be executed in the current session.
+        """Indicates if the function can be executed in the current session..
 
-        Currently, it's just a placeholder that always returns True.
-
-        The function should fe refactored once we start supporting
+        The function should fe refactored once we start fully supporting
         VALIDATORS, CORRECTORS and SEQUENCERS
         """
-        return True
+        return self.function.can_be_executed
 
     @property
     def needs_execution(self) -> bool:

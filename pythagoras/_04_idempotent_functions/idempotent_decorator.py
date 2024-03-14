@@ -1,21 +1,31 @@
 from typing import Callable
 
-import logging
+from pythagoras._03_autonomous_functions.autonomous_funcs import (
+    AutonomousFunction)
 
 from pythagoras._04_idempotent_functions.idempotent_func_address_context import (
-    IdempotentFunction)
+    IdempotentFunction, supporting_funcs)
 
 
 class idempotent:
 
     island_name: str | None
 
-    def __init__(self, island_name: str | None = None):
+    def __init__(self
+        , island_name: str | None = None
+        , validators: supporting_funcs = None
+        , correctors: supporting_funcs = None):
         assert isinstance(island_name, str) or island_name is None
         self.island_name = island_name
+        self.validators = validators
+        self.correctors = correctors
 
 
     def __call__(self, a_func:Callable) -> IdempotentFunction:
-        wrapper = IdempotentFunction(a_func, self.island_name)
+        wrapper = IdempotentFunction(
+            a_func
+            , island_name = self.island_name
+            , validators = self.validators
+            , correctors = self.correctors)
         return wrapper
 
