@@ -21,7 +21,7 @@ def _force_initialize(*args, **kwargs):
     return initialize(*args, **kwargs)
 
 def initialize(base_dir:str
-               , n_background_workers:int
+               , n_background_workers:int = 3
                , cloud_type:str = "local"
                , default_island_name:str = "Samos"
                , runtime_id: str|None = None):
