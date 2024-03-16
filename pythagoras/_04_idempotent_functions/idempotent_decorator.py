@@ -1,10 +1,7 @@
 from typing import Callable
 
-from pythagoras._03_autonomous_functions.autonomous_funcs import (
-    AutonomousFunction)
-
 from pythagoras._04_idempotent_functions.idempotent_func_address_context import (
-    IdempotentFunction, supporting_funcs)
+    IdempotentFunction, SupportingFuncs)
 
 
 class idempotent:
@@ -12,9 +9,9 @@ class idempotent:
     island_name: str | None
 
     def __init__(self
-        , island_name: str | None = None
-        , validators: supporting_funcs = None
-        , correctors: supporting_funcs = None):
+                 , island_name: str | None = None
+                 , validators: SupportingFuncs = None
+                 , correctors: SupportingFuncs = None):
         assert isinstance(island_name, str) or island_name is None
         self.island_name = island_name
         self.validators = validators

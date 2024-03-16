@@ -30,17 +30,19 @@ from pythagoras._05_events_and_exceptions.execution_environment_summary import (
 from pythagoras._05_events_and_exceptions.global_event_loggers import (
     register_exception_globally, register_event_globally)
 
-supporting_funcs:TypeAlias = (None | str | AutonomousFunction
-                              | List[str] | List[AutonomousFunction])
+
+ASupportingFunc:TypeAlias = str | AutonomousFunction
+
+SupportingFuncs:TypeAlias = ASupportingFunc | List[ASupportingFunc] | None
 
 class IdempotentFunction(AutonomousFunction):
     augmented_code_checked: bool
-    validators: supporting_funcs
-    correctors: supporting_funcs
+    validators: SupportingFuncs
+    correctors: SupportingFuncs
     def __init__(self, a_func: Callable | str | OrdinaryFunction
-            , island_name:str | None = None
-            , validators: supporting_funcs = None
-            , correctors: supporting_funcs = None):
+                 , island_name:str | None = None
+                 , validators: SupportingFuncs = None
+                 , correctors: SupportingFuncs = None):
         super().__init__(a_func, island_name)
         if validators is None:
             assert correctors is None
@@ -51,7 +53,7 @@ class IdempotentFunction(AutonomousFunction):
 
 
     def process_supporting_functions_arg(self
-            , supporting_funcs: supporting_funcs = None):
+                                         , supporting_funcs: SupportingFuncs = None):
         result = None
         if supporting_funcs is None:
             return result
@@ -198,13 +200,13 @@ class IdempotentFunction(AutonomousFunction):
         self.augmented_code_checked = True
 
 
-    def get_address(self, **kwargs) -> FunctionExecutionResultAddress:
+    def get_address(self, **kwargs) -> IdempotentFunctionExecutionResultAddress:
         packed_kwargs = PackedKwArgs(**kwargs)
-        result_address = FunctionExecutionResultAddress(self, packed_kwargs)
+        result_address = IdempotentFunctionExecutionResultAddress(self, packed_kwargs)
         return result_address
 
 
-    def swarm(self, **kwargs) -> FunctionExecutionResultAddress:
+    def swarm(self, **kwargs) -> IdempotentFunctionExecutionResultAddress:
         result_address = self.get_address(**kwargs)
         result_address.request_execution()
         return result_address
@@ -212,11 +214,11 @@ class IdempotentFunction(AutonomousFunction):
 
     def execute(self, **kwargs) -> Any:
         packed_kwargs = PackedKwArgs(**kwargs)
-        output_address = FunctionExecutionResultAddress(self, packed_kwargs)
+        output_address = IdempotentFunctionExecutionResultAddress(self, packed_kwargs)
         _pth_f_addr_ = output_address
         if output_address.ready:
             return output_address.get()
-        with FunctionExecutionContext(output_address) as _pth_ec:
+        with IdempotentFunctionExecutionContext(output_address) as _pth_ec:
             output_address.request_execution()
             _pth_ec.register_execution_attempt()
             pth.run_history.py[output_address + ["source"]] = (
@@ -237,7 +239,7 @@ class IdempotentFunction(AutonomousFunction):
             assert isinstance(kwargs, dict)
         addrs = []
         for kwargs in list_of_kwargs:
-            new_addr = FunctionExecutionResultAddress(self, kwargs)
+            new_addr = IdempotentFunctionExecutionResultAddress(self, kwargs)
             new_addr.request_execution()
             addrs.append(new_addr)
         addrs_indexed = list(zip(range(len(addrs)), addrs))
@@ -260,7 +262,7 @@ def register_idempotent_function(f: IdempotentFunction) -> None:
         island[name]._augmented_source_code = None
 
 
-class FunctionCallSignature:
+class IdempotentFunctionCallSignature:
     def __init__(self,f:IdempotentFunction,arguments:SortedKwArgs):
         assert isinstance(f, IdempotentFunction)
         assert isinstance(arguments, SortedKwArgs)
@@ -268,11 +270,12 @@ class FunctionCallSignature:
         self.f_addr = ValueAddress(f)
         self.args_addr = ValueAddress(arguments.pack())
 
-class FunctionExecutionResultAddress(HashAddress):
+
+class IdempotentFunctionExecutionResultAddress(HashAddress):
     def __init__(self, f: IdempotentFunction, arguments:dict[str, Any]):
         assert isinstance(f, IdempotentFunction)
         self._arguments = SortedKwArgs(**arguments)
-        signature = FunctionCallSignature(f,self._arguments)
+        signature = IdempotentFunctionCallSignature(f, self._arguments)
         tmp = ValueAddress(signature)
         new_prefix = f.f_name
         if f.island_name is not None:
@@ -293,13 +296,13 @@ class FunctionExecutionResultAddress(HashAddress):
 
     def get_ValueAddress(self):
         return ValueAddress.from_strings(  # TODO: refactor this
-            prefix="functioncallsignature", hash_value=self.hash_value)
+            prefix="idempotentfunctioncallsignature", hash_value=self.hash_value)
 
     def __setstate__(self, state):
-       assert False, ("You can't pickle a FunctionExecutionResultAddress. ")
+       assert False, ("You can't pickle a IdempotentFunctionExecutionResultAddress. ")
 
     def __getstate__(self):
-        assert False, ("You can't pickle a FunctionExecutionResultAddress. ")
+        assert False, ("You can't pickle a IdempotentFunctionExecutionResultAddress. ")
 
     @property
     def ready(self):
@@ -469,14 +472,14 @@ class FunctionExecutionResultAddress(HashAddress):
         return events
 
 
-class FunctionExecutionContext:
+class IdempotentFunctionExecutionContext:
     session_id: str
-    f_address: FunctionExecutionResultAddress
+    f_address: IdempotentFunctionExecutionResultAddress
     output_capturer = OutputCapturer
     exception_counter: int
     event_counter: int
 
-    def __init__(self, f_address: FunctionExecutionResultAddress):
+    def __init__(self, f_address: IdempotentFunctionExecutionResultAddress):
         self.session_id = get_random_signature()
         self.f_address = f_address
         self.output_capturer = OutputCapturer()

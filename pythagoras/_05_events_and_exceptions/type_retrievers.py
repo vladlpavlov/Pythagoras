@@ -18,22 +18,22 @@ def retrieve_AutonomousFunction_class() -> type:
     return sys.modules['pythagoras'].AutonomousFunction
 
 
-def retrieve_FunctionExecutionResultAddress_class() -> type:
-    """Return the FunctionExecutionResultAddress class.
+def retrieve_IdempotentFunctionExecutionResultAddress_class() -> type:
+    """Return the IdempotentFunctionExecutionResultAddress class.
 
     This is for-internal-use-only function, created to
     avoid circular import dependencies.
     """
-    return sys.modules['pythagoras'].FunctionExecutionResultAddress
+    return sys.modules['pythagoras'].IdempotentFunctionExecutionResultAddress
 
 
-def retrieve_FunctionExecutionContext_class() -> type:
-    """Return the FunctionExecutionContext class.
+def retrieve_IdempotentFunctionExecutionContext_class() -> type:
+    """Return the IdempotentFunctionExecutionContext class.
 
     This is for-internal-use-only function, created to
     avoid circular import dependencies.
     """
-    return sys.modules['pythagoras'].FunctionExecutionContext
+    return sys.modules['pythagoras'].IdempotentFunctionExecutionContext
 
 
 
