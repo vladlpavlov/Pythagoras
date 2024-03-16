@@ -90,6 +90,7 @@ def test_basic_addr(tmpdir):
             return 10
 
         addr = do_nothing_idempotent.swarm()
+        addr._invalidate_cache()
 
     with _force_initialize(tmpdir, n_background_workers=0):
         assert addr.execute() == 10

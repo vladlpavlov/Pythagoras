@@ -7,8 +7,6 @@ import pythagoras as pth
 
 def test_random_request_execution(tmpdir):
 
-
-
     with pth.initialize(tmpdir, n_background_workers=0):
 
         @pth.idempotent()
@@ -22,6 +20,7 @@ def test_random_request_execution(tmpdir):
 
     process_random_execution_request(init_params)
 
+    address._invalidate_cache()
     result = address.get()
     assert result == 50
     assert address.function(n=-1) == -5

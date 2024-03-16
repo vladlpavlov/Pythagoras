@@ -5,12 +5,12 @@ from pythagoras._03_autonomous_functions import *
 import sys
 
 from pythagoras._07_mission_control.global_state_management import (
-    _clean_global_state, initialize)
+    _clean_global_state, initialize, _force_initialize)
 
 def test_globals(tmpdir):
     """Test autonomous function wrapper with global objects."""
 
-    with initialize(tmpdir, n_background_workers=0):
+    with _force_initialize(tmpdir, n_background_workers=0):
 
         @autonomous()
         def good_global_f():
@@ -40,7 +40,7 @@ def test_globals(tmpdir):
 
 def test_locals_2(tmpdir):
     """Test autonomous function wrapper with local objects."""
-    with initialize(tmpdir, n_background_workers=0):
+    with _force_initialize(tmpdir, n_background_workers=0):
 
         import random
 
@@ -63,7 +63,7 @@ def test_locals_2(tmpdir):
         assert not is_autonomous(bad_local_f3)
 
 def test_non_classic_callables(tmpdir):
-    with initialize(tmpdir, n_background_workers=0):
+    with _force_initialize(tmpdir, n_background_workers=0):
 
         with pytest.raises(Exception):
             autonomous()(lambda x: x**2)
@@ -92,14 +92,14 @@ def test_non_classic_callables(tmpdir):
 
 
 def test_yield(tmpdir):
-    with initialize(tmpdir, n_background_workers=0):
+    with _force_initialize(tmpdir, n_background_workers=0):
         with pytest.raises(Exception):
             @autonomous()
             def f():
                 yield 1
 
 def test_nested_yield(tmpdir):
-    with initialize(tmpdir, n_background_workers=0):
+    with _force_initialize(tmpdir, n_background_workers=0):
         @autonomous()
         def f_y():
             def g():

@@ -48,6 +48,7 @@ def test_basic_addr(tmpdir):
         addr = do_nothing_idempotent.swarm()
 
     with _force_initialize(tmpdir, n_background_workers=0):
+        addr._invalidate_cache()
         assert addr.execute() == 10
 
 

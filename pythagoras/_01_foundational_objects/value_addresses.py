@@ -41,18 +41,31 @@ class ValueAddress(HashAddress):
         if push_to_cloud and not (self in pth.value_store):
             pth.value_store[self] = data
 
+        self._value = data
+        self._ready = True
+
+    def _invalidate_cache(self):
+        if hasattr(self, "_value"):
+            del self._value
+        if hasattr(self, "_ready"):
+            del self._ready
+
     def get_ValueAddress(self):
         return self
 
     @property
     def ready(self):
         """Check if address points to a value that is ready to be retrieved."""
-        return self in pth.value_store
+        if not hasattr(self, "_ready"):
+            self._ready = self in pth.value_store
+        return self._ready
 
 
     def get(self, timeout:Optional[int] = None) -> Any:
         """Retrieve value, referenced by the address"""
-        return pth.value_store[self]
+        if not hasattr(self, "_value"):
+            self._value = pth.value_store[self]
+        return self._value
 
     def get_typed(self
             ,expected_type:Type[T]
@@ -63,4 +76,9 @@ class ValueAddress(HashAddress):
         assert isinstance(result, expected_type)
         return result
 
+    def __getstate__(self):
+        state = dict(str_chain=self.str_chain)
+        return state
 
+    def __setstate__(self, state):
+        self.str_chain = state["str_chain"]

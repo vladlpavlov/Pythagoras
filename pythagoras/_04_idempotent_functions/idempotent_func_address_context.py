@@ -271,42 +271,69 @@ class FunctionCallSignature:
 class FunctionExecutionResultAddress(HashAddress):
     def __init__(self, f: IdempotentFunction, arguments:dict[str, Any]):
         assert isinstance(f, IdempotentFunction)
-        arguments = SortedKwArgs(**arguments)
-        signature = FunctionCallSignature(f,arguments)
+        self._arguments = SortedKwArgs(**arguments)
+        signature = FunctionCallSignature(f,self._arguments)
         tmp = ValueAddress(signature)
         new_prefix = f.f_name
         if f.island_name is not None:
             new_prefix += "_" + f.island_name
         new_hash_value = tmp.hash_value
         super().__init__(new_prefix, new_hash_value)
+        self._function = f
+
+    def _invalidate_cache(self):
+        if hasattr(self, "_ready"):
+            del self._ready
+        if hasattr(self, "_function"):
+            del self._function
+        if hasattr(self, "_result"):
+            del self._result
+        if hasattr(self, "_arguments"):
+            del self._arguments
 
     def get_ValueAddress(self):
         return ValueAddress.from_strings(  # TODO: refactor this
             prefix="functioncallsignature", hash_value=self.hash_value)
 
+    def __setstate__(self, state):
+       assert False, ("You can't pickle a FunctionExecutionResultAddress. ")
+
+    def __getstate__(self):
+        assert False, ("You can't pickle a FunctionExecutionResultAddress. ")
+
     @property
     def ready(self):
-        result =  self in pth.execution_results
+        if hasattr(self, "_ready"):
+            return True
+        result = (self in pth.execution_results)
+        if result:
+            self._ready = True
         return result
 
     def execute(self):
+        if hasattr(self, "_result"):
+            return self._result
         function = self.function
         arguments = self.arguments
-        result = function.execute(**arguments)
-        return result
+        self._result = function.execute(**arguments)
+        return self._result
+
 
     def request_execution(self):
-        if self in pth.execution_results:
+        if self.ready:
             pth.execution_requests.delete_if_exists(self)
         else:
             if self not in pth.execution_requests:
                 pth.execution_requests[self] = True
 
+
     def drop_execution_request(self):
         pth.execution_requests.delete_if_exists(self)
 
+
     def is_execution_requested(self):
         return self in pth.execution_requests
+
 
     def get(self, timeout: int = None):
         """Retrieve value, referenced by the address.
@@ -314,8 +341,13 @@ class FunctionExecutionResultAddress(HashAddress):
         If the value is not immediately available, backoff exponentially
         till timeout is exceeded. If timeout is None, keep trying forever.
         """
+        if hasattr(self, "_result"):
+            return self._result
+
         if self.ready:
-            return pth.value_store[pth.execution_results[self]]
+            self._result = pth.value_store[pth.execution_results[self]]
+            return self._result
+
         self.request_execution()
 
         start_time, backoff_period = time.time(), 1.0
@@ -324,9 +356,9 @@ class FunctionExecutionResultAddress(HashAddress):
 
         while True:
             if self.ready:
-                result = pth.value_store[pth.execution_results[self]]
+                self._result = pth.value_store[pth.execution_results[self]]
                 self.drop_execution_request()
-                return result
+                return self._result
             else:
                 time.sleep(backoff_period)
                 backoff_period *= 2.0
@@ -341,9 +373,13 @@ class FunctionExecutionResultAddress(HashAddress):
 
     @property
     def function(self) -> IdempotentFunction:
+        if hasattr(self, "_function"):
+            return self._function
         signature_addr = self.get_ValueAddress()
         signature = signature_addr.get()
-        return signature.f_addr.get()
+        self._function = signature.f_addr.get()
+        return self._function
+
 
     @property
     def f_name(self) -> str:
@@ -351,15 +387,21 @@ class FunctionExecutionResultAddress(HashAddress):
         signature = signature_addr.get()
         return signature.f_name
 
+
     @property
     def island_name(self) -> str:
         return self.function.island_name
 
+
     @property
     def arguments(self) -> SortedKwArgs:
+        if hasattr(self, "_arguments"):
+            return self._arguments
         signature_addr = self.get_ValueAddress()
         signature = signature_addr.get()
-        return signature.args_addr.get()
+        self._arguments = signature.args_addr.get()
+        return self._arguments
+
 
     @property
     def can_be_executed(self) -> bool:
@@ -369,6 +411,7 @@ class FunctionExecutionResultAddress(HashAddress):
         VALIDATORS, CORRECTORS and SEQUENCERS
         """
         return self.function.can_be_executed
+
 
     @property
     def needs_execution(self) -> bool:
@@ -397,11 +440,13 @@ class FunctionExecutionResultAddress(HashAddress):
             return True
         return False
 
+
     @property
     def execution_attempts(self) -> PersiDict:
         attempts_path = self + ["attempts"]
         attempts = pth.run_history.json.get_subdict(attempts_path)
         return attempts
+
 
     @property
     def execution_outputs(self) -> PersiDict:
@@ -409,17 +454,20 @@ class FunctionExecutionResultAddress(HashAddress):
         outputs = pth.run_history.txt.get_subdict(outputs_path)
         return outputs
 
+
     @property
     def crashes(self) -> PersiDict:
         crashes_path = self + ["crashes"]
         crashes = pth.run_history.json.get_subdict(crashes_path)
         return crashes
 
+
     @property
     def events(self) -> PersiDict:
         events_path = self + ["events"]
         events = pth.run_history.json.get_subdict(events_path)
         return events
+
 
 class FunctionExecutionContext:
     session_id: str

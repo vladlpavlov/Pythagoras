@@ -1,7 +1,7 @@
 import pytest
 from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
 from pythagoras._07_mission_control.global_state_management import (
-    _clean_global_state, initialize)
+    _clean_global_state, initialize, _force_initialize)
 
 
 def isEven(n):
@@ -19,7 +19,7 @@ def isOdd(n):
 
 
 def test_no_decorators(tmpdir):
-    with initialize(tmpdir, n_background_workers=0):
+    with _force_initialize(tmpdir, n_background_workers=0):
         assert isOdd(n=400) == False
         assert isEven(n=400) == True
 
@@ -45,10 +45,11 @@ def test_no_decorators(tmpdir):
 def test_two_decorators(tmpdir):
     global isEven, isOdd
     addr = None
-    with initialize(tmpdir, n_background_workers=0):
+    with _force_initialize(tmpdir, n_background_workers=0):
         isEven = idempotent()(isEven)
         isOdd = idempotent()(isOdd)
         addr = isEven.swarm(n=40)
 
-    with initialize(tmpdir, n_background_workers=5):
+    with _force_initialize(tmpdir, n_background_workers=5):
+        addr._invalidate_cache()
         assert addr.get() == True

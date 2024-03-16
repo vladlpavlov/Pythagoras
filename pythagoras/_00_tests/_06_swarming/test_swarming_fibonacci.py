@@ -22,4 +22,5 @@ def test_swarming_fibonacci(tmpdir):
         address = fibonacci.swarm(n=50)
 
     with initialize(tmpdir, n_background_workers=10):
+        address._invalidate_cache()
         assert address.get() == 12586269025

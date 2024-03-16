@@ -25,6 +25,9 @@ def test_addrr_execute(tmpdir):
     _clean_global_state()
     initialize(tmpdir, n_background_workers=0)
 
+    addr_10._invalidate_cache()
     assert addr_10.execute() == 0
+
+    addr_10._invalidate_cache()
     assert addr_10.function(n=1) == 10
 
