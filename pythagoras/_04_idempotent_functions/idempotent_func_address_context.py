@@ -22,6 +22,8 @@ from pythagoras._02_ordinary_functions.ordinary_funcs import (
 
 from pythagoras._04_idempotent_functions.kw_args import (
     UnpackedKwArgs, PackedKwArgs, SortedKwArgs)
+from pythagoras._04_idempotent_functions.persidict_to_timeline import \
+    build_timeline_from_persidict
 from pythagoras._04_idempotent_functions.process_augmented_func_src import (
     process_augmented_func_src)
 from pythagoras._04_idempotent_functions.output_capturer import OutputCapturer
@@ -450,12 +452,30 @@ class IdempotentFunctionExecutionResultAddress(HashAddress):
         attempts = pth.run_history.json.get_subdict(attempts_path)
         return attempts
 
+    def last_execution_attempt(self) -> Any:
+        attempts = self.execution_attempts
+        timeline = build_timeline_from_persidict(attempts)
+        if not len(timeline):
+            result = None
+        else:
+            result = timeline[-1]
+        return result
+
 
     @property
     def execution_outputs(self) -> PersiDict:
         outputs_path = self + ["outputs"]
         outputs = pth.run_history.txt.get_subdict(outputs_path)
         return outputs
+
+    def last_execution_output(self) -> Any:
+        outputs = self.execution_outputs
+        timeline = build_timeline_from_persidict(outputs)
+        if not len(timeline):
+            result = None
+        else:
+            result = timeline[-1]
+        return result
 
 
     @property
@@ -464,12 +484,32 @@ class IdempotentFunctionExecutionResultAddress(HashAddress):
         crashes = pth.run_history.json.get_subdict(crashes_path)
         return crashes
 
+    @property
+    def last_crash(self) -> Any:
+        crashes = self.crashes
+        timeline = build_timeline_from_persidict(crashes)
+        if not len(timeline):
+            result = None
+        else:
+            result = timeline[-1]
+        return result
+
 
     @property
     def events(self) -> PersiDict:
         events_path = self + ["events"]
         events = pth.run_history.json.get_subdict(events_path)
         return events
+
+    @property
+    def last_event(self) -> Any:
+        events = self.events
+        timeline = build_timeline_from_persidict(events)
+        if not len(timeline):
+            result = None
+        else:
+            result = timeline[-1]
+        return result
 
 
 class IdempotentFunctionExecutionContext:
