@@ -17,7 +17,7 @@ code of two functions to check if they are equivalent.
 """
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
-    OrdinaryFunction)
+    OrdinaryFn)
 
 from pythagoras._02_ordinary_functions.ordinary_decorator import (
     ordinary)

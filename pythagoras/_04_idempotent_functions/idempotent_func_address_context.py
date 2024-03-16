@@ -15,10 +15,10 @@ from pythagoras._01_foundational_objects.hash_addresses import HashAddress
 from pythagoras._01_foundational_objects.value_addresses import ValueAddress
 
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
-    AutonomousFunction, register_autonomous_function)
+    AutonomousFn, register_autonomous_function)
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
-    OrdinaryFunction)
+    OrdinaryFn)
 
 from pythagoras._04_idempotent_functions.kw_args import (
     UnpackedKwArgs, PackedKwArgs, SortedKwArgs)
@@ -33,15 +33,15 @@ from pythagoras._05_events_and_exceptions.global_event_loggers import (
     register_exception_globally, register_event_globally)
 
 
-ASupportingFunc:TypeAlias = str | AutonomousFunction
+ASupportingFunc:TypeAlias = str | AutonomousFn
 
 SupportingFuncs:TypeAlias = ASupportingFunc | List[ASupportingFunc] | None
 
-class IdempotentFunction(AutonomousFunction):
+class IdempotentFn(AutonomousFn):
     augmented_code_checked: bool
     validators: SupportingFuncs
     correctors: SupportingFuncs
-    def __init__(self, a_func: Callable | str | OrdinaryFunction
+    def __init__(self, a_func: Callable | str | OrdinaryFn
                  , island_name:str | None = None
                  , validators: SupportingFuncs = None
                  , correctors: SupportingFuncs = None):
@@ -59,13 +59,13 @@ class IdempotentFunction(AutonomousFunction):
         result = None
         if supporting_funcs is None:
             return result
-        if isinstance(supporting_funcs, (AutonomousFunction,str)):
+        if isinstance(supporting_funcs, (AutonomousFn, str)):
             result = [supporting_funcs]
         else:
             result = supporting_funcs
         assert isinstance(result, list)
         for f in result:
-            if isinstance(f, AutonomousFunction):
+            if isinstance(f, AutonomousFn):
                 assert f.strictly_autonomous
                 assert f.island_name == self.island_name
             else:
@@ -179,7 +179,7 @@ class IdempotentFunction(AutonomousFunction):
 
     def __setstate__(self, state):
         assert len(state) == 8
-        assert state["class_name"] == IdempotentFunction.__name__
+        assert state["class_name"] == IdempotentFn.__name__
         self.name = state["name"]
         self.naked_source_code = state["naked_source_code"]
         self.island_name = state["island_name"]
@@ -202,13 +202,13 @@ class IdempotentFunction(AutonomousFunction):
         self.augmented_code_checked = True
 
 
-    def get_address(self, **kwargs) -> IdempotentFunctionExecutionResultAddress:
+    def get_address(self, **kwargs) -> IdempotentFnExecutionResultAddress:
         packed_kwargs = PackedKwArgs(**kwargs)
-        result_address = IdempotentFunctionExecutionResultAddress(self, packed_kwargs)
+        result_address = IdempotentFnExecutionResultAddress(self, packed_kwargs)
         return result_address
 
 
-    def swarm(self, **kwargs) -> IdempotentFunctionExecutionResultAddress:
+    def swarm(self, **kwargs) -> IdempotentFnExecutionResultAddress:
         result_address = self.get_address(**kwargs)
         result_address.request_execution()
         return result_address
@@ -216,11 +216,11 @@ class IdempotentFunction(AutonomousFunction):
 
     def execute(self, **kwargs) -> Any:
         packed_kwargs = PackedKwArgs(**kwargs)
-        output_address = IdempotentFunctionExecutionResultAddress(self, packed_kwargs)
+        output_address = IdempotentFnExecutionResultAddress(self, packed_kwargs)
         _pth_f_addr_ = output_address
         if output_address.ready:
             return output_address.get()
-        with IdempotentFunctionExecutionContext(output_address) as _pth_ec:
+        with IdempotentFnExecutionContext(output_address) as _pth_ec:
             output_address.request_execution()
             _pth_ec.register_execution_attempt()
             pth.run_history.py[output_address + ["source"]] = (
@@ -241,7 +241,7 @@ class IdempotentFunction(AutonomousFunction):
             assert isinstance(kwargs, dict)
         addrs = []
         for kwargs in list_of_kwargs:
-            new_addr = IdempotentFunctionExecutionResultAddress(self, kwargs)
+            new_addr = IdempotentFnExecutionResultAddress(self, kwargs)
             new_addr.request_execution()
             addrs.append(new_addr)
         addrs_indexed = list(zip(range(len(addrs)), addrs))
@@ -253,9 +253,9 @@ class IdempotentFunction(AutonomousFunction):
         return results_list
 
 
-def register_idempotent_function(f: IdempotentFunction) -> None:
+def register_idempotent_function(f: IdempotentFn) -> None:
     """Register an idempotent function in the Pythagoras system."""
-    assert isinstance(f, IdempotentFunction)
+    assert isinstance(f, IdempotentFn)
     register_autonomous_function(f)
     island_name = f.island_name
     island = pth.all_autonomous_functions[island_name]
@@ -264,20 +264,20 @@ def register_idempotent_function(f: IdempotentFunction) -> None:
         island[name]._augmented_source_code = None
 
 
-class IdempotentFunctionCallSignature:
-    def __init__(self,f:IdempotentFunction,arguments:SortedKwArgs):
-        assert isinstance(f, IdempotentFunction)
+class IdempotentFnCallSignature:
+    def __init__(self, f:IdempotentFn, arguments:SortedKwArgs):
+        assert isinstance(f, IdempotentFn)
         assert isinstance(arguments, SortedKwArgs)
         self.f_name = f.name
         self.f_addr = ValueAddress(f)
         self.args_addr = ValueAddress(arguments.pack())
 
 
-class IdempotentFunctionExecutionResultAddress(HashAddress):
-    def __init__(self, f: IdempotentFunction, arguments:dict[str, Any]):
-        assert isinstance(f, IdempotentFunction)
+class IdempotentFnExecutionResultAddress(HashAddress):
+    def __init__(self, f: IdempotentFn, arguments:dict[str, Any]):
+        assert isinstance(f, IdempotentFn)
         self._arguments = SortedKwArgs(**arguments)
-        signature = IdempotentFunctionCallSignature(f, self._arguments)
+        signature = IdempotentFnCallSignature(f, self._arguments)
         tmp = ValueAddress(signature)
         new_prefix = f.f_name
         if f.island_name is not None:
@@ -298,13 +298,13 @@ class IdempotentFunctionExecutionResultAddress(HashAddress):
 
     def get_ValueAddress(self):
         return ValueAddress.from_strings(  # TODO: refactor this
-            prefix="idempotentfunctioncallsignature", hash_value=self.hash_value)
+            prefix="idempotentfncallsignature", hash_value=self.hash_value)
 
     def __setstate__(self, state):
-       assert False, ("You can't pickle a IdempotentFunctionExecutionResultAddress. ")
+       assert False, ("You can't pickle a IdempotentFnExecutionResultAddress. ")
 
     def __getstate__(self):
-        assert False, ("You can't pickle a IdempotentFunctionExecutionResultAddress. ")
+        assert False, ("You can't pickle a IdempotentFnExecutionResultAddress. ")
 
     @property
     def ready(self):
@@ -377,7 +377,7 @@ class IdempotentFunctionExecutionResultAddress(HashAddress):
                 backoff_period = max(1.0, backoff_period)
 
     @property
-    def function(self) -> IdempotentFunction:
+    def function(self) -> IdempotentFn:
         if hasattr(self, "_function"):
             return self._function
         signature_addr = self.get_ValueAddress()
@@ -512,14 +512,14 @@ class IdempotentFunctionExecutionResultAddress(HashAddress):
         return result
 
 
-class IdempotentFunctionExecutionContext:
+class IdempotentFnExecutionContext:
     session_id: str
-    f_address: IdempotentFunctionExecutionResultAddress
+    f_address: IdempotentFnExecutionResultAddress
     output_capturer = OutputCapturer
     exception_counter: int
     event_counter: int
 
-    def __init__(self, f_address: IdempotentFunctionExecutionResultAddress):
+    def __init__(self, f_address: IdempotentFnExecutionResultAddress):
         self.session_id = get_random_signature()
         self.f_address = f_address
         self.output_capturer = OutputCapturer()

@@ -2,7 +2,7 @@
 from pythagoras._01_foundational_objects.hash_and_random_signatures import (
     get_random_signature)
 from pythagoras._05_events_and_exceptions.type_retrievers import (
-    retrieve_IdempotentFunctionExecutionContext_class)
+    retrieve_IdempotentFnExecutionContext_class)
 from pythagoras._05_events_and_exceptions.find_in_callstack import (
     find_local_var_in_callstack)
 from pythagoras._05_events_and_exceptions.global_event_loggers import (
@@ -13,7 +13,7 @@ import pythagoras as pth
 
 def get_current_function_execution_context():
     all_context_objects = find_local_var_in_callstack(name_to_find="_pth_ec"
-        , class_to_find=retrieve_IdempotentFunctionExecutionContext_class())
+        , class_to_find=retrieve_IdempotentFnExecutionContext_class())
     if len(all_context_objects) > 0:
         return all_context_objects[0]
     else:

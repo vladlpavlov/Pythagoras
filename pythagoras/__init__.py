@@ -32,7 +32,7 @@ run_history:Optional[MultiPersiDict] = None
 compute_nodes:Optional[MultiPersiDict] = None
 
 runtime_id: Optional[str] = None
-all_autonomous_functions:Optional[Dict[str|None,Dict[str,AutonomousFunction]]] = None
+all_autonomous_functions:Optional[Dict[str|None,Dict[str,AutonomousFn]]] = None
 default_island_name: Optional[str] = None
 entropy_infuser: Optional[Random] = None
 n_background_workers: Optional[int] = None

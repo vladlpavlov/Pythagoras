@@ -1,6 +1,6 @@
 import inspect, autopep8
 from pythagoras._02_ordinary_functions.code_normalizer import get_normalized_function_source
-from pythagoras._02_ordinary_functions.ordinary_funcs import OrdinaryFunction
+from pythagoras._02_ordinary_functions.ordinary_funcs import OrdinaryFn
 
 def f_docstring():
     """ This is a CRAZY docstring"""
@@ -90,10 +90,10 @@ def test_different():
             if f1 is f2:
                 assert (get_normalized_function_source(f1)
                         == get_normalized_function_source(f2))
-                assert (get_normalized_function_source(OrdinaryFunction(f1))
+                assert (get_normalized_function_source(OrdinaryFn(f1))
                         == get_normalized_function_source(f2))
             else:
                 assert (get_normalized_function_source(f1)
                         != get_normalized_function_source(f2))
-                assert (get_normalized_function_source(OrdinaryFunction(f1))
+                assert (get_normalized_function_source(OrdinaryFn(f1))
                         != get_normalized_function_source(f2))

@@ -41,7 +41,7 @@ of decoration, while dynamic checks happen at the time of function call.
 
 
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
-    AutonomousFunction)
+    AutonomousFn)
 
 from pythagoras._03_autonomous_functions.autonomicity_checks import (
     is_autonomous, is_loosely_autonomous)

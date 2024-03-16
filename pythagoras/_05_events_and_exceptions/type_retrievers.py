@@ -1,39 +1,39 @@
 import sys
 
-def retrieve_IdempotentFunction_class() -> type:
-    """Return the IdempotentFunction class.
+def retrieve_IdempotentFn_class() -> type:
+    """Return the IdempotentFn class.
 
     This is for-internal-use-only function, created to
     avoid circular import dependencies.
     """
-    return sys.modules['pythagoras'].IdempotentFunction
+    return sys.modules['pythagoras'].IdempotentFn
 
 
-def retrieve_AutonomousFunction_class() -> type:
-    """Return the AutonomousFunction class.
-
-    This is for-internal-use-only function, created to
-    avoid circular import dependencies.
-    """
-    return sys.modules['pythagoras'].AutonomousFunction
-
-
-def retrieve_IdempotentFunctionExecutionResultAddress_class() -> type:
-    """Return the IdempotentFunctionExecutionResultAddress class.
+def retrieve_AutonomousFn_class() -> type:
+    """Return the AutonomousFn class.
 
     This is for-internal-use-only function, created to
     avoid circular import dependencies.
     """
-    return sys.modules['pythagoras'].IdempotentFunctionExecutionResultAddress
+    return sys.modules['pythagoras'].AutonomousFn
 
 
-def retrieve_IdempotentFunctionExecutionContext_class() -> type:
-    """Return the IdempotentFunctionExecutionContext class.
+def retrieve_IdempotentFnExecutionResultAddress_class() -> type:
+    """Return the IdempotentFnExecutionResultAddress class.
 
     This is for-internal-use-only function, created to
     avoid circular import dependencies.
     """
-    return sys.modules['pythagoras'].IdempotentFunctionExecutionContext
+    return sys.modules['pythagoras'].IdempotentFnExecutionResultAddress
+
+
+def retrieve_IdempotentFnExecutionContext_class() -> type:
+    """Return the IdempotentFnExecutionContext class.
+
+    This is for-internal-use-only function, created to
+    avoid circular import dependencies.
+    """
+    return sys.modules['pythagoras'].IdempotentFnExecutionContext
 
 
 

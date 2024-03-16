@@ -16,7 +16,7 @@ def test_load_save_error(tmpdir):
         def f(a, b):
             return a + b
 
-        f_1 = AutonomousFunction(f, island_name="123")
+        f_1 = AutonomousFn(f, island_name="123")
         f_1_address = ValueAddress(f_1)
         assert len(pth.value_store) == 1
         f_1_address._invalidate_cache()
@@ -28,7 +28,7 @@ def test_load_save_error(tmpdir):
         def f(a, b):
             return a * b * 2
 
-        f_2 = AutonomousFunction(f, island_name="123")
+        f_2 = AutonomousFn(f, island_name="123")
         f_2_address = ValueAddress(f_2)
         assert len(pth.value_store) == 2
         f_2_address._invalidate_cache()

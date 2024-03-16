@@ -7,7 +7,7 @@ from pythagoras._01_foundational_objects.hash_and_random_signatures import (
     get_random_signature)
 
 from pythagoras._02_ordinary_functions.ordinary_funcs import (
-    OrdinaryFunction)
+    OrdinaryFn)
 
 from pythagoras._03_autonomous_functions.call_graph_explorer import (
     explore_call_graph_deep)
@@ -24,14 +24,14 @@ from pythagoras._05_events_and_exceptions.global_event_loggers import (
 import pythagoras as pth
 
 
-class AutonomousFunction(OrdinaryFunction):
+class AutonomousFn(OrdinaryFn):
     # naked_source_code: str
     # name: str
     island_name:str
     strictly_autonomous:bool
 
 
-    def __init__(self, a_func: Callable | str | OrdinaryFunction
+    def __init__(self, a_func: Callable | str | OrdinaryFn
                  , island_name:str | None = None
                  ,strictly_autonomous:bool = False):
 
@@ -42,14 +42,14 @@ class AutonomousFunction(OrdinaryFunction):
         assert isinstance(island_name, str)
         # TODO: Add checks for island_name (should be a safe str)
 
-        if isinstance(a_func, AutonomousFunction):
+        if isinstance(a_func, AutonomousFn):
             assert island_name == a_func.island_name
 
         self.island_name = island_name
 
         self.strictly_autonomous = bool(strictly_autonomous)
 
-        if self.__class__.__name__ == AutonomousFunction.__name__:
+        if self.__class__.__name__ == AutonomousFn.__name__:
             register_autonomous_function(self)
 
 
@@ -162,7 +162,7 @@ class AutonomousFunction(OrdinaryFunction):
             result = names_dict["_pth_result"]
             return result
         except Exception as e:
-            if self.__class__ == AutonomousFunction:
+            if self.__class__ == AutonomousFn:
                 exception_id = f"{self.name}_{self.island_name}"
                 exception_id += f"_{e.__class__.__name__}"
                 exception_id += f"_{get_random_signature()}"
@@ -188,7 +188,7 @@ class AutonomousFunction(OrdinaryFunction):
 
     def __setstate__(self, state):
         assert len(state) == 5
-        assert state["class_name"] == AutonomousFunction.__name__
+        assert state["class_name"] == AutonomousFn.__name__
         self.name = state["name"]
         self.naked_source_code = state["naked_source_code"]
         self.island_name = state["island_name"]
@@ -196,8 +196,8 @@ class AutonomousFunction(OrdinaryFunction):
         register_autonomous_function(self)
 
 
-def register_autonomous_function(f: AutonomousFunction) -> None:
-    assert isinstance(f, AutonomousFunction)
+def register_autonomous_function(f: AutonomousFn) -> None:
+    assert isinstance(f, AutonomousFn)
     island_name = f.island_name
     name = f.name
     if island_name not in pth.all_autonomous_functions:

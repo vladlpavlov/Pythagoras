@@ -15,7 +15,7 @@ def test_load_save(tmpdir):
             , default_island_name="test"
             , n_background_workers=0):
 
-        f_1 = AutonomousFunction(f, island_name="test")
+        f_1 = AutonomousFn(f, island_name="test")
         f_address = ValueAddress(f_1)
 
         f_2 = f_address.get()

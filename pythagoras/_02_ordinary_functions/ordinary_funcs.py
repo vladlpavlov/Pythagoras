@@ -9,13 +9,13 @@ from pythagoras._02_ordinary_functions.code_normalizer_implementation import (
     __get_normalized_function_source__)
 
 
-class OrdinaryFunction:
+class OrdinaryFn:
     naked_source_code:str
     name:str
 
-    def __init__(self, a_func: Callable | str | OrdinaryFunction, **_):
+    def __init__(self, a_func: Callable | str | OrdinaryFn, **_):
 
-        if isinstance(a_func, OrdinaryFunction):
+        if isinstance(a_func, OrdinaryFn):
             self.naked_source_code = a_func.naked_source_code
             self.name = a_func.name
         else:

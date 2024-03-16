@@ -31,7 +31,7 @@ and to enforce autonomicity requirements for the function.
 from typing import Callable
 
 from pythagoras._03_autonomous_functions.autonomous_funcs import (
-     AutonomousFunction)
+    AutonomousFn)
 
 
 class autonomous:
@@ -57,7 +57,7 @@ class autonomous:
         self.island_name = island_name
         self.strictly_autonomous = strictly_autonomous
 
-    def __call__(self, a_func: Callable|str) -> AutonomousFunction:
+    def __call__(self, a_func: Callable|str) -> AutonomousFn:
         """Decorator for autonomous functions.
 
         It does both static and dynamic checks for autonomous functions.
@@ -83,7 +83,7 @@ class autonomous:
         all possible violations of function autonomy requirements.
         """
 
-        wrapper = AutonomousFunction(
+        wrapper = AutonomousFn(
             a_func, island_name=self.island_name
             , strictly_autonomous=self.strictly_autonomous)
         return wrapper

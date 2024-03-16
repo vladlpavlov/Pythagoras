@@ -1,7 +1,7 @@
 from typing import Callable
 
 from pythagoras._04_idempotent_functions.idempotent_func_address_context import (
-    IdempotentFunction, SupportingFuncs)
+    IdempotentFn, SupportingFuncs)
 
 
 class idempotent:
@@ -18,8 +18,8 @@ class idempotent:
         self.correctors = correctors
 
 
-    def __call__(self, a_func:Callable) -> IdempotentFunction:
-        wrapper = IdempotentFunction(
+    def __call__(self, a_func:Callable) -> IdempotentFn:
+        wrapper = IdempotentFn(
             a_func
             , island_name = self.island_name
             , validators = self.validators

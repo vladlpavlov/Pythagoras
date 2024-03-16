@@ -187,7 +187,7 @@ def is_correctly_initialized():
                     return False
                 if not isinstance(
                         pth.all_autonomous_functions[island_name][function_name]
-                        ,pth.AutonomousFunction):
+                        ,pth.AutonomousFn):
                     return False
     if not isinstance(pth.initialization_parameters, dict):
         return False
