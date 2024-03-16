@@ -21,9 +21,10 @@ def register_exception_globally(exception_id = None, **kwargs):
         exc_value=exc_value, **kwargs)
 
 
-def register_event_globally(event_id = None, **kwargs):
+def register_event_globally(event_id, *args, **kwargs):
     path = current_date_gmt_string()
     if event_id is None:
         event_id = get_random_signature()
     full_path = [path, event_id]
-    pth.event_log[full_path] = add_execution_environment_summary(**kwargs)
+    pth.event_log[full_path] = add_execution_environment_summary(
+        *args,**kwargs)

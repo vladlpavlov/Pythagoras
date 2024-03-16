@@ -37,9 +37,14 @@ def build_execution_environment_summary()-> Dict:
     return execution_environment_summary
 
 
-def add_execution_environment_summary(**kwargs):
+def add_execution_environment_summary(*args, **kwargs):
+    """Add execution environment summary to kwargs."""
     context_param_name = "execution_environment_summary"
     while context_param_name in kwargs:
         context_param_name += "_"
+    message_param_name = "message_list"
+    while message_param_name in kwargs:
+        message_param_name += "_"
     kwargs[context_param_name] = build_execution_environment_summary()
+    kwargs[message_param_name] = args
     return kwargs

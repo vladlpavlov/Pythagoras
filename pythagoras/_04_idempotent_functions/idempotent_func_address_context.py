@@ -519,12 +519,13 @@ class IdempotentFunctionExecutionContext:
         exception_id = self.f_address.f_name + "_" + exception_id
         register_exception_globally(**kwargs, exception_id=exception_id)
 
-    def register_event(self, event_type:str|None=None, **kwargs):
+    def register_event(self, event_type:str|None, *args, **kwargs):
         event_id = self.session_id + f"_e_{self.event_counter}"
         if event_type is not None:
             event_id += "_"+ event_type
         events = self.f_address.events
-        events[event_id] = add_execution_environment_summary(**kwargs, event_type=event_type)
+        events[event_id] = add_execution_environment_summary(
+            *args, **kwargs, event_type=event_type)
 
         event_id = self.session_id + f"_e_{self.event_counter}"
         if event_type is not None:
@@ -532,6 +533,6 @@ class IdempotentFunctionExecutionContext:
             event_id = event_type + "_"+ event_id
         event_id = self.f_address.island_name + "_" + event_id
         event_id = self.f_address.f_name + "_" + event_id
-        register_event_globally(**kwargs, event_id=event_id)
+        register_event_globally(event_id, *args, **kwargs)
 
         self.event_counter += 1

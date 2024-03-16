@@ -29,10 +29,10 @@ class EventPosterFactory:
         return EventPoster(
             event_type = item, enable_printing = self.enable_printing)
 
-    def __call__(self, **kwargs):
+    def __call__(self, *args, **kwargs):
         event_poster =  EventPoster(
             event_type = None, enable_printing = self.enable_printing)
-        return event_poster(**kwargs)
+        return event_poster(*args, **kwargs)
 
 class EventPoster:
     def __init__(self, event_type: str|None, enable_printing: bool = False):
@@ -41,24 +41,30 @@ class EventPoster:
         self.event_type = event_type
         self.enable_printing = enable_printing
 
-    def __call__(self,**kwargs) -> None:
+    def __call__(self,*args, **kwargs) -> None:
         assert pth.is_correctly_initialized(), (
             "The Pythagoras package has not been correctly initialized.")
         fe_context = get_current_function_execution_context()
         if fe_context is not None:
-            fe_context.register_event(event_type = self.event_type, **kwargs)
+            fe_context.register_event(
+                self.event_type, *args, **kwargs)
         else:
+            event_id = get_random_signature()
             if self.event_type is not None:
                 kwargs["event_type"] = self.event_type
-                event_id = self.event_type + "_" + get_random_signature()
-            else:
-                event_id = get_random_signature()
-            register_event_globally(**kwargs, event_id = event_id)
+                event_id = self.event_type + "_" + event_id
+            register_event_globally(event_id, *args, **kwargs, )
 
         if self.enable_printing:
             print("\n" + 15*"~" + " EVENT WAS POSTED " + 15*"~")
-            for k in kwargs:
-                print(f"\t{k}: {kwargs[k]}")
+            if self.event_type is not None:
+                print(f"Event type: {self.event_type}")
+            if len(args) > 0:
+                print(f"Event message: ", *args)
+            if len(kwargs) > 0:
+                print(f"Event parameters:")
+                for k in kwargs:
+                    print(f"\t{k}: {kwargs[k]}")
 
 
 post_event = EventPosterFactory(enable_printing = False)
