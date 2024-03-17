@@ -1,7 +1,8 @@
 import ast
 from typing import Callable, Union
 
-from pythagoras._02_ordinary_functions import get_normalized_function_source
+from pythagoras._02_ordinary_functions.code_normalizer import (
+    get_normalized_function_source)
 
 from pythagoras._99_misc_utils.id_examiner import is_reserved_identifier
 

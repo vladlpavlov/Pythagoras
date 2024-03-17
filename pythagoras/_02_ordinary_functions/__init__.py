@@ -21,6 +21,3 @@ from pythagoras._02_ordinary_functions.ordinary_funcs import (
 
 from pythagoras._02_ordinary_functions.ordinary_decorator import (
     ordinary)
-
-from pythagoras._02_ordinary_functions.code_normalizer import (
-    get_normalized_function_source)
