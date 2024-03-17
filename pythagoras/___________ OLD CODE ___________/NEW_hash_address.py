@@ -132,7 +132,7 @@ class HashAddress(SafeStrTuple):
 class ValueAddress(HashAddress):
     """A globally unique address of an immutable value.
 
-    ValueAddress is a universal global identifier of any (constant) value.
+    ValueAddr is a universal global identifier of any (constant) value.
     Using only the value's hash should (theoretically) be enough to
     uniquely address all possible data objects that the humanity  will create
     in the foreseeable future (see, for example ipfs.io).
@@ -152,8 +152,8 @@ class ValueAddress(HashAddress):
             return
 
         assert not isinstance(data,HashAddress), (
-            "ValueAddress is the only HashAddress which is allowed "
-            + "to be converted to ValueAddress")
+            "ValueAddr is the only HashAddr which is allowed "
+            + "to be converted to ValueAddr")
 
         prefix = self._build_prefix(data)
         hash_value = self._build_hash_value(data)

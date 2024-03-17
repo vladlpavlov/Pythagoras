@@ -1,5 +1,5 @@
 from typing import Dict, Any
-from pythagoras._01_foundational_objects.value_addresses import ValueAddress
+from pythagoras._01_foundational_objects.value_addresses import ValueAddr
 import pythagoras as pth
 
 
@@ -24,17 +24,17 @@ class SortedKwArgs(dict):
         """ Restore values based on their hash addresses."""
         unpacked_copy = dict()
         for k,v in self.items():
-            if isinstance(v, ValueAddress):
+            if isinstance(v, ValueAddr):
                 unpacked_copy[k] = pth.value_store[v]
             else:
                 unpacked_copy[k] = v
         return unpacked_copy
 
-    def pack(self) -> Dict[str, ValueAddress]:
+    def pack(self) -> Dict[str, ValueAddr]:
         """ Replace values with their hash addresses."""
         packed_copy = dict()
         for k,v in self.items():
-            packed_copy[k] = ValueAddress(v)
+            packed_copy[k] = ValueAddr(v)
         return packed_copy
 
 

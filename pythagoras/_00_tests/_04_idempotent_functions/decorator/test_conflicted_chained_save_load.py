@@ -1,6 +1,6 @@
 import pytest
 
-from pythagoras._01_foundational_objects.value_addresses import ValueAddress
+from pythagoras._01_foundational_objects.value_addresses import ValueAddr
 
 from pythagoras._04_idempotent_functions.idempotent_decorator import (
     idempotent)
@@ -33,8 +33,8 @@ def test_conflicted_chained_save_load(tmpdir):
         assert f3() == 0
         assert f4() == 0
 
-        address_2 = ValueAddress(f2)
-        address_4 = ValueAddress(f4)
+        address_2 = ValueAddr(f2)
+        address_4 = ValueAddr(f4)
 
         assert address_2.get()() == 0
         assert address_4.get()() == 0

@@ -1,6 +1,6 @@
 import pytest
 
-from pythagoras._01_foundational_objects.value_addresses import ValueAddress
+from pythagoras._01_foundational_objects.value_addresses import ValueAddr
 
 from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
 from pythagoras._04_idempotent_functions.idempotency_checks import is_idempotent

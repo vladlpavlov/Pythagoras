@@ -1,6 +1,6 @@
 from pythagoras._07_mission_control.global_state_management import (
     _force_initialize)
-from pythagoras._01_foundational_objects.value_addresses import ValueAddress
+from pythagoras._01_foundational_objects.value_addresses import ValueAddr
 from pythagoras._03_autonomous_functions import *
 
 import pytest
@@ -17,7 +17,7 @@ def test_load_save_error(tmpdir):
             return a + b
 
         f_1 = AutonomousFn(f, island_name="123")
-        f_1_address = ValueAddress(f_1)
+        f_1_address = ValueAddr(f_1)
         assert len(pth.value_store) == 1
         f_1_address._invalidate_cache()
 
@@ -29,7 +29,7 @@ def test_load_save_error(tmpdir):
             return a * b * 2
 
         f_2 = AutonomousFn(f, island_name="123")
-        f_2_address = ValueAddress(f_2)
+        f_2_address = ValueAddr(f_2)
         assert len(pth.value_store) == 2
         f_2_address._invalidate_cache()
 

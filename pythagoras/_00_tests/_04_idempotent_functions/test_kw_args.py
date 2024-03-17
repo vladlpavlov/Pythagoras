@@ -1,4 +1,4 @@
-from pythagoras import ValueAddress
+from pythagoras import ValueAddr
 from pythagoras._04_idempotent_functions.kw_args import PackedKwArgs
 from pythagoras._07_mission_control.global_state_management import _clean_global_state, \
     initialize
@@ -16,7 +16,7 @@ def test_packed_kwargs(tmpdir):
     assert list(pka.keys()) == sorted(pka.keys())
 
     for k in pka:
-        assert pka[k] == ValueAddress(sampe_dict[k])
+        assert pka[k] == ValueAddr(sampe_dict[k])
 
     assert pka.unpack() == sampe_dict
     assert pka == PackedKwArgs(**pka.unpack())

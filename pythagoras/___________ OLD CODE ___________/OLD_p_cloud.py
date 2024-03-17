@@ -562,7 +562,7 @@ class PValueAddress(PHashAddress):
         return result
 
     def __repr__(self):
-        str_repr =  f"ValueAddress( prefix={self.prefix} "
+        str_repr =  f"ValueAddr( prefix={self.prefix} "
         if self.descriptor:
             str_repr += f", descriptor={self.descriptor} "
         str_repr += f", hash_value={self.hash_value} )"

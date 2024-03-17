@@ -4,14 +4,14 @@ from copy import deepcopy
 from typing import Any, Optional, Type, TypeVar
 
 import pythagoras as pth
-from pythagoras._01_foundational_objects.hash_addresses import HashAddress
+from pythagoras._01_foundational_objects.hash_addresses import HashAddr
 
 T = TypeVar("T")
 
-class ValueAddress(HashAddress):
+class ValueAddr(HashAddr):
     """A globally unique address of an immutable value.
 
-    ValueAddress is a universal global identifier of any (constant) value.
+    ValueAddr is a universal global identifier of any (constant) value.
     Using only the value's hash should (theoretically) be enough to
     uniquely address all possible data objects that the humanity  will create
     in the foreseeable future (see, for example ipfs.io).
@@ -25,13 +25,13 @@ class ValueAddress(HashAddress):
         assert len(args) == 0
         assert len(kwargs) == 0
 
-        if hasattr(data, "get_ValueAddress"):
-            self.str_chain = deepcopy(data.get_ValueAddress().str_chain)
+        if hasattr(data, "get_ValueAddr"):
+            self.str_chain = deepcopy(data.get_ValueAddr().str_chain)
             return
 
-        assert not isinstance(data,HashAddress), (
-            "get_ValueAddress is the only way to "
-            + "convert HashAddress into ValueAddress")
+        assert not isinstance(data, HashAddr), (
+            "get_ValueAddr is the only way to "
+            + "convert HashAddr into ValueAddr")
 
         prefix = self._build_prefix(data)
         hash_value = self._build_hash_value(data)
@@ -50,7 +50,7 @@ class ValueAddress(HashAddress):
         if hasattr(self, "_ready"):
             del self._ready
 
-    def get_ValueAddress(self):
+    def get_ValueAddr(self):
         return self
 
     @property

@@ -1,6 +1,6 @@
 import pytest
 
-from pythagoras._01_foundational_objects.value_addresses import ValueAddress
+from pythagoras._01_foundational_objects.value_addresses import ValueAddr
 
 from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
 from pythagoras._04_idempotent_functions.idempotency_checks import is_idempotent
@@ -25,6 +25,6 @@ def test_basic_save_load(tmpdir):
 
     address = None
     # assert len(pth.value_store) == 0
-    for i in range(3): address = ValueAddress(my_function)
+    for i in range(3): address = ValueAddr(my_function)
     for i in range(3): assert address.get()() == 2024
     # assert len(pth.value_store) == 1

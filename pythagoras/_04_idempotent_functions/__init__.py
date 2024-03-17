@@ -3,7 +3,7 @@ from pythagoras._04_idempotent_functions.kw_args import (
 
 from pythagoras._04_idempotent_functions.idempotent_func_address_context import (
     IdempotentFn
-    , IdempotentFnExecutionResultAddress
+    , IdempotentFnExecutionResultAddr
     , IdempotentFnExecutionContext)
 
 from pythagoras._04_idempotent_functions.idempotent_decorator import (

@@ -1,15 +1,9 @@
-import pytest
 
-from persidict import FileDirDict
-
-from pythagoras._02_ordinary_functions.ordinary_decorator import ordinary
-from pythagoras._03_autonomous_functions.autonomous_decorators import autonomous
 from pythagoras._04_idempotent_functions.idempotent_decorator import idempotent
-from pythagoras._04_idempotent_functions.idempotency_checks import is_idempotent
 from pythagoras._04_idempotent_functions.idempotent_func_address_context import (
-    IdempotentFnExecutionResultAddress)
+    IdempotentFnExecutionResultAddr)
 from pythagoras._07_mission_control.global_state_management import (
-    _clean_global_state, initialize)
+    initialize, _force_initialize)
 
 import pythagoras as pth
 
@@ -22,28 +16,27 @@ def factorial(n:int) -> int:
 
 def test_needs_execution(tmpdir):
 
-    _clean_global_state()
-    initialize(tmpdir, n_background_workers=0)
+    with _force_initialize(tmpdir, n_background_workers=0):
     # initialize(base_dir="TTTTTTTTTTTTTTTTTTTTT")
 
-    global factorial
-    factorial = idempotent()(factorial)
+        global factorial
+        factorial = idempotent()(factorial)
 
-    addr = IdempotentFnExecutionResultAddress(f=factorial, arguments=dict(n=5))
+        addr = IdempotentFnExecutionResultAddr(a_fn=factorial, arguments=dict(n=5))
 
-    assert not addr.ready
-    assert addr.can_be_executed
-    assert addr.needs_execution
-    assert len(addr.execution_attempts) == 0
-    addr.request_execution()
-    assert addr.is_execution_requested()
+        assert not addr.ready
+        assert addr.can_be_executed
+        assert addr.needs_execution
+        assert len(addr.execution_attempts) == 0
+        addr.request_execution()
+        assert addr.execution_requested
 
-    factorial(n=5)
-    assert addr.ready
-    assert addr.can_be_executed
-    assert not addr.needs_execution
-    assert len(addr.execution_attempts) == 1
-    assert not addr.is_execution_requested()
+        factorial(n=5)
+        assert addr.ready
+        assert addr.can_be_executed
+        assert not addr.needs_execution
+        assert len(addr.execution_attempts) == 1
+        assert not addr.execution_requested
 
 
 

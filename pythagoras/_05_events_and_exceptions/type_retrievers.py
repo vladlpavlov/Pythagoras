@@ -18,13 +18,13 @@ def retrieve_AutonomousFn_class() -> type:
     return sys.modules['pythagoras'].AutonomousFn
 
 
-def retrieve_IdempotentFnExecutionResultAddress_class() -> type:
-    """Return the IdempotentFnExecutionResultAddress class.
+def retrieve_IdempotentFnExecutionResultAddr_class() -> type:
+    """Return the IdempotentFnExecutionResultAddr class.
 
     This is for-internal-use-only function, created to
     avoid circular import dependencies.
     """
-    return sys.modules['pythagoras'].IdempotentFnExecutionResultAddress
+    return sys.modules['pythagoras'].IdempotentFnExecutionResultAddr
 
 
 def retrieve_IdempotentFnExecutionContext_class() -> type:

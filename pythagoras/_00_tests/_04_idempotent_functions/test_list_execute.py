@@ -17,7 +17,7 @@ def test_list_execute(tmpdir):
     for i in range(4):
         input.append(dict(x=i))
 
-    assert dbl.list_execute(input) == [0, 2, 4, 6]
+    assert dbl.execute_list(input) == [0, 2, 4, 6]
 
 
 

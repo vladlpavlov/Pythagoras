@@ -25,25 +25,22 @@ import pythagoras as pth
 
 
 class AutonomousFn(OrdinaryFn):
-    # naked_source_code: str
-    # name: str
     island_name:str
     strictly_autonomous:bool
 
-
-    def __init__(self, a_func: Callable | str | OrdinaryFn
+    def __init__(self, a_fn: Callable | str | OrdinaryFn
                  , island_name:str | None = None
-                 ,strictly_autonomous:bool = False):
+                 , strictly_autonomous:bool = False):
 
-        super().__init__(a_func)
+        super().__init__(a_fn)
 
         if island_name is None:
             island_name = pth.default_island_name
         assert isinstance(island_name, str)
         # TODO: Add checks for island_name (should be a safe str)
 
-        if isinstance(a_func, AutonomousFn):
-            assert island_name == a_func.island_name
+        if isinstance(a_fn, AutonomousFn):
+            assert island_name == a_fn.island_name
 
         self.island_name = island_name
 
@@ -68,50 +65,50 @@ class AutonomousFn(OrdinaryFn):
     @property
     def dependencies(self) -> list[str]:
         island = pth.all_autonomous_functions[self.island_name]
-        name = self.name
+        name = self.fn_name
         assert island[name]._dependencies is not None
         assert isinstance(island[name]._dependencies,list)
         assert len(island[name]._dependencies) >= 1
         return sorted(island[name]._dependencies)
 
-    def static_checks(self)-> bool:
+    def perform_static_checks(self)-> bool:
         island = pth.all_autonomous_functions[self.island_name]
-        name = self.name
+        name = self.fn_name
         if island[name]._static_checks_passed is not None:
             assert isinstance(island[name]._static_checks_passed, bool)
             return island[name]._static_checks_passed
 
-        analyzer = analyze_names_in_function(self.naked_source_code)
+        analyzer = analyze_names_in_function(self.fn_source_code)
         normalized_source = analyzer["normalized_source"]
         analyzer = analyzer["analyzer"]
-        assert self.naked_source_code == normalized_source
+        assert self.fn_source_code == normalized_source
 
 
         nonlocal_names = analyzer.names.explicitly_nonlocal_unbound_deep
         nonlocal_names -= set(pth.all_decorators)
 
-        assert len(nonlocal_names) == 0, (f"Function {self.name}"
+        assert len(nonlocal_names) == 0, (f"Function {self.fn_name}"
             + f" is not autonomous, it uses external nonlocal"
             + f" objects: {analyzer.names.explicitly_nonlocal_unbound_deep}")
 
-        assert analyzer.n_yelds == 0, (f"Function {self.name}"
+        assert analyzer.n_yelds == 0, (f"Function {self.fn_name}"
                 + f" is not autonomous, it uses yield statements")
 
         self._static_checks_passed = True
         return True
 
-    def runtime_checks(self)-> bool:
+    def perform_runtime_checks(self)-> bool:
         island = pth.all_autonomous_functions[self.island_name]
-        name = self.name
+        name = self.fn_name
 
         if island[name]._runtime_checks_passed is not None:
             assert isinstance(island[name]._runtime_checks_passed, bool)
             return island[name]._runtime_checks_passed
 
-        analyzer = analyze_names_in_function(self.naked_source_code)
+        analyzer = analyze_names_in_function(self.fn_source_code)
         normalized_source = analyzer["normalized_source"]
         analyzer = analyzer["analyzer"]
-        assert self.naked_source_code == normalized_source
+        assert self.fn_source_code == normalized_source
 
         import_required = analyzer.names.explicitly_global_unbound_deep
         import_required |= analyzer.names.unclassified_deep
@@ -125,12 +122,12 @@ class AutonomousFn(OrdinaryFn):
             island = pth.all_autonomous_functions[self.island_name]
             import_required -= set(island)
 
-        assert len(import_required) ==0, (f"Function {self.name}"
+        assert len(import_required) ==0, (f"Function {self.fn_name}"
             + f" is not autonomous, it uses global"
             + f" objects {import_required}"
             + f" without importing them inside the function body")
 
-        all_functions_in_island = [f.naked_source_code for f in island.values()]
+        all_functions_in_island = [f.fn_source_code for f in island.values()]
         deep_dependencies = explore_call_graph_deep(all_functions_in_island)
         dependencies = deep_dependencies[name]
         assert isinstance(dependencies, set)
@@ -142,7 +139,7 @@ class AutonomousFn(OrdinaryFn):
 
     def execute(self, **kwargs) -> Any:
         try:
-            assert self.runtime_checks()
+            assert self.perform_runtime_checks()
             names_dict = retrieve_objs_available_inside_autonomous_functions()
             island = pth.all_autonomous_functions[self.island_name]
             names_dict["_pth_kwargs"] = kwargs
@@ -150,34 +147,34 @@ class AutonomousFn(OrdinaryFn):
                 for f_name in self.dependencies:
                     names_dict[f_name] = island[f_name]
             else:
-                names_dict[self.name] = island[self.name]
+                names_dict[self.fn_name] = island[self.fn_name]
 
 
-            tmp_name = "_pth_tmp_" + self.name
-            source_to_exec = self.naked_source_code + "\n"
+            tmp_name = "_pth_tmp_" + self.fn_name
+            source_to_exec = self.fn_source_code + "\n"
             source_to_exec = source_to_exec.replace(
-                " "+self.name+"(", " "+tmp_name+"(",1)
+                " "+self.fn_name+"(", " "+tmp_name+"(",1)
             source_to_exec += f"\n_pth_result = {tmp_name}(**_pth_kwargs)\n"
             exec(source_to_exec, names_dict, names_dict)
             result = names_dict["_pth_result"]
             return result
         except Exception as e:
             if self.__class__ == AutonomousFn:
-                exception_id = f"{self.name}_{self.island_name}"
+                exception_id = f"{self.fn_name}_{self.island_name}"
                 exception_id += f"_{e.__class__.__name__}"
                 exception_id += f"_{get_random_signature()}"
                 register_exception_globally(exception_id=exception_id)
             raise e
 
     def __call__(self,* args, **kwargs) -> Any:
-        assert len(args) == 0, (f"Function {self.name} can't"
+        assert len(args) == 0, (f"Function {self.fn_name} can't"
             + " be called with positional arguments,"
             + " only keyword arguments are allowed.")
         return self.execute(**kwargs)
 
     def __getstate__(self):
-        draft_state = dict(name = self.name
-            , naked_source_code = self.naked_source_code
+        draft_state = dict(fn_name = self.fn_name
+            , fn_source_code = self.fn_source_code
             , island_name = self.island_name
             , strictly_autonomous = self.strictly_autonomous
             , class_name = self.__class__.__name__)
@@ -189,53 +186,53 @@ class AutonomousFn(OrdinaryFn):
     def __setstate__(self, state):
         assert len(state) == 5
         assert state["class_name"] == AutonomousFn.__name__
-        self.name = state["name"]
-        self.naked_source_code = state["naked_source_code"]
+        self.fn_name = state["fn_name"]
+        self.fn_source_code = state["fn_source_code"]
         self.island_name = state["island_name"]
         self.strictly_autonomous = state["strictly_autonomous"]
         register_autonomous_function(self)
 
 
-def register_autonomous_function(f: AutonomousFn) -> None:
-    assert isinstance(f, AutonomousFn)
-    island_name = f.island_name
-    name = f.name
+def register_autonomous_function(a_fn: AutonomousFn) -> None:
+    assert isinstance(a_fn, AutonomousFn)
+    island_name = a_fn.island_name
+    fn_name = a_fn.fn_name
     if island_name not in pth.all_autonomous_functions:
         pth.all_autonomous_functions[island_name] = dict()
     island = pth.all_autonomous_functions[island_name]
-    if name not in island:
-        island[name] = f
-        island[name]._static_checks_passed = None
-        island[name]._runtime_checks_passed = None
-        island[name]._dependencies = None
+    if fn_name not in island:
+        island[fn_name] = a_fn
+        island[fn_name]._static_checks_passed = None
+        island[fn_name]._runtime_checks_passed = None
+        island[fn_name]._dependencies = None
     else:
-        assert f.naked_source_code == island[name].naked_source_code, (
-                f"Function {name} is already "
+        assert a_fn.fn_source_code == island[fn_name].fn_source_code, (
+                f"Function {fn_name} is already "
                 + f"defined in island {island_name}"
                 + f" with different source code. You cannot change it within"
                 + f" one session of the program.")
-        assert f.decorator == island[f.name].decorator, (
-                f"Function {name} is already "
+        assert a_fn.decorator == island[a_fn.fn_name].decorator, (
+                f"Function {fn_name} is already "
                 + f"defined in island {island_name} with the same source code "
                 + f"but different decorator. You cannot change decorator "
                 + f"within one session of the program.")
-        assert type(f) == type(island[f.name])
+        assert type(a_fn) == type(island[a_fn.fn_name])
 
-    assert f.static_checks()
-    if f.strictly_autonomous:
-        assert f.runtime_checks()
+    assert a_fn.perform_static_checks()
+    if a_fn.strictly_autonomous:
+        assert a_fn.perform_runtime_checks()
 
-    assert f.island_name in pth.all_autonomous_functions
-    assert f.name in pth.all_autonomous_functions[island_name]
-    assert f.naked_source_code == (
-        pth.all_autonomous_functions[f.island_name][f.name].naked_source_code)
-    assert hasattr(pth.all_autonomous_functions[f.island_name][f.name]
+    assert a_fn.island_name in pth.all_autonomous_functions
+    assert a_fn.fn_name in pth.all_autonomous_functions[island_name]
+    assert a_fn.fn_source_code == (
+        pth.all_autonomous_functions[a_fn.island_name][a_fn.fn_name].fn_source_code)
+    assert hasattr(pth.all_autonomous_functions[a_fn.island_name][a_fn.fn_name]
                    , "_static_checks_passed")
-    assert hasattr(pth.all_autonomous_functions[f.island_name][f.name]
+    assert hasattr(pth.all_autonomous_functions[a_fn.island_name][a_fn.fn_name]
                    , "_runtime_checks_passed")
-    assert hasattr(pth.all_autonomous_functions[f.island_name][f.name]
+    assert hasattr(pth.all_autonomous_functions[a_fn.island_name][a_fn.fn_name]
                    , "_dependencies")
-    if f is not pth.all_autonomous_functions[f.island_name][f.name]:
-        assert not hasattr(f, "_static_checks_passed")
-        assert not hasattr(f, "_runtime_checks_passed")
-        assert not hasattr(f, "_dependencies")
+    if a_fn is not pth.all_autonomous_functions[a_fn.island_name][a_fn.fn_name]:
+        assert not hasattr(a_fn, "_static_checks_passed")
+        assert not hasattr(a_fn, "_runtime_checks_passed")
+        assert not hasattr(a_fn, "_dependencies")

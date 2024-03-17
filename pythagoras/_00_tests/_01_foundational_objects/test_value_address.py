@@ -1,4 +1,4 @@
-from pythagoras._01_foundational_objects.value_addresses import ValueAddress
+from pythagoras._01_foundational_objects.value_addresses import ValueAddr
 from pythagoras._07_mission_control.global_state_management import (
     initialize, _clean_global_state)
 import pythagoras as pth
@@ -13,8 +13,8 @@ def test_value_address_basic(tmpdir):
     counter = 0
     for v in values_to_test:
         assert len(pth.value_store) == counter
-        assert ValueAddress(v).get() == v
-        assert ValueAddress(v).get() == v
+        assert ValueAddr(v).get() == v
+        assert ValueAddr(v).get() == v
         counter += 1
         assert len(pth.value_store) == counter
 
@@ -28,8 +28,8 @@ def test_nested_value_addrs(tmpdir):
     counter = 0
     for v in values_to_test:
         assert len(pth.value_store) == counter
-        assert ValueAddress([ValueAddress(v)]).get()[0].get() == v
-        assert ValueAddress([ValueAddress(v)]).get()[0].get() == v
+        assert ValueAddr([ValueAddr(v)]).get()[0].get() == v
+        assert ValueAddr([ValueAddr(v)]).get()[0].get() == v
         counter += 2
         assert len(pth.value_store) == counter
 

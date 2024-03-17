@@ -14,6 +14,6 @@ def get_normalized_function_source(a_func: OrdinaryFn | Callable | str) -> str:
     """
 
     if isinstance(a_func, OrdinaryFn):
-        return a_func.naked_source_code
+        return a_func.fn_source_code
     else:
         return __get_normalized_function_source__(a_func, drop_pth_decorators=True)

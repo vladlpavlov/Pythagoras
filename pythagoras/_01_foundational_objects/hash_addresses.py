@@ -10,13 +10,13 @@ from pythagoras._01_foundational_objects.hash_and_random_signatures import (
 
 T = TypeVar("T")
 
-class HashAddress(SafeStrTuple, ABC):
+class HashAddr(SafeStrTuple, ABC):
     """A globally unique hash-based address of an object.
 
     Two objects with exactly the same type and value will always have
-    exactly the same HashAddress-es.
+    exactly the same HashAddr-es.
 
-    A HashAddress consists of 2 strings: a prefix, and a hash.
+    A HashAddr consists of 2 strings: a prefix, and a hash.
     A prefix contains human-readable information about an object's type.
     A hash string contains the object's hash signature. It may begin with
     an optional descriptor, which provides additional human-readable
@@ -70,7 +70,7 @@ class HashAddress(SafeStrTuple, ABC):
                      , prefix:str
                      , hash_value:str
                      , assert_readiness:bool=True
-                     ) -> HashAddress:
+                     ) -> HashAddr:
         """(Re)construct address from text representations of prefix and hash"""
 
         assert prefix, "prefix must be a non-empty string"
