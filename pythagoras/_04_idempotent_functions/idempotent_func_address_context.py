@@ -213,6 +213,11 @@ class IdempotentFn(AutonomousFn):
         result_address.request_execution()
         return result_address
 
+    def run(self, **kwargs) -> IdempotentFnExecutionResultAddr:
+        result_address = self.get_address(**kwargs)
+        result_address.execute()
+        return result_address
+
 
     def execute(self, **kwargs) -> Any:
         packed_kwargs = PackedKwArgs(**kwargs)
@@ -238,7 +243,10 @@ class IdempotentFn(AutonomousFn):
             output_address.drop_execution_request()
             return result
 
-    def execute_list(self, list_of_kwargs:list[dict]) -> Any:
+    def run_list(
+            self
+            , list_of_kwargs:list[dict]
+            ) -> list[IdempotentFnExecutionResultAddr]:
         assert isinstance(list_of_kwargs, (list, tuple))
         for kwargs in list_of_kwargs:
             assert isinstance(kwargs, dict)
@@ -247,13 +255,11 @@ class IdempotentFn(AutonomousFn):
             new_addr = IdempotentFnExecutionResultAddr(self, kwargs)
             new_addr.request_execution()
             addrs.append(new_addr)
-        addrs_indexed = list(zip(range(len(addrs)), addrs))
-        pth.entropy_infuser.shuffle(addrs_indexed)
-        results_dict = dict()
-        for n, an_addr in addrs_indexed:
-            results_dict[n] = an_addr.function.execute(**an_addr.arguments)
-        results_list = [results_dict[n] for n in range(len(addrs))]
-        return results_list
+        addrs_workspace = deepcopy(addrs)
+        pth.entropy_infuser.shuffle(addrs_workspace)
+        for an_addr in addrs_workspace:
+            an_addr.execute()
+        return addrs
 
 
 def register_idempotent_function(a_fn: IdempotentFn) -> None:
@@ -268,6 +274,15 @@ def register_idempotent_function(a_fn: IdempotentFn) -> None:
 
 
 class IdempotentFnCallSignature:
+    """A signature of a call to an idempotent function.
+
+    This class is used to create a unique identifier for a call to an
+    idempotent function. The identifier is used to store the result of the
+    call in the value store.
+
+    This is a supporting class for IdempotentFnExecutionResultAddr.
+    Pythagoras' users should not need to interact with it directly.
+    """
     def __init__(self, a_fn:IdempotentFn, arguments:SortedKwArgs):
         assert isinstance(a_fn, IdempotentFn)
         assert isinstance(arguments, SortedKwArgs)
@@ -304,10 +319,12 @@ class IdempotentFnExecutionResultAddr(HashAddr):
             prefix="idempotentfncallsignature", hash_value=self.hash_value)
 
     def __setstate__(self, state):
-       assert False, ("You can't pickle a IdempotentFnExecutionResultAddr. ")
+        assert len(state) == 1
+        self.str_chain = state["str_chain"]
 
     def __getstate__(self):
-        assert False, ("You can't pickle a IdempotentFnExecutionResultAddr. ")
+        state = dict(str_chain=self.str_chain)
+        return state
 
     @property
     def ready(self):
