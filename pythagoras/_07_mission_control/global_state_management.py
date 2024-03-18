@@ -104,7 +104,11 @@ def initialize(base_dir:str
         , txt = dict(
             base_class_for_values=str
             , digest_len=0
-            , immutable_items=True))
+            , immutable_items=True)
+        , pkl = dict(
+            digest_len=0
+            , immutable_items=True)
+    )
 
     execution_requests_dir = os.path.join(
         base_dir, "execution_requests")

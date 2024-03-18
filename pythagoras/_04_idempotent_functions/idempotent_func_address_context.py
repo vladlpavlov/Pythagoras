@@ -231,7 +231,10 @@ class IdempotentFn(AutonomousFn):
             assert output_address.can_be_executed
             unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
             result = super().execute(**unpacked_kwargs)
-            pth.execution_results[output_address] = ValueAddr(result)
+            result_addr = ValueAddr(result)
+            pth.execution_results[output_address] = result_addr
+            pth.run_history.pkl[
+                output_address + ["results",_pth_ec.session_id]] = result_addr
             output_address.drop_execution_request()
             return result
 
@@ -455,6 +458,16 @@ class IdempotentFnExecutionResultAddr(HashAddr):
         return False
 
 
+
+    @property
+    def execution_records(self) -> list[IdempotentFnExecutionRecord]:
+        result = []
+        for k in self.execution_attempts:
+            run_id = k[-1][:-2]
+            result.append(IdempotentFnExecutionRecord(self,run_id))
+        return result
+
+
     @property
     def execution_attempts(self) -> PersiDict:
         attempts_path = self + ["attempts"]
@@ -470,6 +483,12 @@ class IdempotentFnExecutionResultAddr(HashAddr):
         else:
             result = timeline[-1]
         return result
+
+    @property
+    def execution_results(self) -> PersiDict:
+        results_path = self + ["results"]
+        results = pth.run_history.pkl.get_subdict(results_path)
+        return results
 
 
     @property
@@ -588,3 +607,56 @@ class IdempotentFnExecutionContext:
         register_event_globally(event_id, *args, **kwargs)
 
         self.event_counter += 1
+
+
+class IdempotentFnExecutionRecord:
+    result_addr: IdempotentFnExecutionResultAddr
+    run_id: str
+    def __init__(
+            self
+            , result_addr: IdempotentFnExecutionResultAddr
+            , run_id: str):
+        self.result_addr = result_addr
+        self.run_id = run_id
+
+    @property
+    def output(self) -> str|None:
+        execution_outputs = self.result_addr.execution_outputs
+        for k in execution_outputs:
+            if self.run_id in k[-1]:
+                return execution_outputs[k]
+        return None
+
+    @property
+    def attempt_context(self)-> dict|None:
+        execution_attempts = self.result_addr.execution_attempts
+        for k in execution_attempts:
+            if self.run_id in k[-1]:
+                return execution_attempts[k]
+        return None
+
+    @property
+    def crashes(self) -> list[dict]:
+        result = []
+        crashes = self.result_addr.crashes
+        for k in crashes:
+            if self.run_id in k[-1]:
+                result.append(crashes[k])
+        return result
+
+    @property
+    def events(self) -> list[dict]:
+        result = []
+        events = self.result_addr.events
+        for k in events:
+            if self.run_id in k[-1]:
+                result.append(events[k])
+        return result
+
+    @property
+    def result(self)->Any:
+        execution_results = self.result_addr.execution_results
+        for k in execution_results:
+            if self.run_id in k[-1]:
+                return execution_results[k].get()
+        assert False, "Result not found"
