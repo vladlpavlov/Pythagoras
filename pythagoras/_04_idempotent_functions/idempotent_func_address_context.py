@@ -628,19 +628,19 @@ class IdempotentFnExecutionContext:
 
 class IdempotentFnExecutionRecord:
     result_addr: IdempotentFnExecutionResultAddr
-    run_id: str
+    session_id: str
     def __init__(
             self
             , result_addr: IdempotentFnExecutionResultAddr
-            , run_id: str):
+            , session_id: str):
         self.result_addr = result_addr
-        self.run_id = run_id
+        self.session_id = session_id
 
     @property
     def output(self) -> str|None:
         execution_outputs = self.result_addr.execution_outputs
         for k in execution_outputs:
-            if self.run_id in k[-1]:
+            if self.session_id in k[-1]:
                 return execution_outputs[k]
         return None
 
@@ -648,7 +648,7 @@ class IdempotentFnExecutionRecord:
     def attempt_context(self)-> dict|None:
         execution_attempts = self.result_addr.execution_attempts
         for k in execution_attempts:
-            if self.run_id in k[-1]:
+            if self.session_id in k[-1]:
                 return execution_attempts[k]
         return None
 
@@ -657,7 +657,7 @@ class IdempotentFnExecutionRecord:
         result = []
         crashes = self.result_addr.crashes
         for k in crashes:
-            if self.run_id in k[-1]:
+            if self.session_id in k[-1]:
                 result.append(crashes[k])
         return result
 
@@ -666,7 +666,7 @@ class IdempotentFnExecutionRecord:
         result = []
         events = self.result_addr.events
         for k in events:
-            if self.run_id in k[-1]:
+            if self.session_id in k[-1]:
                 result.append(events[k])
         return result
 
@@ -674,6 +674,6 @@ class IdempotentFnExecutionRecord:
     def result(self)->Any:
         execution_results = self.result_addr.execution_results
         for k in execution_results:
-            if self.run_id in k[-1]:
+            if self.session_id in k[-1]:
                 return execution_results[k].get()
         assert False, "Result not found"
