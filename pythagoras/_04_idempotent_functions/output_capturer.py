@@ -1,6 +1,8 @@
 import sys
 import io
 import logging
+import traceback
+
 
 # TODO: see if we can use https://capturer.readthedocs.io/en/latest/index.html
 
@@ -12,9 +14,11 @@ class OutputCapturer:
     """
 
     class _TeeStream:
-        """
-        An internal class that duplicates output to both a specified original stream and a StringIO buffer.
-        Used for capturing stdout and stderr while allowing normal output.
+        """An internal class that duplicates output.
+
+        The output is duplicated to both a specified original stream
+        and a StringIO buffer. Used for capturing stdout and stderr
+        while allowing normal output.
         """
         def __init__(self, original, buffer):
             """
@@ -43,9 +47,10 @@ class OutputCapturer:
             self.buffer.flush()
 
     class _CaptureHandler(logging.Handler):
-        """
-        An internal logging handler that captures logging output to a StringIO buffer.
-        It also forwards log records to the original logging handlers to maintain normal logging behavior.
+        """  An internal logging handler that captures logging output
+        .
+        It also forwards log records to the original logging handlers
+        to maintain normal logging behavior.
         """
         def __init__(self, buffer, original_handlers):
             """
@@ -70,16 +75,21 @@ class OutputCapturer:
                 handler.emit(record)
 
     def __init__(self):
-        """
-        Initialize the OutputCapturer object. Sets up tee streams for stdout and stderr, and a capture handler for logging.
+        """ Initialize the OutputCapturer object.
+
+        Sets up tee streams for stdout and stderr,
+        and a capture handler for logging.
         """
         self.original_stdout = sys.stdout
         self.original_stderr = sys.stderr
         self.original_log_handlers = logging.root.handlers[:]
         self.captured_buffer = io.StringIO()
-        self.tee_stdout = self._TeeStream(self.original_stdout, self.captured_buffer)
-        self.tee_stderr = self._TeeStream(self.original_stderr, self.captured_buffer)
-        self.capture_handler = self._CaptureHandler(self.captured_buffer, self.original_log_handlers)
+        self.tee_stdout = self._TeeStream(
+            self.original_stdout, self.captured_buffer)
+        self.tee_stderr = self._TeeStream(
+            self.original_stderr, self.captured_buffer)
+        self.capture_handler = self._CaptureHandler(
+            self.captured_buffer, self.original_log_handlers)
 
     def __enter__(self):
         """
@@ -91,16 +101,17 @@ class OutputCapturer:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the runtime context.
+        Restores stdout, stderr, and logging output to their original state.
         """
-        Exit the runtime context. Restores stdout, stderr, and logging output to their original state.
-        """
+        if exc_type is not None:
+            traceback.print_exc()
         sys.stdout = self.original_stdout
         sys.stderr = self.original_stderr
-        logging.root.handlers = self.original_log_handlers  # Restore original handlers
+        logging.root.handlers = self.original_log_handlers
 
     def get_output(self):
-        """
-        Retrieve the captured output from the buffer.
+        """Retrieve the captured output from the buffer.
         Returns:
             A string containing all the output captured during the lifetime of the capturer.
         """

@@ -35,6 +35,7 @@ def test_basics(tmpdir):
 
 
 def test_exception(tmpdir):
+    # tmpdir = "UOUOUOUOUOUOUOUOUOUOUOUOUOUOUOUO"
     with _force_initialize(tmpdir, n_background_workers=0):
 
         @idempotent()
@@ -53,3 +54,4 @@ def test_exception(tmpdir):
         assert len(a.execution_records[0].crashes) == 1
         with pytest.raises(Exception):
             x = a.execution_records[0].result
+        assert "ZeroDivisionError" in a.execution_records[0].output
