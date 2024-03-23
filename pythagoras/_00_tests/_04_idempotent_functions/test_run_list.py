@@ -19,8 +19,3 @@ def test_list_execute(tmpdir):
         addrs = dbl.run_list(input)
         results = [a.get() for a in addrs]
         assert results == [0, 2, 4, 6]
-
-
-
-
-

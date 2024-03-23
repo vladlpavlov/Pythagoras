@@ -421,7 +421,7 @@ class IdempotentFnExecutionResultAddr(HashAddr):
     @property
     def fn_source_code(self) -> str:
         function = self.function
-        return function.fn_source_code
+        return function.fn_source_code.replace(r"\n", "\n")
 
 
     @property
