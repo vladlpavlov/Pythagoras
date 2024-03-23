@@ -419,6 +419,12 @@ class IdempotentFnExecutionResultAddr(HashAddr):
 
 
     @property
+    def fn_source_code(self) -> str:
+        function = self.function
+        return function.fn_source_code
+
+
+    @property
     def island_name(self) -> str:
         return self.function.island_name
 
@@ -430,10 +436,12 @@ class IdempotentFnExecutionResultAddr(HashAddr):
         signature_addr = self.get_ValueAddr()
         signature = signature_addr.get()
         self._arguments = signature.args_addr.get()
+        self._arguments = self._arguments.unpack()
         return self._arguments
 
+
     @property
-    def args(self) -> SortedKwArgs:
+    def kwargs(self) -> SortedKwArgs:
         return self.arguments
 
 
