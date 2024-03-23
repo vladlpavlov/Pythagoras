@@ -1,21 +1,17 @@
 # Pythagoras
 
-Planet-scale idempotent computations in Python.
+Scalable idempotent computations in Python.
 
 ## What is it?
 
-An experimental framework that aims to democratize access to 
-distributed serverless compute. We make it simple and inexpensive to 
-create and run massively parallel algorithms. 
-Pythagoras makes data scientists' lives easier, 
-while allowing them to solve more complex problems 
-in a shorter time with smaller budgets.
+A framework that makes algorithm parallelization easy and inexpensive, 
+focused on accelerating data science and machine learning workflows. 
 
 ## How to get it?
 
 The source code is hosted on GitHub at: https://github.com/vladlpavlov/pythagoras
 
-Binary installers for the latest released version are available 
+Installers for the latest released version are available 
 at the Python package index at: https://pypi.org/project/pythagoras
 
     pip install pythagoras
@@ -46,5 +42,17 @@ at the Python package index at: https://pypi.org/project/pythagoras
 * [Vlad (Volodymyr) Pavlov](https://www.linkedin.com/in/vlpavlov/)
 
 
+## About The Name
+
+Pythagoras of Samos was a famous ancient Greek thinker and scientist 
+who was the first man to call himself a philosopher ("lover of wisdom"). 
+He is most recognised for his many mathematical findings, 
+including the Pythagorean theorem. 
+
+Not everyone knows that in antiquity, Pythagoras was also credited with 
+major astronomical discoveries, such as sphericity of the Earth 
+and the identity of the morning and evening stars as the planet Venus. 
+
 ### The project is undergoing a major revamp. 
 ### Come back soon see the new version
+
