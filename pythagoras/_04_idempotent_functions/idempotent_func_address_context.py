@@ -436,13 +436,12 @@ class IdempotentFnExecutionResultAddr(HashAddr):
         signature_addr = self.get_ValueAddr()
         signature = signature_addr.get()
         self._arguments = signature.args_addr.get()
-        self._arguments = self._arguments.unpack()
         return self._arguments
 
 
     @property
-    def kwargs(self) -> SortedKwArgs:
-        return self.arguments
+    def kwargs(self) -> dict:
+        return self.arguments.unpack()
 
 
     @property
