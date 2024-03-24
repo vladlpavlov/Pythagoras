@@ -4,11 +4,11 @@ Scalable idempotent computations in Python.
 
 ## What is it?
 
-`Pythagoras` is a Python framework that makes massive
-algorithm parallelization easy and cost-effective, helping 
-accelerate data science, machine learning, and AI workflows. 
+`Pythagoras` is a framework for easy and cost-effective
+massive algorithm parallelization in Python. It helps to accelerate 
+data science, machine learning, and AI workflows.
 
-It offers:
+Pythagoras offers:
 
 * Persistent function memoization that tracks data dependencies and 
 changes in the functions' code.
