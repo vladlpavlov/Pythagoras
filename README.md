@@ -5,8 +5,8 @@ Scalable idempotent computations in Python.
 ## What is it?
 
 `Pythagoras` is a Python framework that makes massive
-algorithm parallelization easy and inexpensive, with a focus on 
-accelerating data science, machine learning, and AI workflows. 
+algorithm parallelization easy and cost-effective, helping 
+accelerate data science, machine learning, and AI workflows. 
 
 It offers:
 
@@ -14,11 +14,11 @@ It offers:
 changes in the functions' code.
 * Scalable parallel execution of memoized functions 
 on a local machine or in a distributed environment.
-* Inexpensive storage-based orchestration backend.
+* Simple and inexpensive storage-based orchestration backend.
 
 ## Usage
 
-* Hello World notebook:
+* `Introduction to Pythagoras` notebook:
 https://colab.research.google.com/drive/1tSJkpHl49Y9ZrYskkdoH2ti3_VZ5_6cj
 
 ## How to get it?
@@ -55,7 +55,6 @@ at the Python package index at: https://pypi.org/project/pythagoras
 
 * [Vlad (Volodymyr) Pavlov](https://www.linkedin.com/in/vlpavlov/)
 
-
 ## About The Name
 
 Pythagoras of Samos was a famous ancient Greek thinker and scientist 
@@ -65,8 +64,4 @@ including the Pythagorean theorem.
 
 Not everyone knows that in antiquity, Pythagoras was also credited with 
 major astronomical discoveries, such as sphericity of the Earth 
-and the identity of the morning and evening stars as the planet Venus. 
-
-### The project is undergoing a major revamp. 
-### Come back soon see the new version
-
+and the identity of the morning and evening stars as the planet Venus.
