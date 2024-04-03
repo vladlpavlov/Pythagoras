@@ -1,5 +1,6 @@
 import os, random, sys, atexit
 
+import pandas as pd
 from persidict import FileDirDict, PersiDict
 
 from pythagoras._01_foundational_objects.hash_and_random_signatures import (
@@ -239,7 +240,10 @@ def _clean_global_state():
     assert pth.is_fully_unitialized()
     assert pth.is_global_state_correct()
 
-class PythagorasContext:
+class PythagorasContext(pd.DataFrame):
+
+    def __init__(self):
+        super().__init__(summary(include_current_session=False))
 
     def __enter__(self):
         pass
@@ -247,11 +251,11 @@ class PythagorasContext:
     def __exit__(self, exc_type, exc_value, traceback):
         _clean_global_state()
 
-    def __str__(self):
-        return summary(include_current_session=False)
-
-    def __repr__(self):
-        return summary(include_current_session=False)
+    # def __str__(self):
+    #     return summary(include_current_session=False)
+    #
+    # def __repr__(self):
+    #     return summary(include_current_session=False)
 
 
 def get_all_island_names() -> set[str]:
