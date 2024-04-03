@@ -47,6 +47,7 @@ def summary(include_current_session:bool = True, print_result:bool = False):
 
     result = pd.concat(all_params)
     result.set_index("parameter", inplace=True)
+    result.index.name = None
 
 
     #
