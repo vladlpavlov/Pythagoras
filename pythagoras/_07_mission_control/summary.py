@@ -13,13 +13,13 @@ def summary(include_current_session:bool = True, print_result:bool = False):
 
     result = "\n"
     result += 20*"~" + " PERSISTENT STATE: " + 20*"~" + "\n"
-    result += f"{pth.base_dir=} \n"
-    result += f"{len(pth.value_store)=} \n"
-    result += f"{len(pth.execution_results)=} \n"
-    result += f"{len(pth.crash_history)=} \n"
-    result += f"{len(pth.event_log)=} \n"
-    result += f"{len(pth.execution_requests)=} \n"
-    result += f"{len(pth.compute_nodes.pkl)=} \n"
+    result += f"Base directory: {pth.base_dir} \n"
+    result += f"# of values stored: {len(pth.value_store)} \n"
+    result += f"# of function execution results cached: {len(pth.execution_results)} \n"
+    result += f"# of exceptions recorded: {len(pth.crash_history)} \n"
+    result += f"# of events recorded: {len(pth.event_log)} \n"
+    result += f"Execution queue size: {len(pth.execution_requests)} \n"
+    result += f"# of active nodes:{len(pth.compute_nodes.pkl)} \n"
 
 
     if include_current_session:
