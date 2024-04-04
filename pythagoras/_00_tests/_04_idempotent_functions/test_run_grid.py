@@ -4,18 +4,17 @@ from pythagoras._07_mission_control.global_state_management import (
     _clean_global_state, _force_initialize)
 
 
-def test_run_list(tmpdir):
-
+def test_run_grid(tmpdir):
     with _force_initialize(tmpdir, n_background_workers=0):
 
         @idempotent()
-        def dbl(x: float) -> float:
-            return x * 2
+        def my_sum(x: float, y:float) -> float:
+            return x + y
 
-        input = []
-        for i in range(4):
-            input.append(dict(x=i))
+        grid = dict(
+            x=[1, 2, 5]
+            ,y=[10, 100, 1000])
 
-        addrs = dbl.run_list(input)
+        addrs = my_sum.run_grid(grid)
         results = [a.get() for a in addrs]
-        assert results == [0, 2, 4, 6]
+        assert sum(results) == 3354

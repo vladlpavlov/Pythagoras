@@ -4,6 +4,7 @@ import time
 import traceback
 from copy import deepcopy
 from typing import Callable, Any, List, TypeAlias
+from sklearn.model_selection import ParameterGrid
 
 from persidict import PersiDict
 
@@ -267,6 +268,23 @@ class IdempotentFn(AutonomousFn):
         for an_addr in addrs_workspace:
             an_addr.execute()
         return addrs
+
+    def swarm_grid(
+            self
+            , grid_of_kwargs:dict[str, list] # refactor
+            ) -> list[IdempotentFnExecutionResultAddr]:
+        param_list = list(ParameterGrid(grid_of_kwargs))
+        addrs = self.swarm_list(param_list)
+        return addrs
+
+    def run_grid(
+            self
+            , grid_of_kwargs:dict[str, list] # refactor
+            ) -> list[IdempotentFnExecutionResultAddr]:
+        param_list = list(ParameterGrid(grid_of_kwargs))
+        addrs = self.run_list(param_list)
+        return addrs
+
 
 
 def register_idempotent_function(a_fn: IdempotentFn) -> None:
