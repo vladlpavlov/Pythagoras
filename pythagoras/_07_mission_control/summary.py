@@ -47,7 +47,7 @@ def summary(include_current_session:bool = True, print_result:bool = False):
     all_params.append(persistent(
         "Total # of events recorded", len(pth.event_log)))
     all_params.append(persistent(
-        "    # of exceptions recorded today"
+        "    # of events recorded today"
         , len(pth.event_log.get_subdict(current_date_gmt_string()))))
     all_params.append(persistent(
         "Execution queue size", len(pth.execution_requests)))
