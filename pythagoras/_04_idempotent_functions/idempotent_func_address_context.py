@@ -243,7 +243,7 @@ class IdempotentFn(AutonomousFn):
             output_address.drop_execution_request()
             return result
 
-    def run_list(
+    def swarm_list(
             self
             , list_of_kwargs:list[dict]
             ) -> list[IdempotentFnExecutionResultAddr]:
@@ -255,6 +255,13 @@ class IdempotentFn(AutonomousFn):
             new_addr = IdempotentFnExecutionResultAddr(self, kwargs)
             new_addr.request_execution()
             addrs.append(new_addr)
+        return addrs
+
+    def run_list(
+            self
+            , list_of_kwargs:list[dict]
+            ) -> list[IdempotentFnExecutionResultAddr]:
+        addrs = self.swarm_list(list_of_kwargs)
         addrs_workspace = deepcopy(addrs)
         pth.entropy_infuser.shuffle(addrs_workspace)
         for an_addr in addrs_workspace:
