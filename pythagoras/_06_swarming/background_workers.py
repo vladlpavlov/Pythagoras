@@ -23,6 +23,7 @@ def parent_runtime_is_live():
 
 def process_random_execution_request(pth_init_params:dict):
     pth_init_params["n_background_workers"] = 0
+    pth_init_params["return_summary_dataframe"] = False
     pth.initialize(**pth_init_params)
 
     with OutputSuppressor():
@@ -51,6 +52,7 @@ def process_random_execution_request(pth_init_params:dict):
 
 def background_worker(pth_init_params:dict):
     pth_init_params["n_background_workers"] = 0
+    pth_init_params["return_summary_dataframe"] = False
     pth.initialize(**pth_init_params)
     subpr_kwargs = dict(pth_init_params=pth_init_params)
 

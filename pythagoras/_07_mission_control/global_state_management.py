@@ -25,7 +25,8 @@ def initialize(base_dir:str
                , n_background_workers:int = 3
                , cloud_type:str = "local"
                , default_island_name:str = "Samos"
-               , runtime_id: str|None = None):
+               , runtime_id: str|None = None
+               , return_summary_dataframe:bool = True):
     """ Initialize Pythagoras.
     """
     assert pth.is_fully_unitialized(), (
@@ -134,7 +135,10 @@ def initialize(base_dir:str
     for n in range(n_background_workers):
         pth.launch_background_worker()
 
-    return PythagorasContext()
+    if return_summary_dataframe:
+        return PythagorasContextWithSummary()
+    else:
+        return PythagorasContext()
 
 
 def is_fully_unitialized():
@@ -240,7 +244,15 @@ def _clean_global_state():
     assert pth.is_fully_unitialized()
     assert pth.is_global_state_correct()
 
-class PythagorasContext(pd.DataFrame):
+
+class PythagorasContext:
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        _clean_global_state()
+
+class PythagorasContextWithSummary(pd.DataFrame):
 
     def __init__(self):
         super().__init__(summary(include_current_session=False))

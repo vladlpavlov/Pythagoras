@@ -3,19 +3,23 @@
 import pythagoras as pth
 import pandas as pd
 
+from pythagoras._05_events_and_exceptions.current_date_gmt_str import \
+    current_date_gmt_string
+
+
 def persistent(param, val) -> pd.DataFrame:
   d = dict(
-      parameter = [param]
-      ,value = [val]
-      ,type = "persistent")
+      type="persistent"
+      ,parameter = [param]
+      ,value = [val])
   return pd.DataFrame(d)
 
 
 def runtime(param, val) -> pd.DataFrame:
   d = dict(
-      parameter = [param]
-      ,value = [val]
-      ,type = "runtime")
+      type = "runtime"
+      ,parameter = [param]
+      ,value = [val])
   return pd.DataFrame(d)
 
 def summary(include_current_session:bool = True, print_result:bool = False):
@@ -38,15 +42,34 @@ def summary(include_current_session:bool = True, print_result:bool = False):
     all_params.append(persistent(
         "Total # of exceptions recorded", len(pth.crash_history)))
     all_params.append(persistent(
+        "    # of exceptions recorded today"
+        , len(pth.crash_history.get_subdict(current_date_gmt_string()))))
+    all_params.append(persistent(
         "Total # of events recorded", len(pth.event_log)))
+    all_params.append(persistent(
+        "    # of exceptions recorded today"
+        , len(pth.event_log.get_subdict(current_date_gmt_string()))))
     all_params.append(persistent(
         "Execution queue size", len(pth.execution_requests)))
     all_params.append(persistent(
         "# of currently active nodes", len(pth.compute_nodes.pkl)))
 
+    all_params.append(runtime(
+        "# of background workers on the current node"
+        , pth.n_background_workers))
+    all_params.append(runtime(
+        "Total # of available islands"
+        , len(pth.all_autonomous_functions)))
+    all_params.append(runtime(
+        "Default island name", pth.default_island_name))
+    all_params.append(runtime(
+        "All available islands"
+        , ", ".join(list(pth.all_autonomous_functions))))
+
 
     result = pd.concat(all_params)
     result.reset_index(drop=True, inplace=True)
+    # result.style.hide(axis="index")
 
 
     #
