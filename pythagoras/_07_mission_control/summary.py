@@ -66,12 +66,13 @@ def summary(include_current_session:bool = True, print_result:bool = False):
         "All available islands"
         , ", ".join(list(pth.all_autonomous_functions))))
     for island_name, island in pth.all_autonomous_functions.items():
+        n_functions = len(island)
         all_params.append(runtime(
-            f"# of functions in island '{island_name}'"
-            , len(island)))
-        all_params.append(runtime(
-            f"Names of functions in island '{island_name}'"
-            , ", ".join(list(island))))
+            f"# of functions in island '{island_name}'", n_functions))
+        if n_functions > 0:
+            all_params.append(runtime(
+                f"Names of functions in island '{island_name}'"
+                , ", ".join(list(island))))
 
 
     result = pd.concat(all_params)
