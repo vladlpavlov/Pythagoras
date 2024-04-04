@@ -10,11 +10,11 @@ data science, machine learning, and AI workflows.
 
 Pythagoras offers:
 
-* Persistent function memoization that tracks data dependencies and 
-changes in the functions' code.
-* Scalable parallel execution of memoized functions 
-on a local machine or in a distributed environment.
-* Simple and inexpensive storage-based orchestration backend.
+* persistent function memoization that tracks data dependencies and 
+changes in the functions' code;
+* scalable parallel execution of memoized functions 
+on a local machine or in a distributed environment;
+* simple and inexpensive storage-based orchestration backend.
 
 ## Usage
 
