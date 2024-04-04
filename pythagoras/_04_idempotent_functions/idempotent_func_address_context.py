@@ -238,7 +238,8 @@ class IdempotentFn(AutonomousFn):
             unpacked_kwargs = UnpackedKwArgs(**packed_kwargs)
             result = super().execute(**unpacked_kwargs)
             result_addr = ValueAddr(result)
-            pth.execution_results[output_address] = result_addr
+            if output_address not in pth.execution_results: #TODO: refactor
+                pth.execution_results[output_address] = result_addr
             pth.run_history.pkl[
                 output_address + ["results",_pth_ec.session_id]] = result_addr
             output_address.drop_execution_request()
