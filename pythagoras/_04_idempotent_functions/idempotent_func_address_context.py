@@ -265,6 +265,9 @@ class IdempotentFn(AutonomousFn):
         """ Execute the function with the given arguments.
 
         The function is executed immediately and the result is returned.
+        The result is memoized, so the function is actually executed
+        only the first time it's called; subsequent calls return the
+        cached result.
         """
 
         packed_kwargs = PackedKwArgs(**kwargs)
