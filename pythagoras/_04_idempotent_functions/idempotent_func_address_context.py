@@ -49,13 +49,13 @@ class IdempotentFn(AutonomousFn):
         super().__init__(a_fn, island_name)
         if validators is None:
             assert correctors is None
-        self.validators = self.process_supporting_functions_arg(validators)
-        self.correctors = self.process_supporting_functions_arg(correctors)
+        self.validators = self._process_supporting_functions_arg(validators)
+        self.correctors = self._process_supporting_functions_arg(correctors)
         self.augmented_code_checked = False
         register_idempotent_function(self)
 
 
-    def process_supporting_functions_arg(
+    def _process_supporting_functions_arg(
             self, supporting_funcs: SupportingFuncs = None):
         result = None
         if supporting_funcs is None:
@@ -78,12 +78,23 @@ class IdempotentFn(AutonomousFn):
 
 
     def validate_environment(self):
+        """Validate the environment before executing the function.
+
+        This method is called before executing the function to
+        validate if the current environment is suitable for execution.
+
+        """
         if self.validators is not None:
             island = pth.all_autonomous_functions[self.island_name]
             for f in self.validators:
                 island[f].execute()
 
     def correct_environment(self):
+        """Correct the environment before executing the function.
+
+        This method is called before executing the function to try to
+        correct the environment to make it suitable for execution.
+        """
         if self.correctors is not None:
             island = pth.all_autonomous_functions[self.island_name]
             for f in self.correctors:
@@ -92,6 +103,14 @@ class IdempotentFn(AutonomousFn):
 
     @property
     def can_be_executed(self) -> bool:
+        """Indicates if the function can be executed in the current environment.
+
+        If the first validation attempt fails,
+        it tries to correct the environment and then validates it again.
+
+        If the second validation attempt fails, returns False.
+        """
+
         try:
             self.validate_environment()
             return True
@@ -155,6 +174,14 @@ class IdempotentFn(AutonomousFn):
 
     @property
     def augmented_fn_source_code(self) -> str:
+        """The augmented source code of the function.
+
+        The augmented source code of an idempotent function
+        includes the source code of the function itself,
+        as well as the source code of all the autonomous functions
+        it depends on including, validators and correctors.
+        """
+
         island_name = self.island_name
         island = pth.all_autonomous_functions[island_name]
         assert hasattr(island[self.fn_name], "_augmented_source_code")
@@ -164,6 +191,7 @@ class IdempotentFn(AutonomousFn):
 
 
     def __getstate__(self):
+        """Return the state of the object for pickling. """
         assert self.perform_runtime_checks()
         draft_state = dict(fn_name=self.fn_name
             , fn_source_code=self.fn_source_code
@@ -179,6 +207,7 @@ class IdempotentFn(AutonomousFn):
         return state
 
     def __setstate__(self, state):
+        """Set the state of the object from a pickled state."""
         assert len(state) == 8
         assert state["class_name"] == IdempotentFn.__name__
         self.fn_name = state["fn_name"]
@@ -210,17 +239,34 @@ class IdempotentFn(AutonomousFn):
 
 
     def swarm(self, **kwargs) -> IdempotentFnExecutionResultAddr:
+        """ Request execution of the function with the given arguments.
+
+        The function is executed in the background. The result can be
+        retrieved later using the returned address.
+        """
+
         result_address = self.get_address(**kwargs)
         result_address.request_execution()
         return result_address
 
     def run(self, **kwargs) -> IdempotentFnExecutionResultAddr:
+        """ Execute the function with the given arguments.
+
+        The function is executed immediately. The result can be
+        retrieved later using the returned address.
+        """
+
         result_address = self.get_address(**kwargs)
         result_address.execute()
         return result_address
 
 
     def execute(self, **kwargs) -> Any:
+        """ Execute the function with the given arguments.
+
+        The function is executed immediately and the result is returned.
+        """
+
         packed_kwargs = PackedKwArgs(**kwargs)
         output_address = IdempotentFnExecutionResultAddr(self, packed_kwargs)
         _pth_f_addr_ = output_address
