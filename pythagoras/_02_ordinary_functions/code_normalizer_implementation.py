@@ -1,7 +1,8 @@
 """
 This module provides functionality for normalizing function source codes.
 Normalization consists of removing decorators, comments, docstrings,
-and empty lines, and then formatting according to PEP 8 guidelines.
+type annotations and empty lines, and then
+formatting according to PEP 8 guidelines.
 
 The module's primary function, `get_normalized_function_source`, takes a callable
 as input and returns its source code in a 'canonical' form. The function only
@@ -31,7 +32,7 @@ def __get_normalized_function_source__(
         ) -> str:
     """Return function's source code in a 'canonical' form.
 
-    Remove all comments, docstrings and empty lines;
+    Remove all comments, docstrings, type annotations and empty lines;
     standardize code formatting based on PEP 8.
     If drop_pth_decorators == True, remove Pythagoras decorators.
 
@@ -103,10 +104,26 @@ def __get_normalized_function_source__(
 
     # Remove docstrings.
     for node in ast.walk(code_ast):
+
+        if isinstance(node, ast.AnnAssign):
+            # remove type annotation from variable declarations
+            node.annotation = None
+            continue
+
+        if isinstance(node, ast.arg):
+            # argument annotations in functions
+            node.annotation = None
+            continue
+
         if not isinstance(node
                 , (ast.FunctionDef, ast.ClassDef
                    , ast.AsyncFunctionDef, ast.Module)):
             continue
+
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            # remove return annotation from function definitions
+            node.returns = None
+
         if not len(node.body):
             continue
         if not isinstance(node.body[0], ast.Expr):

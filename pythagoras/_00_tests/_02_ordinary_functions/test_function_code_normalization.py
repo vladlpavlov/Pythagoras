@@ -97,3 +97,28 @@ def test_different():
                         != get_normalized_function_source(f2))
                 assert (get_normalized_function_source(OrdinaryFn(f1))
                         != get_normalized_function_source(f2))
+
+
+def a4(x:int)->float:
+    if x>0:
+        result:float =  x*x*x
+        return result
+    elif x<100_000_000: return -x*x*x
+    else: return 0
+
+def test_type_annotations():
+    global a4
+    old_a4 = get_normalized_function_source(a3)
+    del a4
+    def a4(x):
+        if x > 0:
+            result =  x * x * x
+            return result
+        elif x < 100000000:
+            return -x * x * x
+        else:
+            return 0
+
+    new_a4 = get_normalized_function_source(a3)
+    assert old_a4 == new_a4
+    assert new_a4 == autopep8.fix_code(new_a4)
