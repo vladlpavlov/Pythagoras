@@ -18,9 +18,13 @@ def islands():
 
             all_functions.append(pd.DataFrame(d))
 
-    result = pd.concat(all_functions)
-    result.reset_index(drop=True, inplace=True)
-    if is_executed_in_notebook():
-        return result.style.set_properties(**{'white-space': 'pre-wrap'})
+    if len(all_functions):
+        result = pd.concat(all_functions)
+        result.reset_index(drop=True, inplace=True)
+        if is_executed_in_notebook():
+            return result.style.set_properties(
+                **{'white-space': 'pre-wrap', 'text-align': 'left'})
+        else:
+            return result
     else:
-        return result
+        return "No functions registered so far."
