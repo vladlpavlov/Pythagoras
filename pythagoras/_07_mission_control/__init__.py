@@ -10,3 +10,4 @@ from pythagoras._07_mission_control.global_state_management import (
     )
 
 from pythagoras._07_mission_control.summary import summary
+from pythagoras._07_mission_control.islands import islands
