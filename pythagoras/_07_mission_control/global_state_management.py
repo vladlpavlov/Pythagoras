@@ -255,7 +255,7 @@ class PythagorasContext:
 class PythagorasContextWithSummary(pd.DataFrame):
 
     def __init__(self):
-        super().__init__(summary(include_current_session=False))
+        super().__init__(summary())
 
     def __enter__(self):
         pass

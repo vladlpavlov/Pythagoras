@@ -126,6 +126,11 @@ class IdempotentFn(AutonomousFn):
 
         return False
 
+
+    @property
+    def fn_type(self) -> str:
+        return "idempotent"
+
     @property
     def decorator(self) -> str:
         decorator_str = "@pth.idempotent("

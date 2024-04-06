@@ -50,16 +50,17 @@ class AutonomousFn(OrdinaryFn):
             register_autonomous_function(self)
 
 
+    @property
+    def fn_type(self) -> str:
+        if self.strictly_autonomous:
+            return "strictly_autonomous"
+        else:
+            return "autonomous"
 
     @property
     def decorator(self) -> str:
-        decorator_str =""
-        if self.strictly_autonomous:
-            decorator_str = (f"@pth.strictly_autonomous"
-                             +f"(island_name='{self.island_name}')")
-        else:
-            decorator_str = (f"@pth.autonomous"
-                             +f"(island_name='{self.island_name}')")
+        decorator_str ="@pth."+self.fn_type
+        decorator_str += f"(island_name='{self.island_name}')"
         return decorator_str
 
     @property

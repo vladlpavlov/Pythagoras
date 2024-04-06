@@ -1,5 +1,3 @@
-# from pythagoras._07_mission_control.global_state_management import (
-#   is_fully_unitialized, is_correctly_initialized)
 import pythagoras as pth
 import pandas as pd
 
@@ -22,7 +20,7 @@ def runtime(param, val) -> pd.DataFrame:
       ,value = [val])
   return pd.DataFrame(d)
 
-def summary(include_current_session:bool = True, print_result:bool = False):
+def summary(print_result:bool = False):
     """ Get summary of Pythagoras' current state ."""
 
     # if is_fully_unitialized():
@@ -77,21 +75,6 @@ def summary(include_current_session:bool = True, print_result:bool = False):
 
     result = pd.concat(all_params)
     result.reset_index(drop=True, inplace=True)
-    # result.style.hide(axis="index")
-
-
-    #
-    # if include_current_session:
-    #
-    #     result += 21*"~" +  " CURRENT SESSION: " + 21*"~" + "\n"
-    #     result += f"{len(pth.all_autonomous_functions)=} \n"
-    #     result += f"{[island for island in pth.all_autonomous_functions]=} \n"
-    #     result += f"{pth.default_island_name=} \n"
-    #     default_island = pth.all_autonomous_functions[pth.default_island_name]
-    #     result += f"{len(default_island)=} \n"
-    #     result += f"{[func for func in default_island]=} \n"
-    #
-    # result += 60*"~" + "\n\n"
 
     if print_result:
         print(result)
