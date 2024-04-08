@@ -10,7 +10,7 @@ data science, machine learning, and AI workflows.
 
 Pythagoras offers:
 
-* parallel execution of Python code, locally or 
+* seamless parallel execution of Python code, locally or 
 in diverse distributed environments of any scale;
 * ubiquitous caching for intermediate program states, 
 with intelligent data and code change tracking;
