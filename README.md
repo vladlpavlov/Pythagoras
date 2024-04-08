@@ -12,8 +12,8 @@ Pythagoras offers:
 
 * persistent function memoization that tracks data dependencies and 
 changes in the functions' code;
-* scalable parallel execution of memoized functions 
-on a local machine or in a distributed environment;
+* parallel execution of memoized functions on a local machine 
+or in a distributed environment of any scale;
 * simple and inexpensive storage-based orchestration backend.
 
 ## Usage
