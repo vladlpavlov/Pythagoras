@@ -1,6 +1,6 @@
 # Pythagoras
 
-Scalable idempotent computations in Python.
+Planet-scale distributed computing in Python.
 
 ## What is it?
 

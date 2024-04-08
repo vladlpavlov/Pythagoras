@@ -8,8 +8,7 @@ setuptools.setup(
     ,version="0.10.46"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
-    ,description= "Simple framework for planet-scale "
-                  + "idempotent computations in Python."
+    ,description= "Planet-scale distributed computing in Python."
     ,long_description=long_description
     ,long_description_content_type="text/markdown"
     ,url="https://github.com/vladlpavlov/pythagoras"
