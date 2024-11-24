@@ -47,8 +47,7 @@ class DataPortal(LoggingPortal):
         value_store = dict_type(
             dir_name = value_store_dir
             , digest_len=0
-            , immutable_items=True
-            , file_type="json")
+            , immutable_items=True)
         value_store = FirstEntryDict(value_store, p_consistency_checks)
         self.value_store = value_store
 
