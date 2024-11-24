@@ -12,3 +12,5 @@
 * Add shadow json logging for pickled data
 * Create ReadTheDocs documentation
 * Add testing with tox (or similar tool) for multiple Python versions
+* Add CLI interface
+* Refactor pth.describe(), add .describe() to functions and addresses
