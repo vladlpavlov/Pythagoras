@@ -20,7 +20,11 @@ setuptools.setup(
         , "pythagoras._050_safe_functions"
         , "pythagoras._060_autonomous_functions"
         , "pythagoras._070_pure_functions"
+        , "pythagoras._080_compatibility_validators"
         , "pythagoras._090_swarming_portals"
+        , "pythagoras._800_persidict_extensions"
+        , "pythagoras._810_output_manipulators"
+        , "pythagoras._820_strings_signatures_converters"
         ]
     ,classifiers=[
         "Development Status :: 3 - Alpha"
