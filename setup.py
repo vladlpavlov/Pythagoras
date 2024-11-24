@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.10.56"
+    ,version="0.15.00"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description= "Planet-scale distributed computing in Python."
@@ -13,14 +13,14 @@ setuptools.setup(
     ,long_description_content_type="text/markdown"
     ,url="https://github.com/vladlpavlov/pythagoras"
     ,packages=["pythagoras"
-        , "pythagoras._01_foundational_objects"
-        , "pythagoras._02_ordinary_functions"
-        , "pythagoras._03_autonomous_functions"
-        , "pythagoras._04_idempotent_functions"
-        , "pythagoras._05_events_and_exceptions"
-        , "pythagoras._06_swarming"
-        , "pythagoras._07_mission_control"
-        , "pythagoras._99_misc_utils"
+        , "pythagoras._010_basic_portals"
+        , "pythagoras._020_logging_portals"
+        , "pythagoras._030_data_portals"
+        , "pythagoras._040_ordinary_functions"
+        , "pythagoras._050_safe_functions"
+        , "pythagoras._060_autonomous_functions"
+        , "pythagoras._070_pure_functions"
+        , "pythagoras._090_swarming_portals"
         ]
     ,classifiers=[
         "Development Status :: 3 - Alpha"
@@ -55,6 +55,7 @@ setuptools.setup(
         , 'torch'
         , 'keras'
         , 'tensorflow'
+        , 'deepdiff'
     ]
 
 )

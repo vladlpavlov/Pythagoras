@@ -50,6 +50,7 @@ at the Python package index at: https://pypi.org/project/pythagoras
 * [pytorch](https://pytorch.org)
 * [tensorflow](https://www.tensorflow.org)
 * [keras](https://keras.io)
+* [deepdiff](https://zepworks.com/deepdiff/current/)
 
 ## Key Contacts
 

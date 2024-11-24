@@ -9,38 +9,53 @@ from typing import Optional, Dict
 from random import Random
 from persidict import PersiDict
 
-from pythagoras._99_misc_utils import *
-from pythagoras._01_foundational_objects import *
-from pythagoras._02_ordinary_functions import *
-from pythagoras._03_autonomous_functions import *
-from pythagoras._04_idempotent_functions import *
-from pythagoras._05_events_and_exceptions import *
-from pythagoras._06_swarming import *
-from pythagoras._07_mission_control import *
+from pythagoras._800_persidict_extensions import *
+from pythagoras._810_output_manipulators import *
+from pythagoras._820_strings_signatures_converters import *
+
+from pythagoras._010_basic_portals import *
+from pythagoras._010_basic_portals import _PortalTester
+from pythagoras._020_logging_portals import *
+from pythagoras._030_data_portals import *
+from pythagoras._040_ordinary_functions import *
+from pythagoras._050_safe_functions import *
+from pythagoras._060_autonomous_functions import *
+from pythagoras._070_pure_functions import *
+from pythagoras._090_swarming_portals import *
 
 
-base_dir:Optional[str] = None
 
-value_store:Optional[PersiDict] = None
-execution_results:Optional[PersiDict] = None
-execution_requests:Optional[PersiDict] = None
-
-crash_history: Optional[PersiDict] = None
-event_log: Optional[PersiDict] = None
-
-run_history:Optional[MultiPersiDict] = None
-compute_nodes:Optional[MultiPersiDict] = None
-
-runtime_id: Optional[str] = None
-all_autonomous_functions:Optional[Dict[str|None,Dict[str,AutonomousFn]]] = None
-default_island_name: Optional[str] = None
-entropy_infuser: Optional[Random] = None
-n_background_workers: Optional[int] = None
-initialization_parameters: Optional[dict] = None
+# default_portal:Optional[AutonomousCodePortal] = None ## CodeAndDataPortal
+#
+# base_dir:Optional[str] = None ## DataPortal
+#
+# value_store:Optional[PersiDict] = None ## DataPortaportall
+# execution_results:Optional[PersiDict] = None ## CodeAndDataPortal
+# execution_requests:Optional[PersiDict] = None ## CodeAndDataPortal
+#
+# crash_history: Optional[PersiDict] = None ## CodeAndDataPortal
+# event_log: Optional[PersiDict] = None ## CodeAndDataPortal
+#
+# run_history:Optional[OverlappingMultiDict] = None ## CodeAndDataPortal
+# compute_nodes:Optional[OverlappingMultiDict] = None ## CodeAndDataPortal
+#
+# runtime_id: Optional[str] = None
+# all_autonomous_functions:Optional[Dict[str|None,Dict[str,AutonomousFn]]] = None
+# default_island_name: Optional[str] = None ## CodeAndDataPortal
+# entropy_infuser: Optional[Random] = None ## DataPortal
+# n_background_workers: Optional[int] = None ## CodeAndDataPortal
+# initialization_parameters: Optional[dict] = None
 
 primary_decorators = {d.__name__:d for d in [
-    idempotent, autonomous, strictly_autonomous]}
+    autonomous
+    , strictly_autonomous
+    , pure
+    ]}
 all_decorators = {d.__name__:d for d in [
-    idempotent, autonomous, strictly_autonomous, ordinary]}
+    ordinary
+    , autonomous
+    , strictly_autonomous
+    , pure
+]}
 
 
