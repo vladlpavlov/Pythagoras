@@ -21,7 +21,9 @@ from pythagoras._040_ordinary_functions import *
 from pythagoras._050_safe_functions import *
 from pythagoras._060_autonomous_functions import *
 from pythagoras._070_pure_functions import *
+from pythagoras._080_compatibility_validators import *
 from pythagoras._090_swarming_portals import *
+from pythagoras._100_top_level_API import *
 
 
 
