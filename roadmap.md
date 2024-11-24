@@ -10,4 +10,5 @@
 * Tutorials for key features
 * Improve logging (including replacing large values with their summaries)
 * Add shadow json logging for pickled data
-* create ReadTheDocs documentation
+* Create ReadTheDocs documentation
+* Add testing with tox (or similar tool) for multiple Python versions
