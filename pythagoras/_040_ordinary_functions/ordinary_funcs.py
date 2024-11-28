@@ -96,8 +96,10 @@ class OrdinaryFn:
 
 
     def _available_names(self):
+        """Returns a dictionary with the names, available inside the function."""
         names= dict(globals())
         names[self.fn_name] = self
+        names["self"] = self
         names["pth"] = pth
         return names
 

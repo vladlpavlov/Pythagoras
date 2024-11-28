@@ -1,7 +1,6 @@
 # Development Roadmap for Pythagoras project
 
 * Integrate RestrictedPython
-* Add self-awareness for pure functions
 * Add support for work with AWS
 * Add backward compatibility testing
 * Polish work with multiple portals (+ no-Init)

@@ -263,6 +263,7 @@ class AutonomousFn(SafeFn, PortalAwareClass):
         pth_names = set(retrieve_objs_available_inside_autonomous_functions())
         import_required -= pth_names
         import_required -= {fn_name}
+        import_required -= {"self"} #TODO: replace with ._available_names() ???
         if not self.strictly_autonomous:
             island = portal.known_functions[self.island_name]
             prev_len_import_required = len(import_required)
