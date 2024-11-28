@@ -21,9 +21,7 @@ stack of nested 'with' statements.
 The class also supports logging uncaught exceptions globally.
 """
 
-from pythagoras._020_logging_portals.logging_portals import (
-    LoggingPortal)
+from .logging_portals import LoggingPortal
 
-from pythagoras._020_logging_portals.execution_environment_summary import (
-    build_execution_environment_summary)
+from .execution_environment_summary import build_execution_environment_summary
 

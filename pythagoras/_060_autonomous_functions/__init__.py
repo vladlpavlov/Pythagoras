@@ -48,11 +48,9 @@ of decoration, while runtime checks happen at the time of function execution.
 """
 
 
-from pythagoras._060_autonomous_functions.autonomous_core_classes import (
-    AutonomousFn, AutonomousCodePortal)
+from .autonomous_core_classes import AutonomousFn, AutonomousCodePortal
 
-from pythagoras._060_autonomous_functions.autonomous_decorators import (
-    autonomous, strictly_autonomous)
+from .autonomous_decorators import autonomous, strictly_autonomous
 
-from pythagoras._060_autonomous_functions.autonomicity_checks import (
+from .autonomicity_checks import (
     is_autonomous, is_loosely_autonomous, is_strictly_autonomous)

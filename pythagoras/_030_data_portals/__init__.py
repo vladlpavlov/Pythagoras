@@ -25,9 +25,7 @@ DataPortal is a subclass of LoggingPortal, which means it can
 persistently record exceptions and events.
 """
 
-from pythagoras._030_data_portals.value_addresses import (
-    ValueAddr)
+from .value_addresses import ValueAddr
 
-from pythagoras._030_data_portals.data_portals import (
-    DataPortal)
+from .data_portals import DataPortal
 

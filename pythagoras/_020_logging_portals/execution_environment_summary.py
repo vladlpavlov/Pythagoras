@@ -6,7 +6,7 @@ from typing import Dict
 from getpass import getuser
 from datetime import datetime
 import torch
-from pythagoras._020_logging_portals.notebook_checker import is_executed_in_notebook
+from .notebook_checker import is_executed_in_notebook
 
 def build_execution_environment_summary()-> Dict:
     """Capture core information about execution environment.

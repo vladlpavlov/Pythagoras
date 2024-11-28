@@ -28,9 +28,8 @@ PortalAwareClass is also not intended to be used directly. It should
 be subclassed to provide additional functionality.
 """
 
-from pythagoras._010_basic_portals.exceptions import NotAllowedError
-from pythagoras._010_basic_portals.foundation import BasicPortal
-from pythagoras._010_basic_portals.portal_aware_classes import (
-    PortalAwareClass)
-from pythagoras._010_basic_portals.portal_tester import _PortalTester
+from .exceptions import NotAllowedError
+from .foundation import BasicPortal
+from .portal_aware_classes import PortalAwareClass
+from .portal_tester import _PortalTester
 

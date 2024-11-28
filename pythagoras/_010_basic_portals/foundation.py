@@ -5,7 +5,7 @@ from typing import Optional
 import pandas as pd
 
 from persidict import PersiDict, FileDirDict
-from pythagoras._010_basic_portals.exceptions import NotAllowedError
+from .exceptions import NotAllowedError
 
 def _persistent(param, val) -> pd.DataFrame:
   d = dict(

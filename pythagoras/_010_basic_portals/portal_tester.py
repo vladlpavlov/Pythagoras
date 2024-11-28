@@ -1,5 +1,5 @@
 from __future__ import annotations
-from pythagoras._010_basic_portals.foundation import BasicPortal
+from .foundation import BasicPortal
 
 class _PortalTester:
     """A context manager for testing portal objects.

@@ -1,2 +1,2 @@
-from pythagoras._810_output_manipulators.output_capturer import *
-from pythagoras._810_output_manipulators.output_suppressor import *
+from .output_capturer import *
+from .output_suppressor import *

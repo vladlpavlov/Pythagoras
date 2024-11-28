@@ -1,7 +1,6 @@
 from typing import Optional
 
-from pythagoras._010_basic_portals.foundation import BasicPortal
-# from pythagoras._010_basic_portals.portal_getters import get_portal
+from .foundation import BasicPortal
 
 
 class PortalAwareClass:
