@@ -14,7 +14,7 @@ from pythagoras._020_logging_portals.logging_portals import NeedsRandomization
 
 from pythagoras._030_data_portals.data_portals import DataPortal
 
-from pythagoras._040_ordinary_functions.ordinary_funcs import (
+from pythagoras._040_ordinary_functions.ordinary_core_classes import (
     OrdinaryFn)
 
 from pythagoras._060_autonomous_functions.call_graph_explorer import (
@@ -23,8 +23,8 @@ from pythagoras._060_autonomous_functions.call_graph_explorer import (
 from pythagoras._060_autonomous_functions.names_usage_analyzer import (
     analyze_names_in_function)
 
-from pythagoras._050_safe_functions.safe_funcs import SafeFn
-
+from pythagoras._050_safe_functions.safe_core_classes import (
+    SafeFn, SafeCodePortal)
 
 from pythagoras._060_autonomous_functions.pth_available_names_retriever import (
     retrieve_objs_available_inside_autonomous_functions)
@@ -32,7 +32,7 @@ from pythagoras._060_autonomous_functions.pth_available_names_retriever import (
 import pythagoras as pth
 
 
-class AutonomousCodePortal(DataPortal):
+class AutonomousCodePortal(SafeCodePortal):
     
     default_island_name: str | None
     known_functions: dict[str, dict[str, AutonomousFn]] | None
@@ -121,9 +121,7 @@ class AutonomousFn(SafeFn, PortalAwareClass):
                  , island_name:str | None = None
                  , strictly_autonomous:bool = False
                  , portal: AutonomousCodePortal | None = None):
-
-        PortalAwareClass.__init__(self, portal=portal)
-        SafeFn.__init__(self,a_fn)
+        SafeFn.__init__(self,a_func=a_fn, portal = portal)
 
         if island_name is None:
             island_name = self.portal.default_island_name

@@ -1,18 +1,21 @@
 import pythagoras as pth
-from pythagoras import ordinary
+from pythagoras import ordinary, OrdinaryCodePortal, _PortalTester
 
-@pth.ordinary()
+
 def simple_function_1(a:int,b:int)->int:
     return a+b
 
-@ordinary()
 def simple_function_2(a:int,b:int)->int:
     return a*b
 
-def test_simple():
-    assert simple_function_1(a=1,b=2)==3
-    assert simple_function_2(a=2,b=3)==6
-    assert simple_function_1.decorator=="@pth.ordinary()"
+def test_simple(tmpdir):
+    global simple_function_1, simple_function_2
+    with _PortalTester(OrdinaryCodePortal, base_dir=tmpdir) as t:
+        simple_function_1 = pth.ordinary(t.portal)(simple_function_1)
+        simple_function_2 = ordinary(t.portal)(simple_function_2)
+        assert simple_function_1(a=1,b=2)==3
+        assert simple_function_2(a=2,b=3)==6
+        assert simple_function_1.decorator=="@pth.ordinary()"
 
 
 

@@ -24,7 +24,7 @@ subclasses of OrdinaryFn). Most of the time, a Pythagoras user will
 work with idempotent functions.
 """
 
-from .ordinary_funcs import OrdinaryFn
+from .ordinary_core_classes import OrdinaryFn, OrdinaryCodePortal
 
 from .ordinary_decorator import ordinary
 

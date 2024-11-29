@@ -1,6 +1,9 @@
 import inspect, autopep8
+
+from pythagoras import _PortalTester
 from pythagoras._040_ordinary_functions.code_normalizer import get_normalized_function_source
-from pythagoras._040_ordinary_functions.ordinary_funcs import OrdinaryFn
+from pythagoras._040_ordinary_functions.ordinary_core_classes import OrdinaryFn, OrdinaryCodePortal
+
 
 def f_docstring():
     """ This is a CRAZY docstring"""
@@ -82,21 +85,24 @@ def test_inclosed2():
     assert new_a3 == autopep8.fix_code(new_a3)
 
 
-def test_different():
+def test_different(tmpdir):
     all_funcs = [f_docstring, f_comments, test_basics, test_inclosed
                 , test_inclosed2, a2, a3, test_different]
-    for f1 in all_funcs:
-        for f2 in all_funcs:
-            if f1 is f2:
-                assert (get_normalized_function_source(f1)
-                        == get_normalized_function_source(f2))
-                assert (get_normalized_function_source(OrdinaryFn(f1))
-                        == get_normalized_function_source(f2))
-            else:
-                assert (get_normalized_function_source(f1)
-                        != get_normalized_function_source(f2))
-                assert (get_normalized_function_source(OrdinaryFn(f1))
-                        != get_normalized_function_source(f2))
+    with _PortalTester(OrdinaryCodePortal, base_dir=tmpdir) as t:
+        for f1 in all_funcs:
+            for f2 in all_funcs:
+                if f1 is f2:
+                    assert (get_normalized_function_source(f1)
+                            == get_normalized_function_source(f2))
+                    assert (get_normalized_function_source(
+                                OrdinaryFn(f1, portal=t.portal))
+                            == get_normalized_function_source(f2))
+                else:
+                    assert (get_normalized_function_source(f1)
+                            != get_normalized_function_source(f2))
+                    assert (get_normalized_function_source(
+                                OrdinaryFn(f1, portal = t.portal))
+                            != get_normalized_function_source(f2))
 
 
 def a4(x:int)->float:

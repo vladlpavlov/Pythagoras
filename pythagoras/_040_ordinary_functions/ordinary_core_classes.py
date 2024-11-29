@@ -3,9 +3,11 @@ from __future__ import annotations
 import sys
 from typing import Callable, Any
 
-from pythagoras import LoggingPortal
+from persidict import FileDirDict
+
+from pythagoras import DataPortal, BasicPortal, PortalAwareClass
 from pythagoras._820_strings_signatures_converters.hash_signatures import get_hash_signature
-from pythagoras._020_logging_portals.logging_portals import NeedsRandomization
+from pythagoras._020_logging_portals.logging_portals import NeedsRandomization, LoggingPortal
 from pythagoras._040_ordinary_functions.function_name import (
     get_function_name_from_source)
 from pythagoras._040_ordinary_functions.code_normalizer_implementation import (
@@ -14,7 +16,36 @@ from pythagoras._040_ordinary_functions.code_normalizer_implementation import (
 import pythagoras as pth
 
 
-class OrdinaryFn:
+class OrdinaryCodePortal(DataPortal):
+    def __init__(
+            self
+            , base_dir: str | None = None
+            , dict_type: type = FileDirDict
+            , p_consistency_checks: float | None = None
+            ):
+        super().__init__(base_dir=base_dir
+                         , dict_type=dict_type
+                         , p_consistency_checks=p_consistency_checks)
+
+    @classmethod
+    def get_portal(cls, suggested_portal: OrdinaryCodePortal | None = None
+                   ) -> OrdinaryCodePortal:
+        return BasicPortal.get_portal(suggested_portal)
+
+    @classmethod
+    def get_current_portal(cls) -> OrdinaryCodePortal | None:
+        """Get the current (default) portal object"""
+        return BasicPortal._current_portal(expected_class=cls)
+
+    @classmethod
+    def get_noncurrent_portals(cls) -> list[OrdinaryCodePortal]:
+        return BasicPortal._noncurrent_portals(expected_class=cls)
+
+    @classmethod
+    def get_active_portals(cls) -> list[OrdinaryCodePortal]:
+        return BasicPortal._active_portals(expected_class=cls)
+
+class OrdinaryFn(PortalAwareClass):
     """A wrapper around an ordinary function that allows calling it.
 
     An ordinary function is a regular function. Async functions,
@@ -40,7 +71,11 @@ class OrdinaryFn:
     _result_var_name:str
     _tmp_fn_name:str
 
-    def __init__(self, a_func: Callable | str | OrdinaryFn, **_):
+    def __init__(self
+            , a_func: Callable | str | OrdinaryFn
+            , portal: OrdinaryCodePortal | None = None
+            , **_):
+        PortalAwareClass.__init__(self, portal=portal)
         self._fn_fully_registered = False
         if isinstance(a_func, OrdinaryFn):
             self.update(a_func)
@@ -49,6 +84,10 @@ class OrdinaryFn:
             self.fn_source_code = __get_normalized_function_source__(
                 a_func, drop_pth_decorators=True)
             self.fn_name = get_function_name_from_source(self.fn_source_code)
+
+    @property
+    def portal(self) -> OrdinaryCodePortal:
+        return super().portal
 
     def update(self, other: OrdinaryFn) -> None:
         self.fn_source_code = other.fn_source_code

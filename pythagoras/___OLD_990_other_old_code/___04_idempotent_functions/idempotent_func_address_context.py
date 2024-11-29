@@ -19,7 +19,7 @@ from pythagoras._030_data_portals.value_addresses import ValueAddr
 from pythagoras.___03_OLD_autonomous_functions.autonomous_funcs import (
     AutonomousFn, register_autonomous_function, CodePortal)
 
-from pythagoras._040_ordinary_functions.ordinary_funcs import (
+from pythagoras._040_ordinary_functions.ordinary_core_classes import (
     OrdinaryFn)
 
 from pythagoras.___04_idempotent_functions.kw_args import SortedKwArgs

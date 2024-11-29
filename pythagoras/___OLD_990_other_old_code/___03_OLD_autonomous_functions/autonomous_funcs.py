@@ -13,7 +13,7 @@ from pythagoras._030_data_portals.data_portals import DataPortal
 from pythagoras._820_strings_signatures_converters.random_signatures import (
     get_random_signature)
 
-from pythagoras._040_ordinary_functions.ordinary_funcs import (
+from pythagoras._040_ordinary_functions.ordinary_core_classes import (
     OrdinaryFn)
 
 from pythagoras.___03_OLD_autonomous_functions.call_graph_explorer import (

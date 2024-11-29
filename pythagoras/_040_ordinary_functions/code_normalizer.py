@@ -2,7 +2,7 @@ from typing import Callable
 
 from pythagoras._040_ordinary_functions.code_normalizer_implementation import (
     __get_normalized_function_source__)
-from pythagoras._040_ordinary_functions.ordinary_funcs import OrdinaryFn
+from pythagoras._040_ordinary_functions.ordinary_core_classes import OrdinaryFn
 
 def get_normalized_function_source(a_func: OrdinaryFn | Callable | str) -> str:
     """Return function's source code in a 'canonical' form.

@@ -1,8 +1,11 @@
 from typing import Callable
 
-from pythagoras._040_ordinary_functions.ordinary_funcs import OrdinaryFn
+from pythagoras import PortalAwareClass
+from pythagoras._040_ordinary_functions.ordinary_core_classes import (
+    OrdinaryFn, OrdinaryCodePortal)
 
-class ordinary:
+
+class ordinary(PortalAwareClass):
     """A decorator that converts a Python function into an OrdinaryFn object.
 
     As a part of the conversion process, the source code of the function
@@ -10,8 +13,13 @@ class ordinary:
     an exception is raised.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, portal: OrdinaryCodePortal | None = None):
+        PortalAwareClass.__init__(self=self, portal=portal)
+
+    @property
+    def portal(self) -> OrdinaryCodePortal:
+        return super().portal
+
     def __call__(self,a_func:Callable)->OrdinaryFn:
-        decorated_function = OrdinaryFn(a_func)
-        return decorated_function
+        wrapper = OrdinaryFn(a_func, portal=self.portal)
+        return wrapper

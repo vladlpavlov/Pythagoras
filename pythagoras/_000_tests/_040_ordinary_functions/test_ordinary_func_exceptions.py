@@ -1,14 +1,18 @@
-from pythagoras import OrdinaryFn, DataPortal, _PortalTester
+from pythagoras import OrdinaryFn, DataPortal, _PortalTester, OrdinaryCodePortal
 import time
 
 
 def simple_function_exception(a:int,b:int) -> int:
     return (a+b)/0
 
+
+
+
+
 def test_ordinary_function_excptn(tmpdir):
-    # tmpdir = 20*"Q"+str(int(time.time()))
+    # tmpdir = 3*"ORDINARY_FN_EXCPTN_"+str(int(time.time()))
     try:
-        with _PortalTester(DataPortal, tmpdir) as p:
+        with _PortalTester(OrdinaryCodePortal, tmpdir) as p:
             crash_history = p.portal.crash_history
             assert len(p.portal.crash_history) == 0
             f = OrdinaryFn(simple_function_exception)
@@ -26,7 +30,7 @@ def fibonacci_with_exception(n:int) -> int:
     return fibonacci_with_exception(n=n-1) + fibonacci_with_exception(n=n-2)
 
 def test_ordinary_function_with_recursion(tmpdir):
-    # tmpdir = 20 * "Q" + str(int(time.time()))
+    # tmpdir = 3 * "ORDINARY_FN_WITH_RECURSION_" + str(int(time.time()))
     try:
         with _PortalTester(DataPortal, tmpdir) as p:
             crash_history = p.portal.crash_history
