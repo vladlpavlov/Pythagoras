@@ -197,7 +197,6 @@ class OrdinaryFn(PortalAwareClass):
                 , exception_extra_data_to_persist=extra_data)
             raise
 
-
     @property
     def decorator(self):
         return "@pth.ordinary()"

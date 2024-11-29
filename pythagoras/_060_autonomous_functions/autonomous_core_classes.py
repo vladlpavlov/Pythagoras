@@ -111,7 +111,6 @@ class AutonomousCodePortal(SafeCodePortal):
         return BasicPortal._active_portals(expected_class=cls)
 
 
-
 class AutonomousFn(SafeFn, PortalAwareClass):
     island_name:str
     strictly_autonomous:bool

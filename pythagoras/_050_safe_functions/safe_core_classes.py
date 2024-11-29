@@ -49,7 +49,9 @@ class SafeFn(OrdinaryFn):
             self.update(a_func)
             return
 
-
+    @property
+    def decorator(self):
+        return "@pth.safe()"
 
     @property
     def portal(self) -> SafeCodePortal:
