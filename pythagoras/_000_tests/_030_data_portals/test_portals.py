@@ -40,35 +40,35 @@ def test_nested_portals_whitebox(tmpdir):
 
         with portal1:
             assert len(DataPortal.all_portals) == 3
-            assert len(DataPortal.portals_stack) == 1
-            assert sum(DataPortal.counters_stack) == 1
+            assert len(DataPortal.entered_portals_stack) == 1
+            assert sum(DataPortal.entered_portals_counters_stack) == 1
             with portal2:
                 assert len(DataPortal.all_portals) == 3
-                assert len(DataPortal.portals_stack) == 2
-                assert sum(DataPortal.counters_stack) == 2
+                assert len(DataPortal.entered_portals_stack) == 2
+                assert sum(DataPortal.entered_portals_counters_stack) == 2
                 with portal3:
                     assert len(DataPortal.all_portals) == 3
-                    assert len(DataPortal.portals_stack) == 3
-                    assert sum(DataPortal.counters_stack) == 3
+                    assert len(DataPortal.entered_portals_stack) == 3
+                    assert sum(DataPortal.entered_portals_counters_stack) == 3
 
         with portal1:
-            assert len(DataPortal.portals_stack) == 1
-            assert sum(DataPortal.counters_stack) == 1
+            assert len(DataPortal.entered_portals_stack) == 1
+            assert sum(DataPortal.entered_portals_counters_stack) == 1
             with portal2:
-                assert len(DataPortal.portals_stack) == 2
-                assert sum(DataPortal.counters_stack) == 2
+                assert len(DataPortal.entered_portals_stack) == 2
+                assert sum(DataPortal.entered_portals_counters_stack) == 2
                 with portal2:
-                    assert len(DataPortal.portals_stack) == 2
-                    assert sum(DataPortal.counters_stack) == 3
+                    assert len(DataPortal.entered_portals_stack) == 2
+                    assert sum(DataPortal.entered_portals_counters_stack) == 3
                     with portal3:
-                        assert len(DataPortal.portals_stack) == 3
-                        assert sum(DataPortal.counters_stack) == 4
+                        assert len(DataPortal.entered_portals_stack) == 3
+                        assert sum(DataPortal.entered_portals_counters_stack) == 4
                         with portal1:
-                            assert len(DataPortal.portals_stack) == 4
-                assert len(DataPortal.portals_stack) == 2
-                assert sum(DataPortal.counters_stack) == 2
-            assert len(DataPortal.portals_stack) == 1
-            assert sum(DataPortal.counters_stack) == 1
+                            assert len(DataPortal.entered_portals_stack) == 4
+                assert len(DataPortal.entered_portals_stack) == 2
+                assert sum(DataPortal.entered_portals_counters_stack) == 2
+            assert len(DataPortal.entered_portals_stack) == 1
+            assert sum(DataPortal.entered_portals_counters_stack) == 1
 
 
 def test_get_portal_basic(tmpdir):
@@ -82,21 +82,21 @@ def test_get_portal_basic(tmpdir):
         portal3 = DataPortal(tmpdir3)
 
         with portal1:
-            assert portal1 == DataPortal.get_portal()
+            assert portal1 == DataPortal.get_best_portal_to_use()
             with portal2:
-                assert portal2 == DataPortal.get_portal()
+                assert portal2 == DataPortal.get_best_portal_to_use()
                 with portal3:
-                    assert portal3 == DataPortal.get_portal()
+                    assert portal3 == DataPortal.get_best_portal_to_use()
 
         with portal1:
-            assert portal1 == DataPortal.get_portal()
+            assert portal1 == DataPortal.get_best_portal_to_use()
             with portal2:
-                assert portal2 == DataPortal.get_portal()
+                assert portal2 == DataPortal.get_best_portal_to_use()
                 with portal2:
-                    assert portal2 == DataPortal.get_portal()
+                    assert portal2 == DataPortal.get_best_portal_to_use()
                     with portal3:
-                        assert portal3 == DataPortal.get_portal()
+                        assert portal3 == DataPortal.get_best_portal_to_use()
                         with portal1:
-                            assert portal1 == DataPortal.get_portal()
-                assert portal2 == DataPortal.get_portal()
-            assert portal1 == DataPortal.get_portal()
+                            assert portal1 == DataPortal.get_best_portal_to_use()
+                assert portal2 == DataPortal.get_best_portal_to_use()
+            assert portal1 == DataPortal.get_best_portal_to_use()

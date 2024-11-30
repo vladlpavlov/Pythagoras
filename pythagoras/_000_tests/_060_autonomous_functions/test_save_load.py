@@ -30,7 +30,7 @@ def test_load_save(tmpdir):
 
         del f_address._portal
 
-        f_address._portal = AutonomousCodePortal.get_current_portal()
+        f_address._portal = AutonomousCodePortal.get_most_recently_entered_portal()
 
         f_3 = f_address.get()
         assert f_3(a=1, b=2) == f(a=1, b=2) == 3

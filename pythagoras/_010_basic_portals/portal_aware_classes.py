@@ -18,7 +18,7 @@ class PortalAwareClass:
     _portal: BasicPortal|None
 
     def __init__(self, portal:Optional[BasicPortal]=None):
-        self._portal = BasicPortal.get_portal(portal)
+        self._portal = BasicPortal.get_best_portal_to_use(portal)
 
 
     @property
@@ -34,7 +34,7 @@ class PortalAwareClass:
         This method is supposed to be called from within .__setstate__()
         """
         assert (not hasattr(self, "_portal")) or self._portal is None
-        self._portal = BasicPortal._current_portal()
+        self._portal = BasicPortal._most_recently_entered_portal()
 
     def __getstate__(self):
         """This method is called when the object is pickled.

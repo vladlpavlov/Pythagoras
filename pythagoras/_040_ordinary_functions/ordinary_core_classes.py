@@ -28,22 +28,23 @@ class OrdinaryCodePortal(DataPortal):
                          , p_consistency_checks=p_consistency_checks)
 
     @classmethod
-    def get_portal(cls, suggested_portal: OrdinaryCodePortal | None = None
-                   ) -> OrdinaryCodePortal:
-        return BasicPortal.get_portal(suggested_portal)
+    def get_best_portal_to_use(cls, suggested_portal: OrdinaryCodePortal | None = None
+                               ) -> OrdinaryCodePortal:
+        return BasicPortal.get_best_portal_to_use(suggested_portal)
 
     @classmethod
-    def get_current_portal(cls) -> OrdinaryCodePortal | None:
-        """Get the current (default) portal object"""
-        return BasicPortal._current_portal(expected_class=cls)
+    def get_most_recently_entered_portal(cls) -> OrdinaryCodePortal | None:
+        """Get the current portal object"""
+        return BasicPortal._most_recently_entered_portal(expected_class=cls)
 
     @classmethod
     def get_noncurrent_portals(cls) -> list[OrdinaryCodePortal]:
+        """Get all portals except the most recently entered one"""
         return BasicPortal._noncurrent_portals(expected_class=cls)
 
     @classmethod
-    def get_active_portals(cls) -> list[OrdinaryCodePortal]:
-        return BasicPortal._active_portals(expected_class=cls)
+    def get_entered_portals(cls) -> list[OrdinaryCodePortal]:
+        return BasicPortal._entered_portals(expected_class=cls)
 
 class OrdinaryFn(PortalAwareClass):
     """A wrapper around an ordinary function that allows calling it.

@@ -78,22 +78,23 @@ class DataPortal(LoggingPortal):
         return self._p_consistency_checks
 
     @classmethod
-    def get_portal(cls, suggested_portal: Optional[DataPortal] = None
-                   ) -> DataPortal:
-        return BasicPortal.get_portal(suggested_portal)
+    def get_best_portal_to_use(cls, suggested_portal: Optional[DataPortal] = None
+                               ) -> DataPortal:
+        return BasicPortal.get_best_portal_to_use(suggested_portal)
 
     @classmethod
-    def get_current_portal(cls) -> DataPortal | None:
-        """Get the current (default) portal object"""
-        return BasicPortal._current_portal(expected_class=cls)
+    def get_most_recently_entered_portal(cls) -> DataPortal | None:
+        """Get the current portal object"""
+        return BasicPortal._most_recently_entered_portal(expected_class=cls)
 
     @classmethod
     def get_noncurrent_portals(cls) -> list[DataPortal]:
+        """Get all portals except the most recently entered one"""
         return BasicPortal._noncurrent_portals(expected_class=cls)
 
     @classmethod
-    def get_active_portals(cls) -> list[DataPortal]:
-        return BasicPortal._active_portals(expected_class=cls)
+    def get_entered_portals(cls) -> list[DataPortal]:
+        return BasicPortal._entered_portals(expected_class=cls)
 
     def _clear(self) -> None:
         """Clear the portal's state"""

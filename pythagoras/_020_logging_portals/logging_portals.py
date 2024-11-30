@@ -96,7 +96,7 @@ class LoggingPortal(BasicPortal):
     capabilities for events and exceptions. 'Application-level' means that
     the events and exceptions are logged into location(s) that is(are) the same
     across the entire application, and does not depend on the specific function
-    from which the even or exception is raised.
+    from which the event or exception is raised.
 
     The class provides two dictionaries, `crash_history` and `event_log`,
     to store the exceptions history and event log respectively.
@@ -164,22 +164,25 @@ class LoggingPortal(BasicPortal):
         return result
 
     @classmethod
-    def get_portal(cls, suggested_portal:Optional[LoggingPortal]=None
-               ) -> LoggingPortal:
-        return BasicPortal.get_portal(suggested_portal)
+    def get_best_portal_to_use(cls
+            , suggested_portal:Optional[LoggingPortal]=None
+            ) -> LoggingPortal:
+        return BasicPortal.get_best_portal_to_use(suggested_portal)
 
 
     @classmethod
-    def get_current_portal(cls) -> LoggingPortal | None:
-        return BasicPortal._current_portal(expected_class=LoggingPortal)
+    def get_most_recently_entered_portal(cls) -> LoggingPortal | None:
+        return BasicPortal._most_recently_entered_portal(
+            expected_class=LoggingPortal)
 
     @classmethod
     def get_noncurrent_portals(cls) -> list[LoggingPortal]:
+        """Get all portals except the most recently entered one"""
         return BasicPortal._noncurrent_portals(expected_class=cls)
 
     @classmethod
-    def get_active_portals(cls) -> list[LoggingPortal]:
-        return BasicPortal._active_portals(expected_class=cls)
+    def get_entered_portals(cls) -> list[LoggingPortal]:
+        return BasicPortal._entered_portals(expected_class=cls)
 
     @classmethod
     def _clear_all(cls) -> None:
@@ -249,7 +252,7 @@ class LoggingPortal(BasicPortal):
 
         for prefix in exception_prefixes:
             full_path = prefix + [exception_id]
-            for portal in LoggingPortal.get_active_portals():
+            for portal in LoggingPortal.get_entered_portals():
                 portal.crash_history[full_path] = exception_data_to_persist
 
         LoggingPortal._mark_exception_as_processed(
@@ -338,5 +341,5 @@ class LoggingPortal(BasicPortal):
         event_to_log = LoggingPortal.add_execution_environment_summary(
             *args, **kwargs)
 
-        for portal in LoggingPortal.get_active_portals():
+        for portal in LoggingPortal.get_entered_portals():
             portal.event_log[full_path] = event_to_log

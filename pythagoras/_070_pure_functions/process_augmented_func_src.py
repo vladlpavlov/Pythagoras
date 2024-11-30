@@ -32,7 +32,7 @@ def process_augmented_func_src(
 
     assert isinstance(portal, DataPortal) or portal is None
 
-    portal = DataPortal.get_portal(portal)
+    portal = DataPortal.get_best_portal_to_use(portal)
 
     tree = ast.parse(input_src)
     for node in tree.body:

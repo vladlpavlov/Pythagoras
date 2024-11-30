@@ -22,7 +22,7 @@ setuptools.setup(
         , "pythagoras._070_pure_functions"
         , "pythagoras._080_compatibility_validators"
         , "pythagoras._090_swarming_portals"
-        , "pythagoras._100_top_level_API"
+        , "pythagoras._110_top_level_API"
         , "pythagoras._800_persidict_extensions"
         , "pythagoras._810_output_manipulators"
         , "pythagoras._820_strings_signatures_converters"

@@ -93,22 +93,23 @@ class AutonomousCodePortal(SafeCodePortal):
         super()._clear()
 
     @classmethod
-    def get_portal(cls, suggested_portal: AutonomousCodePortal | None = None
-                   ) -> AutonomousCodePortal:
-        return BasicPortal.get_portal(suggested_portal)
+    def get_best_portal_to_use(cls, suggested_portal: AutonomousCodePortal | None = None
+                               ) -> AutonomousCodePortal:
+        return BasicPortal.get_best_portal_to_use(suggested_portal)
 
     @classmethod
-    def get_current_portal(cls) -> AutonomousCodePortal | None:
-        """Get the current (default) portal object"""
-        return BasicPortal._current_portal(expected_class=cls)
+    def get_most_recently_entered_portal(cls) -> AutonomousCodePortal | None:
+        """Get the current portal object"""
+        return BasicPortal._most_recently_entered_portal(expected_class=cls)
 
     @classmethod
     def get_noncurrent_portals(cls) -> list[AutonomousCodePortal]:
+        """Get all portals except the most recently entered one"""
         return BasicPortal._noncurrent_portals(expected_class=cls)
 
     @classmethod
-    def get_active_portals(cls) -> list[AutonomousCodePortal]:
-        return BasicPortal._active_portals(expected_class=cls)
+    def get_entered_portals(cls) -> list[AutonomousCodePortal]:
+        return BasicPortal._entered_portals(expected_class=cls)
 
 
 class AutonomousFn(SafeFn, PortalAwareClass):

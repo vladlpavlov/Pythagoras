@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 from typing import Optional
 import pandas as pd
 
@@ -43,8 +45,8 @@ class BasicPortal:
     be subclassed to provide additional functionality.
     """
     all_portals: dict = {}
-    portals_stack: list = []
-    counters_stack: list = []
+    entered_portals_stack: list = []
+    entered_portals_counters_stack: list = []
     base_dir: str | None
     dict_type:type | None
 
@@ -86,47 +88,68 @@ class BasicPortal:
 
         return result
 
-    @property
-    def default_base_dir(self) -> str:
-        """Get the default base directory for the portal"""
-        # TODO: Implement a better way to determine the default base directory
-        return "Q-Q-Q"
+
+    @staticmethod
+    def default_base_dir() -> str:
+        """Get the base directory for the default local portal.
+
+        The default base directory is ~/.pythagoras/.default_portal
+
+        Pythagoras connects to the default local portal
+        when no other portal is specified in the
+        program which uses Pythagoras.
+        """
+        home_directory = Path.home()
+        target_directory = home_directory / ".pythagoras" / ".default_portal"
+        target_directory.mkdir(parents=True, exist_ok=True)
+        target_directory_str = str(target_directory.resolve())
+        return target_directory_str
+
+
+    @staticmethod
+    def get_most_recently_added_portal() -> BasicPortal|None:
+        """Get the most recently added portal"""
+        if len(BasicPortal.all_portals) == 0:
+            return None
+        last_key = next(reversed(BasicPortal.all_portals))
+        return BasicPortal.all_portals[last_key]
+
 
     def __enter__(self):
         """Set the portal as the current one"""
-        if (len(BasicPortal.portals_stack) == 0 or
-                id(BasicPortal.portals_stack[-1]) != id(self)):
-            BasicPortal.portals_stack.append(self)
-            BasicPortal.counters_stack.append(1)
+        if (len(BasicPortal.entered_portals_stack) == 0 or
+                id(BasicPortal.entered_portals_stack[-1]) != id(self)):
+            BasicPortal.entered_portals_stack.append(self)
+            BasicPortal.entered_portals_counters_stack.append(1)
         else:
-            BasicPortal.counters_stack[-1] += 1
+            BasicPortal.entered_portals_counters_stack[-1] += 1
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Remove the portal from the current context"""
-        assert BasicPortal.portals_stack[-1] == self, (
+        assert BasicPortal.entered_portals_stack[-1] == self, (
             "Inconsistent state of the portal stack. "
             + "Most probably, portal.__enter__() method was called explicitly "
             + "within a 'with' statement with another portal.")
-        if BasicPortal.counters_stack[-1] == 1:
-            BasicPortal.portals_stack.pop()
-            BasicPortal.counters_stack.pop()
+        if BasicPortal.entered_portals_counters_stack[-1] == 1:
+            BasicPortal.entered_portals_stack.pop()
+            BasicPortal.entered_portals_counters_stack.pop()
         else:
-            BasicPortal.counters_stack[-1] -= 1
+            BasicPortal.entered_portals_counters_stack[-1] -= 1
 
     @staticmethod
     def __exit_all__() -> None:
-        while len(BasicPortal.portals_stack) > 0:
-            portal = BasicPortal.portals_stack[-1]
+        while len(BasicPortal.entered_portals_stack) > 0:
+            portal = BasicPortal.entered_portals_stack[-1]
             portal.__exit__(None, None, None)
 
     @staticmethod
-    def _current_portal(
+    def _most_recently_entered_portal(
             expected_class:Optional[type]=None
             ) -> BasicPortal | None:
         """Get the current (default) portal object"""
-        if len(BasicPortal.portals_stack) > 0:
-            result =  BasicPortal.portals_stack[-1]
+        if len(BasicPortal.entered_portals_stack) > 0:
+            result =  BasicPortal.entered_portals_stack[-1]
             if expected_class is not None:
                 assert issubclass(expected_class, BasicPortal)
                 assert isinstance(result, expected_class)
@@ -135,27 +158,30 @@ class BasicPortal:
             return None
 
     @classmethod
-    def get_current_portal(cls) -> BasicPortal | None:
-        """Get the current (default) portal object"""
-        portal = BasicPortal._current_portal(expected_class=cls)
+    def get_most_recently_entered_portal(cls) -> BasicPortal | None:
+        """Get the currently used portal object"""
+        portal = BasicPortal._most_recently_entered_portal(expected_class=cls)
         return portal
 
     @classmethod
-    def get_portal(cls, suggested_portal:Optional[BasicPortal]=None
-               ) -> BasicPortal:
-        """Get the portal object from the parameter or the default one"""
+    def get_best_portal_to_use(cls
+            , suggested_portal:Optional[BasicPortal]=None
+            ) -> BasicPortal:
+        """Get the portal object from the parameter or find the best one"""
         if suggested_portal is None:
-           suggested_portal = cls.get_current_portal()
-        assert suggested_portal is not None, (
-            "No portal was found in the current context. ")
-        assert isinstance(suggested_portal, cls)
+           suggested_portal = cls.get_most_recently_entered_portal()
+        if suggested_portal is None:
+            suggested_portal = cls.get_most_recently_added_portal()
+        if suggested_portal is None:
+            # Dirty hack to avoid circular imports
+            suggested_portal = sys.modules["pythagoras"].DefaultLocalPortal()
         return suggested_portal
 
 
     @staticmethod
     def _noncurrent_portals(expected_class:Optional[type]=None) -> list[BasicPortal]:
-        """Get all portals except the current one"""
-        current_portal = BasicPortal._current_portal()
+        """Get all portals except the most recently entered one"""
+        current_portal = BasicPortal._most_recently_entered_portal()
         all_portals = BasicPortal.all_portals
 
         if current_portal is None:
@@ -173,26 +199,26 @@ class BasicPortal:
 
     @classmethod
     def get_noncurrent_portals(cls) -> list[BasicPortal]:
-        """Get all portals except the current one"""
+        """Get all portals except the most recently entered one"""
         return BasicPortal._noncurrent_portals(expected_class=cls)
 
 
     @staticmethod
-    def _active_portals(expected_class:Optional[type]=None) -> list[BasicPortal]:
+    def _entered_portals(expected_class:Optional[type]=None) -> list[BasicPortal]:
         """Get all active portals"""
-        active_portals = {}
-        for portal in reversed(BasicPortal.portals_stack):
-            active_portals[id(portal)] = portal
-        result = list(active_portals.values())
+        entered_portals = {}
+        for portal in reversed(BasicPortal.entered_portals_stack):
+            entered_portals[id(portal)] = portal
+        result = list(entered_portals.values())
         if len(result) and expected_class is not None:
             assert issubclass(expected_class, BasicPortal)
             assert all(isinstance(portal, expected_class) for portal in result)
         return result
 
     @classmethod
-    def get_active_portals(cls) -> list[BasicPortal]:
+    def get_entered_portals(cls) -> list[BasicPortal]:
         """Get all active portals"""
-        return BasicPortal._active_portals(expected_class=cls)
+        return BasicPortal._entered_portals(expected_class=cls)
 
     def _clear(self) -> None:
         """Clear the portal's state"""
@@ -204,8 +230,8 @@ class BasicPortal:
         for portal in BasicPortal.all_portals.values():
             portal._clear()
         BasicPortal.all_portals = dict()
-        BasicPortal.portals_stack = list()
-        BasicPortal.counters_stack = list()
+        BasicPortal.entered_portals_stack = list()
+        BasicPortal.entered_portals_counters_stack = list()
 
     def __getstate__(self):
         raise NotAllowedError("Portal objects cannot be pickled.")

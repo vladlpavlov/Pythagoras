@@ -28,7 +28,7 @@ from pythagoras._810_output_manipulators.output_suppressor import (
 class SwarmingPortal(PureCodePortal):
     compute_nodes: OverlappingMultiDict | None
 
-    def __init__(self, base_dir:str
+    def __init__(self, base_dir:str|None = None
                  , dict_type:type = FileDirDict
                  , default_island_name:str = "Samos"
                  , p_consistency_checks:float|None = None
@@ -138,25 +138,26 @@ class SwarmingPortal(PureCodePortal):
 
 
     @classmethod
-    def get_portal(cls, suggested_portal: PureCodePortal | None = None
-                   ) -> SwarmingPortal:
-        return BasicPortal.get_portal(suggested_portal)
+    def get_best_portal_to_use(cls, suggested_portal: PureCodePortal | None = None
+                               ) -> SwarmingPortal:
+        return BasicPortal.get_best_portal_to_use(suggested_portal)
 
 
     @classmethod
-    def get_current_portal(cls) -> SwarmingPortal | None:
-        """Get the current (default) portal object"""
-        return BasicPortal._current_portal(expected_class=cls)
+    def get_most_recently_entered_portal(cls) -> SwarmingPortal | None:
+        """Get the current portal object"""
+        return BasicPortal._most_recently_entered_portal(expected_class=cls)
 
 
     @classmethod
     def get_noncurrent_portals(cls) -> list[SwarmingPortal]:
+        """Get all portals except the most recently entered one"""
         return BasicPortal._noncurrent_portals(expected_class=cls)
 
 
     @classmethod
-    def get_active_portals(cls) -> list[SwarmingPortal]:
-        return BasicPortal._active_portals(expected_class=cls)
+    def get_entered_portals(cls) -> list[SwarmingPortal]:
+        return BasicPortal._entered_portals(expected_class=cls)
 
     def _randomly_delay_execution(self
             , p:float = 0.5

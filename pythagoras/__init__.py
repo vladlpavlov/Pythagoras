@@ -23,7 +23,8 @@ from pythagoras._060_autonomous_functions import *
 from pythagoras._070_pure_functions import *
 from pythagoras._080_compatibility_validators import *
 from pythagoras._090_swarming_portals import *
-from pythagoras._100_top_level_API import *
+from pythagoras._100_default_local_portals import *
+from pythagoras._110_top_level_API import *
 
 
 

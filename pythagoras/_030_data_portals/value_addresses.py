@@ -32,7 +32,7 @@ class ValueAddr(HashAddr):
         assert len(args) == 0
         assert len(kwargs) == 0
 
-        portal = DataPortal.get_portal(portal)
+        portal = DataPortal.get_best_portal_to_use(portal)
 
         with portal:
             if hasattr(data, "get_ValueAddr"):

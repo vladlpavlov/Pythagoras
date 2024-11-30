@@ -25,4 +25,4 @@ def test_value_address_basic(tmpdir):
                 else:
                     assert ValueAddr(sample).get() == sample
 
-                assert ValueAddr(sample).portal == DataPortal.get_current_portal()
+                assert ValueAddr(sample).portal == DataPortal.get_most_recently_entered_portal()

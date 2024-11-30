@@ -17,14 +17,14 @@ def test_value_address_basic(tmpdir,p):
     with _PortalTester(DataPortal,tmpdir, p_consistency_checks=p) as t:
         portal = t.portal
         for v in values_to_test:
-            assert len(portal.get_current_portal().value_store) == counter
+            assert len(portal.get_most_recently_entered_portal().value_store) == counter
             assert ValueAddr(v).get() == v
             assert ValueAddr(v).get() == v
             counter += 1
-            assert len(portal.get_current_portal().value_store) == counter
+            assert len(portal.get_most_recently_entered_portal().value_store) == counter
 
     with _PortalTester(DataPortal,tmpdir, p_consistency_checks=p):
-        assert len(portal.get_current_portal().value_store) == counter
+        assert len(portal.get_most_recently_entered_portal().value_store) == counter
 
 @pytest.mark.parametrize("p",[0,0.5,1])
 def test_nested_value_addrs(tmpdir,p):
@@ -32,14 +32,14 @@ def test_nested_value_addrs(tmpdir,p):
 
     with _PortalTester(DataPortal,tmpdir, p_consistency_checks=p):
         for v in values_to_test:
-            assert len(DataPortal.get_current_portal().value_store) == counter
+            assert len(DataPortal.get_most_recently_entered_portal().value_store) == counter
             assert ValueAddr([ValueAddr(v)]).get()[0].get() == v
             assert ValueAddr([ValueAddr(v)]).get()[0].get() == v
             counter += 2
-            assert len(DataPortal.get_current_portal().value_store) == counter
+            assert len(DataPortal.get_most_recently_entered_portal().value_store) == counter
 
     with _PortalTester(DataPortal,tmpdir, p_consistency_checks=p):
-        assert len(DataPortal.get_current_portal().value_store) == counter
+        assert len(DataPortal.get_most_recently_entered_portal().value_store) == counter
 
 
 @pytest.mark.parametrize("p",[0,0.5,1])

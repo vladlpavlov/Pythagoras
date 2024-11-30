@@ -2,7 +2,7 @@
 # def get_active_portals() -> list[DataPortal]:
 #     active_portals = {}
 #     active_portals[id(pth.default_portal)] = pth.default_portal
-#     for portal in DataPortal.portals_stack:
+#     for portal in DataPortal.entered_portals_stack:
 #         active_portals[id(portal)] = portal
 #     result = list(active_portals.values())
 #     return result

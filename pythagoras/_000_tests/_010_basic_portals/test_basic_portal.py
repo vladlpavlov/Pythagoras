@@ -7,20 +7,20 @@ def test_portal(tmpdir):
 
         portal = BasicPortal(tmpdir.mkdir("awer"))
         assert portal is not None
-        assert portal._current_portal() is None
-        assert BasicPortal.get_current_portal() is None
+        assert portal._most_recently_entered_portal() is None
+        assert BasicPortal.get_most_recently_entered_portal() is None
         assert len(portal._noncurrent_portals()) == 1
         assert len(portal._noncurrent_portals(expected_class=BasicPortal)) == 1
-        assert portal._active_portals() == []
+        assert portal._entered_portals() == []
 
         portal2 = BasicPortal(tmpdir.mkdir("awasder"))
         portal3 = BasicPortal(tmpdir.mkdir("aadfgggr"))
         assert portal is not None
-        assert portal._current_portal() is None
-        assert BasicPortal.get_current_portal() is None
+        assert portal._most_recently_entered_portal() is None
+        assert BasicPortal.get_most_recently_entered_portal() is None
         assert len(portal._noncurrent_portals()) == 3
         assert len(portal._noncurrent_portals(expected_class=BasicPortal)) == 3
-        assert portal._active_portals() == []
+        assert portal._entered_portals() == []
 
 
 def test_clean_all(tmpdir):
@@ -29,9 +29,9 @@ def test_clean_all(tmpdir):
         portal2 = BasicPortal(tmpdir)
         portal3 = BasicPortal(tmpdir)
         BasicPortal._clear_all()
-        assert portal._current_portal() is None
+        assert portal._most_recently_entered_portal() is None
         assert len(portal._noncurrent_portals()) == 0
-        assert portal._active_portals() == []
+        assert portal._entered_portals() == []
 
 
 # def test_portal_nested(tmpdir):
