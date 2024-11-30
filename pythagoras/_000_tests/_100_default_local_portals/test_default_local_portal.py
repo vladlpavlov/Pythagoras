@@ -24,6 +24,7 @@ def test_default_local_portal(mock_path_home):
         assert ".default_portal" in portal_2.base_dir
         homepath = Path("~").expanduser()
         assert str(mock_path_home) in portal_3.base_dir
+        assert len(BasicPortal.entered_portals_stack) == 0
 
         assert isinstance(portal_1, SwarmingPortal)
         DefaultLocalPortal._clear_all()
@@ -43,5 +44,53 @@ def test_work_with_no_portal(mock_path_home):
         assert len(portal.execution_requests) == 0
         assert len(portal.execution_results) == 1
         assert len(portal.known_functions["Samos"]) == 1
+        assert len(BasicPortal.entered_portals_stack) == 0
         DefaultLocalPortal._clear_all()
+
+def test_work_with_one_portal(mock_path_home, tmpdir):
+    DefaultLocalPortal._clear_all()
+    with _PortalTester(SwarmingPortal, tmpdir):
+        assert len(BasicPortal.all_portals) == 1
+        f_pure = pth.pure()(f)
+        f_result = f_pure()
+        assert f_result == 42
+        assert len(BasicPortal.all_portals) == 1
+        assert len(BasicPortal.entered_portals_stack) == 1
+        portal = DefaultLocalPortal()
+        assert len(BasicPortal.entered_portals_stack) == 1
+        assert len(BasicPortal.all_portals) == 2
+        assert len(portal.execution_requests) == 0
+        assert len(portal.execution_results) == 0
+        assert len(portal.known_functions["Samos"]) == 0
+    DefaultLocalPortal._clear_all()
+
+
+def test_work_with_two_portals(mock_path_home, tmpdir):
+    DefaultLocalPortal._clear_all()
+    with _PortalTester(SwarmingPortal, tmpdir):
+        assert len(BasicPortal.entered_portals_stack) == 1
+        with SwarmingPortal(tmpdir.mkdir("la-la-la")) as sw_portal_2:
+            assert len(BasicPortal.all_portals) == 2
+            assert len(BasicPortal.entered_portals_stack) == 2
+            f_pure = pth.pure()(f)
+            f_result = f_pure()
+            assert f_result == 42
+            assert len(BasicPortal.all_portals) == 2
+            assert len(sw_portal_2.known_functions["Samos"]) == 1
+        assert len(BasicPortal.entered_portals_stack) == 1
+        assert len(BasicPortal.all_portals) == 2
+        f_pure_new = pth.pure()(f)
+        f_result = f_pure_new()
+        assert f_result == 42
+        assert len(BasicPortal.all_portals) == 2
+
+        for i in range(5):
+            d_portal = DefaultLocalPortal()
+            assert len(BasicPortal.all_portals) == 3
+
+        assert len(d_portal.execution_requests) == 0
+        assert len(d_portal.execution_results) == 0
+        assert len(d_portal.known_functions["Samos"]) == 0
+        assert len(BasicPortal.entered_portals_stack) == 1
+    DefaultLocalPortal._clear_all()
 
