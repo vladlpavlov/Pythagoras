@@ -14,7 +14,7 @@ Pythagoras offers:
 in diverse distributed environments of any scale;
 * ubiquitous caching for intermediate program states, 
 with intelligent data and code change tracking;
-* extremely simple and budget-friendly orchestration backend.
+* simple and budget-friendly orchestration backend.
 
 ## Usage
 
