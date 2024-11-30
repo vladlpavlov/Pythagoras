@@ -11,7 +11,7 @@ setuptools.setup(
     ,description= "Planet-scale distributed computing in Python."
     ,long_description=long_description
     ,long_description_content_type="text/markdown"
-    ,url="https://github.com/vladlpavlov/pythagoras"
+    ,url="https://github.com/pythagoras-dev/pythagoras"
     ,packages=["pythagoras"
         , "pythagoras._010_basic_portals"
         , "pythagoras._020_logging_portals"
