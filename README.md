@@ -23,7 +23,7 @@ https://colab.research.google.com/drive/1tSJkpHl49Y9ZrYskkdoH2ti3_VZ5_6cj
 
 ## How to get it?
 
-The source code is hosted on GitHub at: https://github.com/vladlpavlov/pythagoras
+The source code is hosted on GitHub at: https://github.com/pythagoras-dev/pythagoras
 
 Installers for the latest released version are available 
 at the Python package index at: https://pypi.org/project/pythagoras
