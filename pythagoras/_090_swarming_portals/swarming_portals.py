@@ -46,7 +46,7 @@ class SwarmingPortal(PureCodePortal):
         compute_nodes_dir = os.path.join(base_dir, "compute_nodes")
         compute_nodes = OverlappingMultiDict(
             dict_type=dict_type
-            , dir_name=compute_nodes_dir
+            , shared_subdicts_params=dict(dir_name=compute_nodes_dir)
             , pkl=dict(digest_len=0, immutable_items=False)
             , json=dict(digest_len=0, immutable_items=False)
         )

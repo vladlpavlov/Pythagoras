@@ -81,7 +81,7 @@ class PureCodePortal(AutonomousCodePortal):
             base_dir, "run_history")
         run_history = OverlappingMultiDict(
             dict_type=dict_type
-            , dir_name=run_history_dir
+            , shared_subdicts_params=dict(dir_name=run_history_dir)
             , json=dict(digest_len=0, immutable_items=True)
             , py=dict(
                 base_class_for_values=str

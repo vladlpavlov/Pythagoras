@@ -18,17 +18,40 @@ class OverlappingMultiDict:
     in a single file directory or in an s3 bucket.
 
     """
-    def __init__(self, dict_type:type, dir_name:str, **subdicts_params):
+    def __init__(self
+                 , dict_type:type
+                 , shared_subdicts_params:dict
+                 , **individual_subdicts_params):
         assert issubclass(dict_type, PersiDict)
-        for subdict_name in subdicts_params:
-            assert isinstance(subdicts_params[subdict_name], dict)
+        assert isinstance(shared_subdicts_params, dict)
+        self.dict_type = dict_type
+        self.shared_subdicts_params = shared_subdicts_params
+        self.individual_subdicts_params = individual_subdicts_params
+        self.subdicts_names = list(individual_subdicts_params.keys())
+        for subdict_name in individual_subdicts_params:
+            assert isinstance(individual_subdicts_params[subdict_name], dict)
             self.__dict__[subdict_name] = dict_type(
-                **subdicts_params[subdict_name]
+                **individual_subdicts_params[subdict_name]
                 ,file_type=subdict_name
-                ,dir_name=dir_name)
+                ,**shared_subdicts_params)
 
         def __getstate__(self):
             raise NotAllowedError("This object should never be pickled")
 
         def __setstate__(self, state):
             raise NotAllowedError("This object should never be pickled")
+
+        def __getitem__(self, key):
+            raise NotAllowedError(
+                "Individual items should be accessed through nested dicts, "
+                + f"which are available via attributes {self.subdicts_names}")
+
+        def __setitem__(self, key, value):
+            raise NotAllowedError(
+                "Individual items should be accessed through nested dicts, "
+                + f"which are available via attributes {self.subdicts_names}")
+
+        def __delitem__(self, key):
+            raise NotAllowedError(
+                "Individual items should be accessed through nested dicts, "
+                + f"which are available via attributes {self.subdicts_names}")

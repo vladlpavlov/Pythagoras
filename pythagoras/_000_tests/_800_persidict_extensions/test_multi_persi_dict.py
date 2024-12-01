@@ -2,9 +2,11 @@ from persidict import FileDirDict
 from pythagoras._800_persidict_extensions.overlapping_multi_dict import OverlappingMultiDict
 
 
-
 def test_single_filedirdict_pkl(tmpdir):
-    d = OverlappingMultiDict(FileDirDict, tmpdir, pkl={})
+    d = OverlappingMultiDict(
+        FileDirDict
+        ,shared_subdicts_params=dict(dir_name=tmpdir)
+        , pkl={})
     assert len(d.pkl) == 0
     d.pkl["hi"] = "hello"
     d.pkl["bye"] = "goodbye"
@@ -13,7 +15,10 @@ def test_single_filedirdict_pkl(tmpdir):
     assert len(d.pkl) == 2
 
 def test_single_filedirdict_json(tmpdir):
-    d = OverlappingMultiDict(FileDirDict, tmpdir, json={})
+    d = OverlappingMultiDict(
+        FileDirDict
+        , shared_subdicts_params=dict(dir_name=tmpdir)
+        , json={})
     assert len(d.json) == 0
     d.json["hi"] = "hello"
     d.json["bye"] = "goodbye"
@@ -22,7 +27,10 @@ def test_single_filedirdict_json(tmpdir):
     assert len(d.json) == 2
 
 def test_single_filedirdict_txt(tmpdir):
-    d = OverlappingMultiDict(FileDirDict, tmpdir, txt={"base_class_for_values": str})
+    d = OverlappingMultiDict(
+        FileDirDict
+        , shared_subdicts_params=dict(dir_name=tmpdir)
+        , txt={"base_class_for_values": str})
     assert len(d.txt) == 0
     d.txt["hi"] = "hello"
     d.txt["bye"] = "goodbye"
@@ -31,7 +39,10 @@ def test_single_filedirdict_txt(tmpdir):
     assert len(d.txt) == 2
 
 def test_single_filedirdict_py(tmpdir):
-    d = OverlappingMultiDict(FileDirDict, tmpdir, py={"base_class_for_values": str})
+    d = OverlappingMultiDict(
+        FileDirDict
+        , shared_subdicts_params=dict(dir_name=tmpdir)
+        , py={"base_class_for_values": str})
     assert len(d.py) == 0
     d.py["hi"] = "hello"
     d.py["bye"] = "goodbye"
@@ -41,7 +52,8 @@ def test_single_filedirdict_py(tmpdir):
 
 def test_2_filedirdicts_py_txt(tmpdir):
     d = OverlappingMultiDict(
-        FileDirDict, tmpdir
+        FileDirDict
+        ,shared_subdicts_params=dict(dir_name=tmpdir)
         , py={"base_class_for_values": str}
         , txt={"base_class_for_values": str})
 
@@ -60,7 +72,8 @@ def test_2_filedirdicts_py_txt(tmpdir):
 
 def test_4_persidicts_py_txt_json_pkl(tmpdir):
     d = OverlappingMultiDict(
-        FileDirDict, tmpdir
+        FileDirDict
+        ,shared_subdicts_params=dict(dir_name=tmpdir)
         , py={"base_class_for_values": str}
         , txt={"base_class_for_values": str}
         , json={}
@@ -87,4 +100,3 @@ def test_4_persidicts_py_txt_json_pkl(tmpdir):
     assert len(d.py) == 3
     assert len(d.json) == 4
     assert len(d.pkl) == 9
-

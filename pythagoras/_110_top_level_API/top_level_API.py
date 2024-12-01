@@ -10,8 +10,10 @@ def initialize(base_dir) -> pd.DataFrame: #TODO: refactor
     portal.__enter__()
     return portal.describe()
 
-def connect_to_portal(base_dir) -> pd.DataFrame:
-    portal = SwarmingPortal(base_dir=base_dir, n_background_workers=3)
+def connect_to_local_portal(base_dir, n_background_workers) -> pd.DataFrame:
+    portal = SwarmingPortal(
+        base_dir=base_dir
+        , n_background_workers=n_background_workers)
     return portal.describe()
 
 def connect_to_default_portal() -> pd.DataFrame:
