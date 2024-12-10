@@ -20,10 +20,10 @@ def test_default_local_portal(mock_path_home):
         portal_3 = DefaultLocalPortal()
         assert len(BasicPortal.all_portals) == 1
 
-        assert ".pythagoras" in portal_1.base_dir
-        assert ".default_portal" in portal_2.base_dir
+        assert ".pythagoras" in portal_1.root_dict.base_dir
+        assert ".default_portal" in portal_2.root_dict.base_dir
         homepath = Path("~").expanduser()
-        assert str(mock_path_home) in portal_3.base_dir
+        assert str(mock_path_home) in portal_3.root_dict.base_dir
         assert len(BasicPortal.entered_portals_stack) == 0
 
         assert isinstance(portal_1, SwarmingPortal)

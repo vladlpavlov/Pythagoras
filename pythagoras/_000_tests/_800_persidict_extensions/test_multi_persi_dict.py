@@ -5,7 +5,7 @@ from pythagoras._800_persidict_extensions.overlapping_multi_dict import Overlapp
 def test_single_filedirdict_pkl(tmpdir):
     d = OverlappingMultiDict(
         FileDirDict
-        ,shared_subdicts_params=dict(dir_name=tmpdir)
+        ,shared_subdicts_params=dict(base_dir=tmpdir)
         , pkl={})
     assert len(d.pkl) == 0
     d.pkl["hi"] = "hello"
@@ -17,7 +17,7 @@ def test_single_filedirdict_pkl(tmpdir):
 def test_single_filedirdict_json(tmpdir):
     d = OverlappingMultiDict(
         FileDirDict
-        , shared_subdicts_params=dict(dir_name=tmpdir)
+        , shared_subdicts_params=dict(base_dir=tmpdir)
         , json={})
     assert len(d.json) == 0
     d.json["hi"] = "hello"
@@ -29,7 +29,7 @@ def test_single_filedirdict_json(tmpdir):
 def test_single_filedirdict_txt(tmpdir):
     d = OverlappingMultiDict(
         FileDirDict
-        , shared_subdicts_params=dict(dir_name=tmpdir)
+        , shared_subdicts_params=dict(base_dir=tmpdir)
         , txt={"base_class_for_values": str})
     assert len(d.txt) == 0
     d.txt["hi"] = "hello"
@@ -41,7 +41,7 @@ def test_single_filedirdict_txt(tmpdir):
 def test_single_filedirdict_py(tmpdir):
     d = OverlappingMultiDict(
         FileDirDict
-        , shared_subdicts_params=dict(dir_name=tmpdir)
+        , shared_subdicts_params=dict(base_dir=tmpdir)
         , py={"base_class_for_values": str})
     assert len(d.py) == 0
     d.py["hi"] = "hello"
@@ -53,7 +53,7 @@ def test_single_filedirdict_py(tmpdir):
 def test_2_filedirdicts_py_txt(tmpdir):
     d = OverlappingMultiDict(
         FileDirDict
-        ,shared_subdicts_params=dict(dir_name=tmpdir)
+        ,shared_subdicts_params=dict(base_dir=tmpdir)
         , py={"base_class_for_values": str}
         , txt={"base_class_for_values": str})
 
@@ -73,7 +73,7 @@ def test_2_filedirdicts_py_txt(tmpdir):
 def test_4_persidicts_py_txt_json_pkl(tmpdir):
     d = OverlappingMultiDict(
         FileDirDict
-        ,shared_subdicts_params=dict(dir_name=tmpdir)
+        ,shared_subdicts_params=dict(base_dir=tmpdir)
         , py={"base_class_for_values": str}
         , txt={"base_class_for_values": str}
         , json={}

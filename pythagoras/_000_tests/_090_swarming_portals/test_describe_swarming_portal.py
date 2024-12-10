@@ -6,7 +6,7 @@ def test_portal(tmpdir):
 
     with _PortalTester():
         portal = SwarmingPortal(
-            base_dir=tmpdir,
+            root_dict=tmpdir,
             n_background_workers=2)
         description = portal.describe()
         assert description.shape == (13, 3)

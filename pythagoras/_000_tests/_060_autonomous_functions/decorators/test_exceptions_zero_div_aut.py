@@ -6,7 +6,7 @@ from pythagoras._060_autonomous_functions import *
 
 
 def test_zero_div(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir) as t:
 
         date_str_1 = current_date_gmt_string()
 

@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 import pandas as pd
+from parameterizable import ParameterizableClass
 
 from persidict import PersiDict, FileDirDict
 from .exceptions import NotAllowedError
@@ -26,7 +27,7 @@ def _runtime(param, val) -> pd.DataFrame:
 
 
 
-class BasicPortal:
+class BasicPortal(ParameterizableClass):
     """A base class for portal objects that enable access to 'outside' world.
 
     In a Pythagoras-based application, a portal is the application's 'window'
@@ -47,41 +48,34 @@ class BasicPortal:
     all_portals: dict = {}
     entered_portals_stack: list = []
     entered_portals_counters_stack: list = []
-    base_dir: str | None
-    dict_type:type | None
+    root_dict: PersiDict | None
 
-    def __init__(self, base_dir:str|None = None, dict_type:type = FileDirDict):
-        """Initialize the portal object"""
 
-        if base_dir is None:
-            base_dir = self.default_base_dir
-        assert not os.path.isfile(base_dir)
-        if not os.path.isdir(base_dir):
-            os.mkdir(base_dir)
-        assert os.path.isdir(base_dir)
-        base_dir = os.path.abspath(base_dir)
-        self.base_dir = base_dir
-
-        assert issubclass(dict_type, PersiDict)
-        assert dict_type == FileDirDict, (
-            "Currently only FileDirDict is supported as a storage_type.")
-        self.dict_type = dict_type
-
+    def __init__(self, root_dict:PersiDict|str|None = None):
+        ParameterizableClass.__init__(self)
+        if root_dict is None:
+            root_dict = FileDirDict(base_dir = self.default_base_dir())
+        elif not isinstance(root_dict, PersiDict):
+            root_dict = FileDirDict(base_dir = str(root_dict))
+        root_dict_params = root_dict.get_params()
+        root_dict_params.update(digest_len=0)
+        root_dict = type(root_dict)(**root_dict_params)
+        self.root_dict = root_dict
         BasicPortal.all_portals[id(self)] = self
 
     def get_params(self) -> dict:
         """Get the portal's configuration parameters"""
-        return dict(base_dir=self.base_dir
-                    , dict_type=self.dict_type)
+        params = dict(root_dict=self.root_dict)
+        return params
 
     def describe(self) -> pd.DataFrame:
         """Get a DataFrame describing the portal's current state"""
         all_params = []
 
         all_params.append(_persistent(
-            "Base directory", self.base_dir))
+            "Base directory", self.root_dict.base_dir))
         all_params.append(_persistent(
-            "Backend type", self.dict_type.__name__))
+            "Backend type", self.root_dict.__class__.__name__))
 
         result = pd.concat(all_params)
         result.reset_index(drop=True, inplace=True)
@@ -222,6 +216,7 @@ class BasicPortal:
 
     def _clear(self) -> None:
         """Clear the portal's state"""
+        self.root_dict = None
         pass
 
     @classmethod

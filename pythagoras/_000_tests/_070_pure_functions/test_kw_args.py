@@ -6,7 +6,7 @@ from pythagoras import SortedKwArgs
 def test_sortedkwargs(tmpdir):
     """Test PackedKwArgs constructor and basic functionality."""
 
-    with _PortalTester(DataPortal, base_dir=tmpdir) as t:
+    with _PortalTester(DataPortal, root_dict=tmpdir) as t:
 
         sampe_dict = { "e": 0, "c":1, "b":2, "a":3}
         assert list(sampe_dict.keys()) != sorted(sampe_dict.keys())
@@ -21,9 +21,9 @@ def test_sortedkwargs(tmpdir):
 
 
 def test_sortedkwargs_2portals(tmpdir):
-    with _PortalTester(DataPortal, base_dir=tmpdir.mkdir("t1")) as t:
+    with _PortalTester(DataPortal, root_dict=tmpdir.mkdir("t1")) as t:
         p1 = t.portal
-        p2 = DataPortal(base_dir=tmpdir.mkdir("t2"))
+        p2 = DataPortal(root_dict=tmpdir.mkdir("t2"))
         sampe_dict = { "e": 0, "c":1, "b":2, "a":3}
         pka = SortedKwArgs(**sampe_dict).pack(p1)
         assert len(p1.value_store) == 4
@@ -43,7 +43,7 @@ def test_sortedkwargs_2portals(tmpdir):
 def test_sortedkwargs_save_load(tmpdir):
     """Test PackedKwArgs constructor and basic functionality."""
 
-    with _PortalTester(DataPortal, base_dir=tmpdir) as t:
+    with _PortalTester(DataPortal, root_dict=tmpdir) as t:
         portal = t.portal
         sampe_dict = { "e": 0, "c":1, "b":2, "a":3}
         pka = SortedKwArgs(**sampe_dict).pack(t.portal)

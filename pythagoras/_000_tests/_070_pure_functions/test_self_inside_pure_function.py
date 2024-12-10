@@ -12,7 +12,7 @@ def another_p_function()->str:
 
 def test_simple(tmpdir):
     global simple_p_function, another_p_function
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir) as t:
         simple_a_function = autonomous()(simple_p_function)
         assert simple_a_function(a=111,b=111000)==111111
 

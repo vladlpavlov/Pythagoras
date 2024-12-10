@@ -8,7 +8,7 @@ from pythagoras._060_autonomous_functions import *
 
 def test_sqrt(tmpdir):
 
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir) as t:
 
         @autonomous()
         def my_sqrt(x: float) -> float:

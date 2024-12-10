@@ -3,7 +3,7 @@ from pythagoras._060_autonomous_functions import *
 
 def test_strictly_autonomous(tmpdir):
 
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
 
         def f(a: int):
             b = 24
@@ -23,7 +23,7 @@ def h(a:int):
     return a+b
 
 def test_not_autonomous(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
         assert not is_autonomous(h)
         assert not is_loosely_autonomous(h)
         # assert not is_strictly_autonomous(h)
@@ -32,7 +32,7 @@ def test_not_autonomous(tmpdir):
 
 
 def test_autonomous(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
 
         @autonomous(island_name="DEMO")
         def zyx(a: int):
@@ -52,7 +52,7 @@ def f_2():
     return f_1() + 10
 
 def test_default_island_chained(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
         global f_1, f_2
         f_1 = autonomous(island_name=None)(f_1)
         f_2 = autonomous(island_name=None)(f_2)
@@ -69,7 +69,7 @@ def g_1():
     return 1000
 
 def test_chained_reversed_order(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
         global g_1, g_2
         g_2 = autonomous(island_name="ABC")(g_2)
         g_1 = autonomous(island_name="ABC")(g_1)

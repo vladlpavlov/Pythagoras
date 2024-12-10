@@ -5,7 +5,7 @@ import builtins
 from typing import Callable, Any
 
 import pandas as pd
-from persidict import FileDirDict
+from persidict import FileDirDict, PersiDict
 
 from pythagoras import LoggingPortal
 from pythagoras._010_basic_portals import BasicPortal, PortalAwareClass
@@ -37,16 +37,13 @@ class AutonomousCodePortal(SafeCodePortal):
     default_island_name: str | None
     known_functions: dict[str, dict[str, AutonomousFn]] | None
     
-    def __init__(
-            self
-            , base_dir: str | None = None
-            , dict_type: type = FileDirDict
-            , default_island_name: str = "Samos"
+    def __init__(self
+            , root_dict: PersiDict | str | None = None
             , p_consistency_checks: float | None = None
+            , default_island_name: str = "Samos"
             ):
-        super().__init__(base_dir=base_dir
-                         ,dict_type=dict_type
-                         ,p_consistency_checks=p_consistency_checks)
+        super().__init__(root_dict=root_dict
+            , p_consistency_checks=p_consistency_checks)
         assert isinstance(default_island_name, str)
         assert len(default_island_name) >= 1
         self.default_island_name = default_island_name

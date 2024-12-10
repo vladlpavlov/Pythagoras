@@ -88,7 +88,7 @@ def test_inclosed2():
 def test_different(tmpdir):
     all_funcs = [f_docstring, f_comments, test_basics, test_inclosed
                 , test_inclosed2, a2, a3, test_different]
-    with _PortalTester(OrdinaryCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(OrdinaryCodePortal, root_dict=tmpdir) as t:
         for f1 in all_funcs:
             for f2 in all_funcs:
                 if f1 is f2:

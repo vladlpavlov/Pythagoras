@@ -36,7 +36,6 @@ from pythagoras._020_logging_portals.execution_environment_summary import (
     build_execution_environment_summary)
 
 
-
 ASupportingFunc:TypeAlias = str | AutonomousFn
 
 SupportingFuncs:TypeAlias = ASupportingFunc | List[ASupportingFunc] | None
@@ -50,50 +49,41 @@ class PureCodePortal(AutonomousCodePortal):
     execution_requests: PersiDict | None
     run_history: OverlappingMultiDict | None
 
-    def __init__(
-            self
-            , base_dir: str | None = None
-            , dict_type: type = FileDirDict
-            , default_island_name: str = "Samos"
+    def __init__(self
+            , root_dict: PersiDict | str | None = None
             , p_consistency_checks: float | None = None
+            , default_island_name: str = "Samos"
             ):
-        super().__init__(base_dir=base_dir
-                         , dict_type=dict_type
-                         , default_island_name=default_island_name
-                         , p_consistency_checks=p_consistency_checks)
-        execution_results_dir = os.path.join(
-            base_dir, "execution_results")
-        execution_results = dict_type(
-            execution_results_dir, digest_len=0
-            , immutable_items=True)
+        super().__init__(root_dict=root_dict
+            , p_consistency_checks=p_consistency_checks
+            , default_island_name=default_island_name)
+
+        results_dict_prototype = self.root_dict.get_subdict(
+            "execution_results")
+        results_dict_params = results_dict_prototype.get_params()
+        results_dict_params.update(immutable_items=True,  file_type = "pkl")
+        execution_results = type(self.root_dict)(**results_dict_params)
         execution_results = FirstEntryDict(
             execution_results, p_consistency_checks)
         self.execution_results = execution_results
 
-        execution_requests_dir = os.path.join(
-            base_dir, "execution_requests")
-        execution_requests = dict_type(
-            execution_requests_dir, digest_len=0
-            , immutable_items=False)
+        requests_dict_prototype = self.root_dict.get_subdict(
+            "execution_requests")
+        requests_dict_params = requests_dict_prototype.get_params()
+        requests_dict_params.update(immutable_items=False, file_type="pkl")
+        execution_requests = type(self.root_dict)(**requests_dict_params)
         self.execution_requests = execution_requests
 
-        run_history_dir = os.path.join(
-            base_dir, "run_history")
+        run_history_prototype = self.root_dict.get_subdict("run_history")
+        run_history_shared_params = run_history_prototype.get_params()
+        dict_type = type(self.root_dict)
         run_history = OverlappingMultiDict(
             dict_type=dict_type
-            , shared_subdicts_params=dict(dir_name=run_history_dir)
-            , json=dict(digest_len=0, immutable_items=True)
-            , py=dict(
-                base_class_for_values=str
-                , digest_len=0
-                , immutable_items=False)
-            , txt=dict(
-                base_class_for_values=str
-                , digest_len=0
-                , immutable_items=True)
-            , pkl=dict(
-                digest_len=0
-                , immutable_items=True) 
+            , shared_subdicts_params=run_history_shared_params
+            , json=dict(immutable_items=True)
+            , py=dict(base_class_for_values=str, immutable_items=False)
+            , txt=dict(base_class_for_values=str, immutable_items=True)
+            , pkl=dict(immutable_items=True)
             )
         self.run_history = run_history
 

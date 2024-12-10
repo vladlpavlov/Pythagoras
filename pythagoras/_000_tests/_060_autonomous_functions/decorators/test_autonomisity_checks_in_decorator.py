@@ -9,7 +9,7 @@ import sys
 def test_globals(tmpdir):
     """Test autonomous function wrapper with global objects."""
 
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
 
         @autonomous()
         def good_global_f():
@@ -39,7 +39,7 @@ def test_globals(tmpdir):
 
 def test_locals_2(tmpdir):
     """Test autonomous function wrapper with local objects."""
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
 
         import random
 
@@ -62,7 +62,7 @@ def test_locals_2(tmpdir):
         assert not is_autonomous(bad_local_f3)
 
 def test_non_classic_callables(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
 
         with pytest.raises(Exception):
             autonomous()(lambda x: x**2)
@@ -91,14 +91,14 @@ def test_non_classic_callables(tmpdir):
 
 
 def test_yield(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
         with pytest.raises(Exception):
             @autonomous()
             def f():
                 yield 1
 
 def test_nested_yield(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
         @autonomous()
         def f_y():
             def g():

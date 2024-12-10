@@ -2,7 +2,7 @@ from pythagoras import BasicPortal
 from pythagoras import _PortalTester
 
 def test_portal(tmpdir):
-
+    the_dir = tmpdir
     with _PortalTester():
 
         portal = BasicPortal(tmpdir.mkdir("awer"))

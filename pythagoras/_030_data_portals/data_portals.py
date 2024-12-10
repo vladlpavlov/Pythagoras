@@ -5,8 +5,7 @@ import os
 from typing import Optional
 
 import pandas as pd
-from persidict import FileDirDict
-
+from persidict import FileDirDict, PersiDict
 
 from pythagoras._010_basic_portals.foundation import BasicPortal, _persistent, _runtime
 from pythagoras._020_logging_portals.logging_portals import LoggingPortal
@@ -34,20 +33,22 @@ class DataPortal(LoggingPortal):
     _p_consistency_checks: float|None
 
     def __init__(self
-            , base_dir:str | None = None
-            , dict_type:type = FileDirDict
+            , root_dict:PersiDict|str|None = None
             , p_consistency_checks: float | None = None
             ):
-        super().__init__(base_dir=base_dir, dict_type=dict_type)
+        super().__init__(root_dict = root_dict)
+        del root_dict
+
         assert p_consistency_checks is None or 0 <= p_consistency_checks <= 1
         if p_consistency_checks is None:
             p_consistency_checks = 0
         self._p_consistency_checks = p_consistency_checks
-        value_store_dir = os.path.join(base_dir, "value_store")
-        value_store = dict_type(
-            dir_name = value_store_dir
-            , digest_len=0
-            , immutable_items=True)
+
+        value_store_prototype = self.root_dict.get_subdict("value_store")
+        value_store_params = value_store_prototype.get_params()
+        value_store_params.update(
+            digest_len=0, immutable_items=True, file_type = "pkl")
+        value_store = type(self.root_dict)(**value_store_params)
         value_store = FirstEntryDict(value_store, p_consistency_checks)
         self.value_store = value_store
 

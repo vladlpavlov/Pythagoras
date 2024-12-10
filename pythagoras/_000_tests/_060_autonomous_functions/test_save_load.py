@@ -8,7 +8,7 @@ def f(a, b):
 
 def test_load_save(tmpdir):
 
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir, default_island_name="test"):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir, default_island_name="test"):
 
         f_1 = AutonomousFn(f, island_name="test",strictly_autonomous=True)
         f_address = ValueAddr(f_1)
@@ -26,7 +26,7 @@ def test_load_save(tmpdir):
         f_address._invalidate_cache()
 
 
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir, default_island_name="test"):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir, default_island_name="test"):
 
         del f_address._portal
 

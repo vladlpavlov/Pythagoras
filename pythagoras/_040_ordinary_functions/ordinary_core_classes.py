@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from typing import Callable, Any
 
-from persidict import FileDirDict
+from persidict import FileDirDict, PersiDict
 
 from pythagoras import DataPortal, BasicPortal, PortalAwareClass
 from pythagoras._820_strings_signatures_converters.hash_signatures import get_hash_signature
@@ -17,15 +17,12 @@ import pythagoras as pth
 
 
 class OrdinaryCodePortal(DataPortal):
-    def __init__(
-            self
-            , base_dir: str | None = None
-            , dict_type: type = FileDirDict
+    def __init__(self
+            , root_dict: PersiDict | str | None = None
             , p_consistency_checks: float | None = None
             ):
-        super().__init__(base_dir=base_dir
-                         , dict_type=dict_type
-                         , p_consistency_checks=p_consistency_checks)
+        super().__init__(root_dict = root_dict
+            , p_consistency_checks=p_consistency_checks)
 
     @classmethod
     def get_best_portal_to_use(cls, suggested_portal: OrdinaryCodePortal | None = None

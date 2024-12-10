@@ -117,23 +117,21 @@ class LoggingPortal(BasicPortal):
     crash_history: PersiDict | None
     event_log: PersiDict | None
 
-    def __init__(self
-            , base_dir:str | None = None
-            , dict_type:type = FileDirDict
-            ):
-        super().__init__(base_dir, dict_type)
+    def __init__(self, root_dict:PersiDict|str|None = None):
+        super().__init__(root_dict)
+        del root_dict
 
-        crash_history_dir = os.path.join(base_dir, "crash_history")
-        crash_history = dict_type(
-            crash_history_dir, digest_len=0
-            , file_type="json", immutable_items=True)
-        self.crash_history = crash_history
+        crash_history_prototype = self.root_dict.get_subdict("crash_history")
+        crash_history_params = crash_history_prototype.get_params()
+        crash_history_params.update(
+            dict(file_type="json", immutable_items=True , digest_len=0))
+        self.crash_history = type(self.root_dict)(**crash_history_params)
 
-        event_log_dir = os.path.join(base_dir, "event_log")
-        event_log = dict_type(
-            event_log_dir, digest_len=0
-            , file_type="json", immutable_items=True)
-        self.event_log = event_log
+        event_log_prototype = self.root_dict.get_subdict("event_log")
+        event_log_params = event_log_prototype.get_params()
+        event_log_params.update(
+            dict(file_type="json", immutable_items=True, digest_len=0))
+        self.event_log = type(self.root_dict)(**event_log_params)
 
         if not LoggingPortal.exception_handlers_registered:
             register_systemwide_uncaught_exception_handlers()

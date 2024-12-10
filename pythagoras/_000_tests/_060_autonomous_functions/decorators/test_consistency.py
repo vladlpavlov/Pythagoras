@@ -5,7 +5,7 @@ import pytest
 
 
 def test_2_didderent_functions_same_name(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
         def f():
             return 1
         f_1 = autonomous(island_name="Moon")(f)
@@ -24,7 +24,7 @@ def test_2_didderent_functions_same_name(tmpdir):
             f_20 = strictly_autonomous()(f)
 
 def test_2_similar_functions_same_name(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
         def f():
             return 100
         f_1 = autonomous(island_name="Moon")(f)

@@ -14,7 +14,7 @@ def fibonacci(n: int) -> int:
 def test_aut_fibonacci(tmpdir,p):
     with _PortalTester(
             AutonomousCodePortal
-            , base_dir=tmpdir
+            , root_dict=tmpdir
             , default_island_name="demo"
             , p_consistency_checks=p
             ) as t:

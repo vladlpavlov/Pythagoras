@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from persidict import FileDirDict
+from persidict import FileDirDict, PersiDict
 
 from pythagoras import BasicPortal
 from pythagoras._040_ordinary_functions.ordinary_core_classes import (
@@ -10,14 +10,11 @@ from pythagoras._040_ordinary_functions.ordinary_core_classes import (
 
 
 class SafeCodePortal(OrdinaryCodePortal):
-    def __init__(
-            self
-            , base_dir: str | None = None
-            , dict_type: type = FileDirDict
-            , p_consistency_checks: float | None = None
-            ):
-        super().__init__(base_dir=base_dir
-            , dict_type=dict_type
+    def __init__(self
+                 , root_dict: PersiDict | str | None = None
+                 , p_consistency_checks: float | None = None
+                 ):
+        super().__init__(root_dict=root_dict
             , p_consistency_checks=p_consistency_checks)
 
 

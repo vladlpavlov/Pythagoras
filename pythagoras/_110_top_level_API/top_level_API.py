@@ -4,15 +4,15 @@ from pandas import describe_option
 from pythagoras import SwarmingPortal, BasicPortal, DefaultLocalPortal
 
 
-def initialize(base_dir) -> pd.DataFrame: #TODO: refactor
+def initialize(root_dict) -> pd.DataFrame: #TODO: refactor
     BasicPortal._clear_all()
-    portal = SwarmingPortal(base_dir=base_dir, n_background_workers=3)
+    portal = SwarmingPortal(root_dict=root_dict, n_background_workers=3)
     portal.__enter__()
     return portal.describe()
 
-def connect_to_local_portal(base_dir, n_background_workers) -> pd.DataFrame:
+def connect_to_local_portal(root_dict, n_background_workers) -> pd.DataFrame:
     portal = SwarmingPortal(
-        base_dir=base_dir
+        root_dict=root_dict
         , n_background_workers=n_background_workers)
     return portal.describe()
 

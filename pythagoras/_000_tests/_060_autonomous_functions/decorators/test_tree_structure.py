@@ -67,7 +67,7 @@ def total():
 
 
 def test_tree(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir) as t:
 
         global f_1, f_2, f_3, f_4, f_5, f_6, f_1_2, f_2_3
         global f_3_4, f_4_5, f_5_6, f_1_2_3, f_2_3_4, f_3_4_5

@@ -7,7 +7,8 @@ from time import sleep
 import random
 
 import pandas as pd
-from persidict import FileDirDict
+import parameterizable
+from persidict import FileDirDict, PersiDict
 
 from pythagoras import BasicPortal, build_execution_environment_summary
 from pythagoras._010_basic_portals.foundation import _runtime
@@ -28,32 +29,34 @@ from pythagoras._810_output_manipulators.output_suppressor import (
 class SwarmingPortal(PureCodePortal):
     compute_nodes: OverlappingMultiDict | None
 
-    def __init__(self, base_dir:str|None = None
-                 , dict_type:type = FileDirDict
+    def __init__(self
+                 , root_dict: PersiDict | str | None = None
                  , default_island_name:str = "Samos"
                  , p_consistency_checks:float|None = None
                  , n_background_workers:int|None = 3
                  , runtime_id:str|None = None
                  ):
-        super().__init__(base_dir = base_dir
-                         ,dict_type = dict_type
-                         ,default_island_name = default_island_name
-                         , p_consistency_checks=p_consistency_checks)
+        super().__init__(root_dict=root_dict
+                         , p_consistency_checks=p_consistency_checks
+                         , default_island_name=default_island_name)
         n_background_workers = int(n_background_workers)
         assert n_background_workers >= 0
         self.n_background_workers = n_background_workers
 
-        compute_nodes_dir = os.path.join(base_dir, "compute_nodes")
+        compute_nodes_prototype = self.root_dict.get_subdict("compute_nodes")
+        compute_nodes_shared_params = compute_nodes_prototype.get_params()
+        dict_type = type(self.root_dict)
         compute_nodes = OverlappingMultiDict(
             dict_type=dict_type
-            , shared_subdicts_params=dict(dir_name=compute_nodes_dir)
-            , pkl=dict(digest_len=0, immutable_items=False)
-            , json=dict(digest_len=0, immutable_items=False)
-        )
+            , shared_subdicts_params=compute_nodes_shared_params
+            , json=dict(immutable_items=False)
+            , pkl=dict(immutable_items=False)
+            )
         self.compute_nodes = compute_nodes
 
+        self.node_id = get_node_signature()
+
         if runtime_id is None:
-            self.node_id = get_node_signature()
             runtime_id = get_random_signature()
             self.runtime_id = runtime_id
             address = [self.node_id, "runtime_id"]
@@ -117,7 +120,7 @@ class SwarmingPortal(PureCodePortal):
 
     def _launch_background_worker(self):
         """Launch one background worker process."""
-        init_params = deepcopy(self.get_params())
+        init_params = self.__get_portable_params__()
         init_params["n_background_workers"] = 0
         ctx = get_context("spawn")
         p = ctx.Process(target=_background_worker, kwargs=init_params)
@@ -169,10 +172,15 @@ class SwarmingPortal(PureCodePortal):
             delay = self.entropy_infuser.uniform(min_delay, max_delay)
             sleep(delay)
 
+parameterizable.register_parameterizable_class(SwarmingPortal)
+
 def _background_worker(**portal_init_params):
     """Background worker that keeps processing random execution requests."""
     portal_init_params["n_background_workers"] = 0
-    with SwarmingPortal(**portal_init_params) as portal:
+    portal = parameterizable.get_object_from_portable_params(
+        portal_init_params)
+    assert isinstance(portal, SwarmingPortal)
+    with portal:
         portal._randomly_delay_execution(p=1)
         ctx = get_context("spawn")
         with OutputSuppressor():
@@ -190,7 +198,10 @@ def _background_worker(**portal_init_params):
 def _process_random_execution_request(**portal_init_params):
     """Process one random execution request."""
     portal_init_params["n_background_workers"] = 0
-    with SwarmingPortal(**portal_init_params) as portal:
+    portal = parameterizable.get_object_from_portable_params(
+        portal_init_params)
+    assert isinstance(portal, SwarmingPortal)
+    with portal:
         max_addresses_to_consider = random.randint(200, 5000)
         # TODO: are 200 and 5000 good values for max_addresses_to_consider?
         with OutputSuppressor():

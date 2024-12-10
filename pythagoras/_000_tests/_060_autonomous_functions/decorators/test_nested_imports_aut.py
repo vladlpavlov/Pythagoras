@@ -3,7 +3,7 @@ from pythagoras._060_autonomous_functions import *
 
 
 def test_nested_from_import(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir) as t:
 
         @autonomous()
         def f(x:float)->float:
@@ -14,7 +14,7 @@ def test_nested_from_import(tmpdir):
 
 
 def test_nested_import_as(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir) as t:
 
         @autonomous()
         def f(x:float)->float:
@@ -24,7 +24,7 @@ def test_nested_import_as(tmpdir):
         assert f(x=0) == 0
 
 def test_nested_from_import_as(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir) as t:
 
         @autonomous()
         def f(x:float)->float:

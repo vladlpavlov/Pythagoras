@@ -25,7 +25,7 @@ def f_7():
 
 def test_two_chains_no_errors(tmpdir):
 
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
 
         global f_1, f_2, f_3, f_4, f_5, f_6, f_7
 

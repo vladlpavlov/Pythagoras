@@ -31,8 +31,7 @@ class DefaultLocalPortal(SwarmingPortal):
             return
         DefaultLocalPortal._calls_counter += 1
         SwarmingPortal.__init__(self
-            , base_dir = BasicPortal.default_base_dir()
-            , dict_type = FileDirDict
+            , root_dict = FileDirDict(BasicPortal.default_base_dir())
             , default_island_name = "Samos"
             , p_consistency_checks = 0
             , n_background_workers=3

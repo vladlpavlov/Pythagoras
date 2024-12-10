@@ -12,7 +12,7 @@ def factorial(n:int) -> int:
 def test_aut_factorial(tmpdir):
     # tmpdir = 20*"Q"+str(int(time.time()))
     try:
-        with _PortalTester(AutonomousCodePortal, base_dir=tmpdir) as t:
+        with _PortalTester(AutonomousCodePortal, root_dict=tmpdir) as t:
             crash_history = t.portal.crash_history
             global factorial
             factorial = autonomous()(factorial)

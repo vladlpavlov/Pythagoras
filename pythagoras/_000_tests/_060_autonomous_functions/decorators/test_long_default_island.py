@@ -27,7 +27,7 @@ def f_6():
 
 
 def test_chained_default_island(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir) as t:
         global f_1, f_2, f_3, f_4, f_5, f_6
 
         f_1 = autonomous()(f_1)

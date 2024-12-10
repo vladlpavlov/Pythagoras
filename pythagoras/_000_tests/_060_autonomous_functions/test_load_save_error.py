@@ -9,9 +9,9 @@ import pytest
 def test_load_save_error(tmpdir,p):
     with _PortalTester(
             AutonomousCodePortal
-            , base_dir=tmpdir
-            ,default_island_name="test"
-            ,p_consistency_checks=p
+            , root_dict=tmpdir
+            , default_island_name="test"
+            , p_consistency_checks=p
             ) as t:
         assert len(t.portal.value_store) == 0
         def f(a, b):
@@ -27,8 +27,8 @@ def test_load_save_error(tmpdir,p):
 
     with _PortalTester(
             AutonomousCodePortal
-            , base_dir=tmpdir
-            ,default_island_name="test"
+            , root_dict=tmpdir
+            , default_island_name="test"
             , p_consistency_checks=p
             ) as t:
 
@@ -44,8 +44,8 @@ def test_load_save_error(tmpdir,p):
 
     with _PortalTester(
             AutonomousCodePortal
-            , base_dir=tmpdir
-            ,default_island_name="test"
+            , root_dict=tmpdir
+            , default_island_name="test"
             , p_consistency_checks=p
             ) as t:
 

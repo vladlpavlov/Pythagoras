@@ -21,13 +21,13 @@ def isOdd(n):
 
 def test_no_decorators(tmpdir):
 
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
         assert isOdd(n=4) == False
         assert isEven(n=4) == True
 
 
 def test_one_decorator(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
         global isEven,  isOdd
         oldIsEven = isEven
         oldIsOdd = isOdd
@@ -40,7 +40,7 @@ def test_one_decorator(tmpdir):
         isOdd = oldIsOdd
 
 def test_two_decorators(tmpdir):
-    with _PortalTester(AutonomousCodePortal, base_dir=tmpdir):
+    with _PortalTester(AutonomousCodePortal, root_dict=tmpdir):
         global isEven, isOdd
         oldIsEven = isEven
         oldIsOdd = isOdd

@@ -5,7 +5,7 @@ def simple_function(a:int,b:int) -> int:
     return a+b
 
 def test_ordinary_function(tmpdir):
-    with _PortalTester(OrdinaryCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(OrdinaryCodePortal, root_dict=tmpdir) as t:
         f = OrdinaryFn(simple_function)
         f = OrdinaryFn(f)
 
@@ -26,7 +26,7 @@ def fibonacci(n:int) -> int:
     return fibonacci(n=n-1) + fibonacci(n=n-2)
 
 def test_ordinary_function_with_recursion(tmpdir):
-    with _PortalTester(OrdinaryCodePortal, base_dir=tmpdir) as t:
+    with _PortalTester(OrdinaryCodePortal, root_dict=tmpdir) as t:
         f = OrdinaryFn(fibonacci)
         f = OrdinaryFn(f)
 

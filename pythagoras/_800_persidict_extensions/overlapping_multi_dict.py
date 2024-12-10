@@ -31,9 +31,9 @@ class OverlappingMultiDict:
         for subdict_name in individual_subdicts_params:
             assert isinstance(individual_subdicts_params[subdict_name], dict)
             self.__dict__[subdict_name] = dict_type(
-                **individual_subdicts_params[subdict_name]
-                ,file_type=subdict_name
-                ,**shared_subdicts_params)
+                **{**shared_subdicts_params
+                ,**individual_subdicts_params[subdict_name]
+                ,"file_type":subdict_name})
 
         def __getstate__(self):
             raise NotAllowedError("This object should never be pickled")
