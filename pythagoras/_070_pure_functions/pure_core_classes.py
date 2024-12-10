@@ -554,8 +554,8 @@ class PureFnExecutionResultAddr(HashAddr):
         new_prefix = a_fn.fn_name
         if a_fn.island_name is not None:
             new_prefix += "_" + a_fn.island_name
-        new_hash_value = tmp.hash_value
-        super().__init__(new_prefix, new_hash_value, portal=a_fn.portal)
+        new_hash_signature = tmp.hash_signature
+        super().__init__(new_prefix, new_hash_signature, portal=a_fn.portal)
         self._function = a_fn
 
     @property
@@ -577,7 +577,7 @@ class PureFnExecutionResultAddr(HashAddr):
             return ValueAddr.from_strings(  # TODO: refactor this
                 # prefix="idempotentfncallsignature"
                 prefix = PureFnCallSignature.__name__.lower()
-                , hash_value=self.hash_value
+                , hash_signature=self.hash_signature
                 , portal= portal)
 
     def __setstate__(self, state):

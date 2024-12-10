@@ -211,7 +211,7 @@ def _process_random_execution_request(**portal_init_params):
                     return
                 for addr in portal.execution_requests:
                     new_address = PureFnExecutionResultAddr.from_strings(
-                        prefix=addr[0], hash_value=addr[1]
+                        prefix=addr[0], hash_signature=addr[1]
                         , assert_readiness=False) # How does it handle portals?
                     if not new_address.needs_execution:
                         continue

@@ -37,7 +37,7 @@ def process_random_execution_request(pth_init_params:dict):
                 return
             for addr in pth.execution_requests:
                 new_addresses = pth.IdempotentFnExecutionResultAddr.from_strings(
-                    prefix=addr[0], hash_value=addr[1], assert_readiness=False)
+                    prefix=addr[0], hash_signature=addr[1], assert_readiness=False)
                 if not new_addresses.needs_execution:
                     continue
                 if not new_addresses.can_be_executed:

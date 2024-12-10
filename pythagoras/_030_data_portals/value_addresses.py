@@ -38,8 +38,8 @@ class ValueAddr(HashAddr):
             if hasattr(data, "get_ValueAddr"):
                 data_value_addr = data.get_ValueAddr()
                 prefix = data_value_addr.prefix
-                hash_value = data_value_addr.hash_value
-                super().__init__(prefix, hash_value, portal=portal)
+                hash_signature = data_value_addr.hash_signature
+                super().__init__(prefix, hash_signature, portal=portal)
                 if portal != data_value_addr.portal and (
                         not self in portal.value_store):
                     data = data_value_addr.get()
@@ -52,8 +52,8 @@ class ValueAddr(HashAddr):
                 + "convert HashAddr into ValueAddr")
 
         prefix = self._build_prefix(data)
-        hash_value = self._build_hash_value(data)
-        super().__init__(prefix, hash_value, portal=portal)
+        hash_signature = self._build_hash_signature(data)
+        super().__init__(prefix, hash_signature, portal=portal)
 
         with portal:
             portal.value_store[self] = data
@@ -174,7 +174,7 @@ class ValueAddr(HashAddr):
     def __copy__(self):
         result = self.from_strings(
             prefix=self.prefix
-            , hash_value=self.hash_value
+            , hash_signature=self.hash_signature
             , portal=self.portal
             , assert_readiness=False)
         return result

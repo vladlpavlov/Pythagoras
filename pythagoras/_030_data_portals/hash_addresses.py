@@ -36,7 +36,7 @@ class HashAddr(SafeStrTuple, PortalAwareClass, ABC):
         return self.str_chain[0]
 
     @property
-    def hash_value(self) -> str:
+    def hash_signature(self) -> str:
         return self.str_chain[1]
 
     @staticmethod
@@ -49,7 +49,7 @@ class HashAddr(SafeStrTuple, PortalAwareClass, ABC):
 
 
     @staticmethod
-    def _build_hash_value(x: Any) -> str:
+    def _build_hash_signature(x: Any) -> str:
         """Create a URL-safe hashdigest for an object."""
 
         if (hasattr(x, "shape") and hasattr(x.shape, "__iter__")
@@ -65,25 +65,25 @@ class HashAddr(SafeStrTuple, PortalAwareClass, ABC):
 
         descriptor = replace_unsafe_chars(descriptor, replace_with="_")
         raw_hash_signature = get_hash_signature(x)
-        hash_value = descriptor + raw_hash_signature
+        hash_signature = descriptor + raw_hash_signature
 
-        return hash_value
+        return hash_signature
 
 
     @classmethod
     def from_strings(cls, *
                      , prefix:str
-                     , hash_value:str
+                     , hash_signature:str
                      , assert_readiness:bool=True
                      , portal:Optional[DataPortal] = None
                      ) -> HashAddr:
         """(Re)construct address from text representations of prefix and hash"""
 
         assert prefix, "prefix must be a non-empty string"
-        assert hash_value, "hash_value must be a non-empty string"
+        assert hash_signature, "hash_signature must be a non-empty string"
 
         address = cls.__new__(cls)
-        super(cls, address).__init__(prefix, hash_value, portal=portal)
+        super(cls, address).__init__(prefix, hash_signature, portal=portal)
         if assert_readiness:
             assert address.ready
         return address
