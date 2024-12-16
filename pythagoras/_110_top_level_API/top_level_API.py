@@ -10,7 +10,7 @@ def initialize(root_dict) -> pd.DataFrame: #TODO: refactor
     portal.__enter__()
     return portal.describe()
 
-def connect_to_local_portal(root_dict, n_background_workers) -> pd.DataFrame:
+def connect_to_local_portal(root_dict=None, n_background_workers=3) -> pd.DataFrame:
     portal = SwarmingPortal(
         root_dict=root_dict
         , n_background_workers=n_background_workers)
