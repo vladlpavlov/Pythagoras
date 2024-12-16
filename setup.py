@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.17.1"
+    ,version="0.17.2"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description= "Planet-scale distributed computing in Python."
