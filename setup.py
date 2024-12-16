@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="pythagoras"
-    ,version="0.17.0"
+    ,version="0.17.1"
     ,author="Volodymyr (Vlad) Pavlov"
     ,author_email="vlpavlov@ieee.org"
     ,description= "Planet-scale distributed computing in Python."
@@ -22,6 +22,7 @@ setuptools.setup(
         , "pythagoras._070_pure_functions"
         , "pythagoras._080_compatibility_validators"
         , "pythagoras._090_swarming_portals"
+        , "pythagoras._100_default_local_portals"
         , "pythagoras._110_top_level_API"
         , "pythagoras._800_persidict_extensions"
         , "pythagoras._810_output_manipulators"
